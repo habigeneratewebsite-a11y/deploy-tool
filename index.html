@@ -3,46 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Chat → GitHub Deployer</title>
+  <title>AI Chat → GitHub Deployer (ZIP Support)</title>
+  <!-- JSZip untuk ekstrak ZIP di browser -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     body { font-family: sans-serif; padding: 1rem; max-width: 500px; margin: auto; }
     label { display: block; margin-top: 0.8rem; font-weight: bold; }
-    input, textarea, button { width: 100%; padding: 0.6rem; margin-top: 0.3rem; font-size: 1rem; border-radius: 6px; border: 1px solid #ccc; }
+    input, textarea, button, select { width: 100%; padding: 0.6rem; margin-top: 0.3rem; font-size: 1rem; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
     button { background: #24292e; color: white; border: none; font-weight: bold; }
     button:active { background: #444; }
+    .mode-selector { display: flex; gap: 1rem; margin: 1rem 0; }
+    .mode-selector label { font-weight: normal; display: flex; align-items: center; gap: 0.3rem; }
     #status { margin-top: 1rem; padding: 0.8rem; border-radius: 6px; white-space: pre-wrap; }
     .success { background: #e6ffec; color: #1a7f37; }
     .error { background: #ffebe9; color: #cf222e; }
+    .info { background: #ddf4ff; color: #0969da; }
+    #progress { margin-top: 0.5rem; font-size: 0.9rem; color: #555; }
+    .hidden { display: none; }
+    small { color: #666; }
+    a { color: #0969da; }
   </style>
 </head>
 <body>
-  <h2>🚀 AI Chat to GitHub</h2>
-  <p>Tempel kode dari chat AI, langsung deploy ke GitHub-mu.</p>
+  <h2>🚀 AI Chat to GitHub (ZIP)</h2>
+  <p>Upload satu file atau banyak file sekaligus dari HP.</p>
 
   <label>Username GitHub</label>
-  <input type="text" id="username" placeholder="contoh: ahmaddanial" required>
+  <input type="text" id="username" placeholder="habigeneratewebsite-a11y" required>
 
-  <label>Nama Repository</label>
-  <input type="text" id="repo" placeholder="repo tujuan, misal my-site" required>
+  <label>Nama Repository Tujuan</label>
+  <input type="text" id="repo" placeholder="my-backend-repo" required>
 
-  <label>Token Akses (Personal Access Token)</label>
-  <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxx" required>
-  <small><a href="https://github.com/settings/tokens/new?scopes=repo&description=deploy-tool" target="_blank">Buat token baru (centang repo)</a> – token disimpan aman di HP ini saja.</small>
+  <label>Token Akses (PAT) <small><a href="https://github.com/settings/tokens/new?scopes=repo&description=deploy-tool" target="_blank">Buat token</a></small></label>
+  <input type="password" id="token" placeholder="ghp_xxxx" required>
 
-  <label>Kode dari Chat AI (tempel di sini)</label>
-  <textarea id="code" rows="10" placeholder="<html>... atau kode apa saja ..."></textarea>
+  <div class="mode-selector">
+    <label>
+      <input type="radio" name="mode" value="single" checked onchange="toggleMode()"> 📄 Single File
+    </label>
+    <label>
+      <input type="radio" name="mode" value="zip" onchange="toggleMode()"> 📦 Upload ZIP
+    </label>
+  </div>
+
+  <!-- Mode Single File -->
+  <div id="single-mode">
+    <label>Kode (HTML/CSS/JS)</label>
+    <textarea id="code" rows="10" placeholder="<html>... atau kode apa saja ..."></textarea>
+  </div>
+
+  <!-- Mode ZIP -->
+  <div id="zip-mode" class="hidden">
+    <label>Pilih file ZIP</label>
+    <input type="file" id="zipFile" accept=".zip">
+  </div>
 
   <button onclick="deploy()">⚡ Deploy Sekarang</button>
+  <div id="progress"></div>
   <div id="status"></div>
 
   <script>
-    // Simpan token, username, repo di localStorage biar gak perlu isi lagi
+    // Simpan data ke localStorage
     const storageKey = 'deployer_gh';
     window.onload = () => {
       const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
       if (saved.username) document.getElementById('username').value = saved.username;
       if (saved.repo) document.getElementById('repo').value = saved.repo;
       if (saved.token) document.getElementById('token').value = saved.token;
+      toggleMode();
     };
 
     function saveToStorage() {
@@ -54,24 +82,95 @@
       localStorage.setItem(storageKey, JSON.stringify(data));
     }
 
+    function toggleMode() {
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      document.getElementById('single-mode').classList.toggle('hidden', mode !== 'single');
+      document.getElementById('zip-mode').classList.toggle('hidden', mode !== 'zip');
+    }
+
+    function setStatus(msg, className) {
+      const statusDiv = document.getElementById('status');
+      statusDiv.textContent = msg;
+      statusDiv.className = className || '';
+    }
+
+    function setProgress(text) {
+      document.getElementById('progress').textContent = text;
+    }
+
+    // Encode string ke base64 (UTF-8 aman)
+    function toBase64(str) {
+      const bytes = new TextEncoder().encode(str);
+      const binString = Array.from(bytes, byte => String.fromCharCode(byte)).join('');
+      return btoa(binString);
+    }
+
+    // Upload satu file ke GitHub (dengan cek SHA jika overwrite)
+    async function uploadFile(owner, repo, path, content, token, branch = 'main') {
+      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+      const headers = {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      };
+
+      // Cek apakah file sudah ada
+      let sha = null;
+      try {
+        const getRes = await fetch(apiUrl, { headers });
+        if (getRes.ok) {
+          const data = await getRes.json();
+          sha = data.sha;
+        } else if (getRes.status !== 404) {
+          throw new Error(`Gagal cek ${path}: ${getRes.status}`);
+        }
+      } catch (err) {
+        throw new Error(`Error GET ${path}: ${err.message}`);
+      }
+
+      const body = {
+        message: `Deploy ${path} from AI Chat (HP)`,
+        content: toBase64(content),
+        branch: branch
+      };
+      if (sha) body.sha = sha;
+
+      const putRes = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!putRes.ok) {
+        const err = await putRes.json().catch(() => ({}));
+        throw new Error(`Upload ${path} gagal: ${err.message || putRes.statusText}`);
+      }
+      return putRes.json();
+    }
+
     async function deploy() {
       const username = document.getElementById('username').value.trim();
       const repo = document.getElementById('repo').value.trim();
       const token = document.getElementById('token').value.trim();
-      const code = document.getElementById('code').value;
+      const mode = document.querySelector('input[name="mode"]:checked').value;
 
-      if (!username || !repo || !token || !code) {
-        setStatus('Semua field harus diisi.', 'error');
+      if (!username || !repo || !token) {
+        setStatus('Isi username, repo, dan token terlebih dahulu.', 'error');
         return;
       }
-
       saveToStorage();
-      setStatus('⏳ Sedang mengupload...', '');
 
-      // Bungkus kode dengan metadata HTML kalau bukan HTML utuh
-      let finalHTML = code;
-      if (!code.trim().startsWith('<!DOCTYPE html>') && !code.trim().startsWith('<html')) {
-        finalHTML = `<!DOCTYPE html>
+      setStatus('', '');
+      setProgress('');
+
+      try {
+        if (mode === 'single') {
+          // --- MODE SINGLE FILE ---
+          const code = document.getElementById('code').value;
+          if (!code.trim()) throw new Error('Kode kosong!');
+
+          let finalHTML = code;
+          if (!code.trim().startsWith('<!DOCTYPE html>') && !code.trim().startsWith('<html')) {
+            finalHTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -85,72 +184,62 @@
 ${code}
 </body>
 </html>`;
-      }
+          }
 
-      const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/index.html`;
-      const headers = {
-        'Authorization': `token ${token}`,
-        'Accept': 'application/vnd.github.v3+json'
-      };
-
-      // Cek apakah file index.html sudah ada (untuk dapetin SHA jika update)
-      let sha = null;
-      try {
-        const getRes = await fetch(apiUrl, { headers });
-        if (getRes.ok) {
-          const data = await getRes.json();
-          sha = data.sha;
-        } else if (getRes.status !== 404) {
-          throw new Error(`Gagal cek file: ${getRes.status} ${await getRes.text()}`);
-        }
-      } catch (err) {
-        setStatus(`❌ Error: ${err.message}`, 'error');
-        return;
-      }
-
-      // Encode ke base64
-      const encoder = new TextEncoder();
-      const bytes = encoder.encode(finalHTML);
-      const base64 = btoa(String.fromCharCode(...bytes));
-
-      const body = {
-        message: 'Deploy from AI chat (HP)',
-        content: base64,
-        branch: 'main'  // ganti 'master' jika perlu
-      };
-      if (sha) body.sha = sha;
-
-      try {
-        const putRes = await fetch(apiUrl, {
-          method: 'PUT',
-          headers: {
-            ...headers,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(body)
-        });
-        if (putRes.ok) {
-          const result = await putRes.json();
+          setProgress('Mengupload index.html...');
+          await uploadFile(username, repo, 'index.html', finalHTML, token);
+          setProgress('');
           const siteUrl = `https://${username}.github.io/${repo}/`;
-          setStatus(
-            `✅ Sukses! File terupload.\n` +
-            `🌐 Situs kamu (jika GitHub Pages aktif): ${siteUrl}\n` +
-            `📄 Commit: ${result.commit.html_url}`,
-            'success'
-          );
-        } else {
-          const err = await putRes.json();
-          throw new Error(err.message || putRes.statusText);
+          setStatus(`✅ Sukses! File terupload.\n🌐 Situs: ${siteUrl}`, 'success');
+
+        } else if (mode === 'zip') {
+          // --- MODE ZIP ---
+          const fileInput = document.getElementById('zipFile');
+          if (!fileInput.files || fileInput.files.length === 0) {
+            throw new Error('Pilih file ZIP terlebih dahulu.');
+          }
+
+          const zipFile = fileInput.files[0];
+          setProgress('Membaca ZIP...');
+          const zip = await JSZip.loadAsync(zipFile);
+
+          const files = [];
+          zip.forEach((relativePath, file) => {
+            if (!file.dir) {
+              files.push({ path: relativePath, contentPromise: file.async('string') });
+            }
+          });
+
+          if (files.length === 0) throw new Error('ZIP kosong atau hanya berisi folder.');
+
+          setProgress(`Ditemukan ${files.length} file. Mulai upload...`);
+          let uploaded = 0;
+          const errors = [];
+
+          for (const file of files) {
+            try {
+              const content = await file.contentPromise;
+              setProgress(`Upload ${file.path} (${++uploaded}/${files.length})...`);
+              await uploadFile(username, repo, file.path, content, token);
+            } catch (err) {
+              errors.push(`❌ ${file.path}: ${err.message}`);
+            }
+          }
+
+          setProgress('');
+          if (errors.length > 0) {
+            setStatus(
+              `⚠️ Upload selesai dengan ${errors.length} error:\n` + errors.join('\n'),
+              'error'
+            );
+          } else {
+            setStatus(`✅ Semua ${files.length} file berhasil diupload ke ${username}/${repo}!`, 'success');
+          }
         }
       } catch (err) {
-        setStatus(`❌ Gagal upload: ${err.message}`, 'error');
+        setProgress('');
+        setStatus(`❌ Error: ${err.message}`, 'error');
       }
-    }
-
-    function setStatus(msg, className) {
-      const statusDiv = document.getElementById('status');
-      statusDiv.textContent = msg;
-      statusDiv.className = className;
     }
   </script>
 </body>
