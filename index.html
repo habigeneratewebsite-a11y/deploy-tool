@@ -149,6 +149,26 @@
     }
     .guide summary { font-weight: bold; color: #b388ff; cursor: pointer; }
     select option { background: #1e1e2f; color: white; }
+    .credential-manager {
+      display: flex; gap: 0.5rem; align-items: center; margin-top: 0.5rem;
+    }
+    .credential-manager select, .credential-manager input, .credential-manager button {
+      margin-top: 0; flex: 1;
+    }
+    .inline-btn {
+      padding: 0.6rem 1rem;
+      background: #536dfe;
+      color: white; border: none; border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .rename-row {
+      display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem;
+    }
+    .rename-row input { margin-top: 0; }
+    .small-status {
+      font-size: 0.9rem; margin-top: 0.5rem; padding: 0.5rem; border-radius: 8px;
+    }
   </style>
 </head>
 <body>
@@ -166,13 +186,22 @@
       <button class="tab-btn" onclick="switchTab('rename')">✏️ Rename</button>
     </div>
 
-    <!-- Credentials -->
+    <!-- Credentials dengan manajemen profil -->
     <label>🔑 Username GitHub</label>
     <input type="text" id="username" placeholder="username kamu">
     <label>📁 Repository Tujuan</label>
     <input type="text" id="repo" placeholder="nama-repo">
-    <label>🪙 Token Akses (PAT) <small><a href="https://github.com/settings/tokens/new?scopes=repo,delete_repo&description=HABI+STUDIO" target="_blank" style="color:#7c4dff;">Buat token (centang repo & delete_repo)</a></small></label>
+    <label>🪙 Token Akses (PAT)</label>
     <input type="password" id="token" placeholder="ghp_xxxx">
+
+    <div class="credential-manager">
+      <button onclick="saveProfile()" class="inline-btn">💾 Simpan Profil</button>
+      <select id="profileSelect" onchange="loadProfile()">
+        <option value="">-- Load Profil --</option>
+      </select>
+      <button onclick="deleteProfile()" class="inline-btn" style="background:#e53935;">🗑️ Hapus</button>
+    </div>
+
     <button onclick="loadRepoTree()" style="margin-top:0.5rem; width:auto; padding:0.4rem 1rem; background:#536dfe; color:white; border:none; border-radius:8px;">🔄 Muat Struktur Repo</button>
 
     <!-- Tab Single File -->
@@ -214,15 +243,21 @@
       <button class="primary danger-btn" onclick="deleteRepoInteractive()">💣 Hapus Repository Ini</button>
     </div>
 
-    <!-- Tab Rename -->
+    <!-- Tab Rename (REVISI TOTAL) -->
     <div id="tab-rename" class="tab-content">
       <h3>✏️ Rename File / Folder</h3>
-      <label>Pilih file atau folder</label>
-      <select id="renameSourceSelect"><option value="">-- pilih --</option></select>
-      <label>Nama baru (path lengkap baru, misal: app/api/baru.js)</label>
-      <input type="text" id="renameNewPath" placeholder="app/api/baru.js">
+      <label>Pilih Folder</label>
+      <input type="text" id="renameFolderInput" list="renameFolderList" placeholder="Cari atau pilih folder..." onchange="onRenameFolderSelected()">
+      <datalist id="renameFolderList"></datalist>
+
+      <label>Pilih File</label>
+      <input type="text" id="renameFileInput" list="renameFileList" placeholder="Cari atau pilih file..." onchange="onRenameFileSelected()">
+      <datalist id="renameFileList"></datalist>
+
+      <label>Nama Baru</label>
+      <input type="text" id="renameNewPath" placeholder="Path baru akan terisi otomatis">
       <button class="primary" onclick="executeRename()">✏️ Rename</button>
-      <div id="renameStatus" style="margin-top:0.5rem; font-size:0.9rem;"></div>
+      <div id="renameStatus" class="small-status" style="margin-top:0.5rem;"></div>
     </div>
 
     <!-- Status Global -->
@@ -257,7 +292,7 @@
     </details>
     <details>
       <summary>✏️ Rename File / Folder</summary>
-      <p>Ganti nama file atau folder. Pilih item dari dropdown (file atau folder), masukkan path baru yang diinginkan, lalu klik Rename. Untuk folder, seluruh isinya akan dipindahkan ke lokasi baru. Fitur ini bekerja dengan membuat file baru di path baru dan menghapus yang lama.</p>
+      <p>Ganti nama file atau folder. Gunakan input "Pilih Folder" atau "Pilih File" untuk mencari dan memilih item yang akan di-rename. Setelah dipilih, field <b>Nama Baru</b> otomatis terisi path lama, tinggal edit sesuai keinginan. Klik <b>Rename</b> dan konfirmasi. Proses akan memindahkan file atau folder ke path baru.</p>
     </details>
     <details>
       <summary>🌍 Siapa yang Bisa Memakai Tool Ini?</summary>
@@ -287,30 +322,72 @@
 
   <script>
     // ==================== GLOBAL ====================
-    const storageKey = 'habistudio_deployer3';
-    let currentTab = 'single';
-    let repoTree = []; // {path, type, sha?} (blob/tree)
+    const storageKey = 'habistudio_profiles'; // untuk menyimpan array profil
+    let repoTree = []; // {path, type, sha?}
     let selectedDeleteFolder = '';
 
     window.onload = () => {
-      loadCredentials();
+      loadProfileList();
       generateParticles();
       switchTab('single');
     };
 
-    function loadCredentials() {
-      const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
-      if (saved.username) document.getElementById('username').value = saved.username;
-      if (saved.repo) document.getElementById('repo').value = saved.repo;
-      if (saved.token) document.getElementById('token').value = saved.token;
+    // ==================== MANAJEMEN PROFIL ====================
+    function getProfiles() {
+      return JSON.parse(localStorage.getItem(storageKey) || '[]');
     }
 
-    function saveCredentials() {
-      localStorage.setItem(storageKey, JSON.stringify({
-        username: document.getElementById('username').value.trim(),
-        repo: document.getElementById('repo').value.trim(),
-        token: document.getElementById('token').value.trim()
-      }));
+    function saveProfiles(profiles) {
+      localStorage.setItem(storageKey, JSON.stringify(profiles));
+    }
+
+    function loadProfileList() {
+      const profiles = getProfiles();
+      const select = document.getElementById('profileSelect');
+      select.innerHTML = '<option value="">-- Load Profil --</option>';
+      profiles.forEach((p, i) => {
+        select.innerHTML += `<option value="${i}">${p.name} (${p.username}/${p.repo})</option>`;
+      });
+    }
+
+    function saveProfile() {
+      const username = document.getElementById('username').value.trim();
+      const repo = document.getElementById('repo').value.trim();
+      const token = document.getElementById('token').value.trim();
+      if (!username || !repo || !token) {
+        alert('Isi semua data kredensial terlebih dahulu.');
+        return;
+      }
+      const name = prompt('Nama profil (misal: Akun Utama, Akun Kedua):');
+      if (!name) return;
+      const profiles = getProfiles();
+      profiles.push({ name, username, repo, token });
+      saveProfiles(profiles);
+      loadProfileList();
+      alert('Profil berhasil disimpan!');
+    }
+
+    function loadProfile() {
+      const index = document.getElementById('profileSelect').value;
+      if (index === '') return;
+      const profiles = getProfiles();
+      const p = profiles[parseInt(index)];
+      document.getElementById('username').value = p.username;
+      document.getElementById('repo').value = p.repo;
+      document.getElementById('token').value = p.token;
+    }
+
+    function deleteProfile() {
+      const index = document.getElementById('profileSelect').value;
+      if (index === '') {
+        alert('Pilih profil yang akan dihapus.');
+        return;
+      }
+      const profiles = getProfiles();
+      profiles.splice(parseInt(index), 1);
+      saveProfiles(profiles);
+      loadProfileList();
+      alert('Profil dihapus.');
     }
 
     function getCredentials() {
@@ -321,6 +398,7 @@
       };
     }
 
+    // ==================== UI HELPERS ====================
     function setGlobalStatus(msg, type) {
       const div = document.getElementById('globalStatus');
       div.textContent = msg;
@@ -351,7 +429,6 @@
       });
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       document.getElementById(`tab-${tab}`).classList.add('active');
-      currentTab = tab;
     }
 
     // ==================== GITHUB API HELPERS ====================
@@ -432,7 +509,6 @@
         alert('Isi username, repo, dan token terlebih dahulu.');
         return;
       }
-      saveCredentials();
       try {
         setGlobalStatus('Memuat struktur repo...', '');
         const tree = await fetchRepoTree(username, repo, token);
@@ -454,7 +530,6 @@
       }
       const folders = repoTree.filter(item => item.type === 'tree');
       const files = repoTree.filter(item => item.type === 'blob');
-
       let html = '<div><strong>📁 Folder:</strong></div>';
       if (folders.length === 0) html += '<div style="opacity:0.7; margin-left:10px;">(tidak ada)</div>';
       else folders.forEach(f => {
@@ -463,7 +538,6 @@
           <button onclick="selectFolderToDelete('${f.path}')">🗑️ Pilih untuk hapus</button>
         </div>`;
       });
-
       html += '<div style="margin-top:0.8rem;"><strong>📄 File:</strong></div>';
       if (files.length === 0) html += '<div style="opacity:0.7; margin-left:10px;">(tidak ada)</div>';
       else files.forEach(file => {
@@ -473,14 +547,12 @@
           <button onclick="deleteSingleFileInteractive('${file.path}')">🗑️</button>
         </div>`;
       });
-
       container.innerHTML = html;
     }
 
     function populateAllSelects() {
       const folders = repoTree.filter(item => item.type === 'tree').map(item => item.path);
       const files = repoTree.filter(item => item.type === 'blob').map(item => item.path);
-      const allItems = [...folders, ...files];
 
       // Single target folder
       const singleSelect = document.getElementById('singleTargetFolder');
@@ -490,11 +562,109 @@
       const editorSelect = document.getElementById('editorFileSelect');
       editorSelect.innerHTML = '<option value="">-- pilih file --</option>' + files.map(f => `<option value="${f}">${f}</option>`).join('');
 
-      // Rename source select (file & folder)
-      const renameSelect = document.getElementById('renameSourceSelect');
-      renameSelect.innerHTML = '<option value="">-- pilih file/folder --</option>' +
-        folders.map(f => `<option value="${f}">📁 ${f}</option>`).join('') +
-        files.map(f => `<option value="${f}">📄 ${f}</option>`).join('');
+      // Rename datalists
+      const folderList = document.getElementById('renameFolderList');
+      folderList.innerHTML = folders.map(f => `<option value="${f}">`).join('');
+      const fileList = document.getElementById('renameFileList');
+      fileList.innerHTML = files.map(f => `<option value="${f}">`).join('');
+    }
+
+    // ==================== RENAME FUNCTIONS ====================
+    function onRenameFolderSelected() {
+      const val = document.getElementById('renameFolderInput').value.trim();
+      if (val) {
+        document.getElementById('renameNewPath').value = val;
+        document.getElementById('renameFileInput').value = ''; // reset file input
+      }
+    }
+
+    function onRenameFileSelected() {
+      const val = document.getElementById('renameFileInput').value.trim();
+      if (val) {
+        document.getElementById('renameNewPath').value = val;
+        document.getElementById('renameFolderInput').value = ''; // reset folder input
+      }
+    }
+
+    async function executeRename() {
+      const { username, repo, token } = getCredentials();
+      const newPath = document.getElementById('renameNewPath').value.trim();
+      const folderVal = document.getElementById('renameFolderInput').value.trim();
+      const fileVal = document.getElementById('renameFileInput').value.trim();
+
+      let oldPath = '';
+      let isFolder = false;
+      let isFile = false;
+
+      if (folderVal) {
+        oldPath = folderVal;
+        isFolder = true;
+      } else if (fileVal) {
+        oldPath = fileVal;
+        isFile = true;
+      }
+
+      if (!username || !repo || !token) { alert('Isi data GitHub.'); return; }
+      if (!oldPath) { alert('Pilih folder atau file yang akan di-rename.'); return; }
+      if (!newPath) { alert('Masukkan path baru.'); return; }
+      if (oldPath === newPath) { alert('Nama baru sama dengan nama lama.'); return; }
+
+      showModal(`Rename <b>${oldPath}</b> menjadi <b>${newPath}</b>?`, async () => {
+        const statusDiv = document.getElementById('renameStatus');
+        try {
+          statusDiv.textContent = 'Memproses...';
+          statusDiv.style.background = '#e0e0e0';
+          statusDiv.style.color = '#333';
+
+          if (isFile) {
+            const data = await githubGetContent(username, repo, oldPath, token);
+            if (!data.content || data.encoding !== 'base64') throw new Error('Bukan file teks.');
+            const content = atob(data.content);
+            await githubUpload(username, repo, newPath, content, token);
+            await githubDeleteFile(username, repo, oldPath, data.sha, token);
+            statusDiv.textContent = `✅ File berhasil di-rename menjadi ${newPath}.`;
+            statusDiv.style.background = '#e6ffec';
+            statusDiv.style.color = '#1a7f37';
+          } else if (isFolder) {
+            const tree = await fetchRepoTree(username, repo, token);
+            const filesInFolder = tree.filter(item => item.type === 'blob' && item.path.startsWith(oldPath + '/'));
+            if (filesInFolder.length === 0) {
+              // Buat placeholder agar folder baru muncul, lalu hapus
+              const placeholderPath = newPath + '/.gitkeep';
+              await githubUpload(username, repo, placeholderPath, '', token);
+              const phData = await githubGetContent(username, repo, placeholderPath, token);
+              await githubDeleteFile(username, repo, placeholderPath, phData.sha, token);
+              statusDiv.textContent = `✅ Folder kosong di-rename (struktur diperbarui).`;
+              statusDiv.style.background = '#e6ffec';
+              statusDiv.style.color = '#1a7f37';
+            } else {
+              let done = 0;
+              for (const file of filesInFolder) {
+                const newFilePath = file.path.replace(oldPath, newPath);
+                const fileData = await githubGetContent(username, repo, file.path, token);
+                if (!fileData.content || fileData.encoding !== 'base64') continue;
+                const content = atob(fileData.content);
+                await githubUpload(username, repo, newFilePath, content, token);
+                await githubDeleteFile(username, repo, file.path, fileData.sha, token);
+                done++;
+                statusDiv.textContent = `Memindahkan ${done}/${filesInFolder.length}...`;
+              }
+              statusDiv.textContent = `✅ Folder berhasil di-rename: ${done} file dipindahkan.`;
+              statusDiv.style.background = '#e6ffec';
+              statusDiv.style.color = '#1a7f37';
+            }
+          }
+          // Reset fields
+          document.getElementById('renameFolderInput').value = '';
+          document.getElementById('renameFileInput').value = '';
+          document.getElementById('renameNewPath').value = '';
+          loadRepoTree();
+        } catch (e) {
+          statusDiv.textContent = `❌ Gagal: ${e.message}`;
+          statusDiv.style.background = '#ffebe9';
+          statusDiv.style.color = '#cf222e';
+        }
+      });
     }
 
     // ==================== SINGLE UPLOAD ====================
@@ -506,7 +676,6 @@
       if (!username || !repo || !token) { alert('Isi data GitHub.'); return; }
       if (!fileName) { alert('Nama file wajib diisi.'); return; }
       if (!code.trim()) { alert('Kode kosong.'); return; }
-      saveCredentials();
       const fullPath = folder ? `${folder}/${fileName}` : fileName;
       let finalCode = code;
       if (fileName.endsWith('.html') && !code.trim().startsWith('<!DOCTYPE html>') && !code.trim().startsWith('<html')) {
@@ -530,7 +699,6 @@
         alert('Isi semua data dan pilih file ZIP.');
         return;
       }
-      saveCredentials();
       const zipFile = fileInput.files[0];
       try {
         setGlobalStatus('📦 Membaca ZIP...', '');
@@ -579,7 +747,6 @@
       if (!filePath) { alert('Pilih file yang akan diupdate.'); return; }
       if (!code.trim()) { alert('Kode kosong.'); return; }
       if (!username || !repo || !token) { alert('Isi data GitHub.'); return; }
-      saveCredentials();
       showModal(`Update file <b>${filePath}</b>?`, async () => {
         try {
           setGlobalStatus(`Mengupload ${filePath}...`, '');
@@ -692,7 +859,6 @@
     async function deleteRepoInteractive() {
       const { username, repo, token } = getCredentials();
       if (!username || !repo || !token) { alert('Isi data GitHub.'); return; }
-      saveCredentials();
       showModal(`⚠️⚠️ HAPUS PERMANEN REPO <b>${username}/${repo}</b>? Semua akan hilang.`, async () => {
         try {
           const resCheck = await fetch(`https://api.github.com/repos/${username}/${repo}`, {
@@ -719,75 +885,6 @@
           }
         } catch (e) {
           setGlobalStatus(`❌ Gagal hapus repo: ${e.message}`, 'error');
-        }
-      });
-    }
-
-    // ==================== RENAME ====================
-    async function executeRename() {
-      const { username, repo, token } = getCredentials();
-      const oldPath = document.getElementById('renameSourceSelect').value;
-      const newPath = document.getElementById('renameNewPath').value.trim();
-      if (!username || !repo || !token) { alert('Isi data GitHub.'); return; }
-      if (!oldPath) { alert('Pilih file atau folder yang akan di-rename.'); return; }
-      if (!newPath) { alert('Masukkan nama/path baru.'); return; }
-      if (oldPath === newPath) { alert('Nama baru sama dengan nama lama.'); return; }
-      saveCredentials();
-
-      const isFolder = repoTree.some(item => item.type === 'tree' && item.path === oldPath);
-      const isFile = repoTree.some(item => item.type === 'blob' && item.path === oldPath);
-
-      showModal(`Rename <b>${oldPath}</b> menjadi <b>${newPath}</b>?`, async () => {
-        try {
-          if (isFile) {
-            // Ambil konten file lama, upload ke path baru, hapus path lama
-            const data = await githubGetContent(username, repo, oldPath, token);
-            if (!data.content || data.encoding !== 'base64') throw new Error('Bukan file teks.');
-            const content = atob(data.content);
-            await githubUpload(username, repo, newPath, content, token);
-            await githubDeleteFile(username, repo, oldPath, data.sha, token);
-            setGlobalStatus(`File berhasil di-rename menjadi ${newPath}.`, 'success');
-          } else if (isFolder) {
-            // Rename folder: pindahkan semua file di dalamnya ke path baru
-            const tree = await fetchRepoTree(username, repo, token);
-            const filesInFolder = tree.filter(item => item.type === 'blob' && item.path.startsWith(oldPath + '/'));
-            if (filesInFolder.length === 0) {
-              // folder kosong, kita bisa buat file placeholder lalu hapus? GitHub tidak bisa rename folder kosong secara langsung.
-              // Alternatif: buat file sementara, hapus folder lama, hapus file sementara.
-              // Untuk folder kosong, kita bisa hapus folder dengan cara menghapus file .gitkeep jika ada, atau buat file baru dan hapus lagi.
-              // Di sini kita buat file .gitkeep di folder baru, hapus folder lama.
-              const placeholderPath = newPath + '/.gitkeep';
-              await githubUpload(username, repo, placeholderPath, '', token);
-              // Ambil sha dari file .gitkeep yang baru
-              const placeholderData = await githubGetContent(username, repo, placeholderPath, token);
-              await githubDeleteFile(username, repo, placeholderPath, placeholderData.sha, token);
-              // Folder lama otomatis hilang karena tidak ada file lagi? Sebenarnya folder di Git hanya representasi, jika tidak ada file di dalamnya, folder tidak muncul. Kita tidak perlu menghapus folder secara eksplisit.
-              // Tapi jika ada .gitkeep, kita sudah hapus. Folder baru akan tetap ada karena ada .gitkeep yang sudah dihapus? Tidak, setelah dihapus folder hilang. Lebih baik biarkan saja: pengguna bisa membuat file di folder baru nanti.
-              // Sebenarnya untuk folder kosong, cukup tidak ada aksi, karena Git tidak menyimpan folder kosong.
-              // Kita beri tahu bahwa rename folder kosong tidak memerlukan perubahan.
-              setGlobalStatus('Folder kosong, rename tidak memerlukan perubahan karena Git tidak melacak folder kosong.', 'info');
-            } else {
-              let done = 0;
-              for (const file of filesInFolder) {
-                const newFilePath = file.path.replace(oldPath, newPath);
-                const fileData = await githubGetContent(username, repo, file.path, token);
-                if (!fileData.content || fileData.encoding !== 'base64') continue;
-                const content = atob(fileData.content);
-                await githubUpload(username, repo, newFilePath, content, token);
-                await githubDeleteFile(username, repo, file.path, fileData.sha, token);
-                done++;
-                document.getElementById('renameStatus').textContent = `Memindahkan ${done}/${filesInFolder.length}...`;
-              }
-              setGlobalStatus(`Folder berhasil di-rename: ${done} file dipindahkan.`, 'success');
-            }
-          } else {
-            throw new Error('Item tidak ditemukan di struktur repo.');
-          }
-          loadRepoTree();
-          document.getElementById('renameNewPath').value = '';
-          document.getElementById('renameStatus').textContent = '';
-        } catch (e) {
-          setGlobalStatus(`Gagal rename: ${e.message}`, 'error');
         }
       });
     }
