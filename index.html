@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Chat → GitHub Deployer</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; max-width: 500px; margin: auto; }
+    label { display: block; margin-top: 0.8rem; font-weight: bold; }
+    input, textarea, button { width: 100%; padding: 0.6rem; margin-top: 0.3rem; font-size: 1rem; border-radius: 6px; border: 1px solid #ccc; }
+    button { background: #24292e; color: white; border: none; font-weight: bold; }
+    button:active { background: #444; }
+    #status { margin-top: 1rem; padding: 0.8rem; border-radius: 6px; white-space: pre-wrap; }
+    .success { background: #e6ffec; color: #1a7f37; }
+    .error { background: #ffebe9; color: #cf222e; }
+  </style>
+</head>
+<body>
+  <h2>🚀 AI Chat to GitHub</h2>
+  <p>Tempel kode dari chat AI, langsung deploy ke GitHub-mu.</p>
+
+  <label>Username GitHub</label>
+  <input type="text" id="username" placeholder="contoh: ahmaddanial" required>
+
+  <label>Nama Repository</label>
+  <input type="text" id="repo" placeholder="repo tujuan, misal my-site" required>
+
+  <label>Token Akses (Personal Access Token)</label>
+  <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxx" required>
+  <small><a href="https://github.com/settings/tokens/new?scopes=repo&description=deploy-tool" target="_blank">Buat token baru (centang repo)</a> – token disimpan aman di HP ini saja.</small>
+
+  <label>Kode dari Chat AI (tempel di sini)</label>
+  <textarea id="code" rows="10" placeholder="<html>... atau kode apa saja ..."></textarea>
+
+  <button onclick="deploy()">⚡ Deploy Sekarang</button>
+  <div id="status"></div>
+
+  <script>
+    // Simpan token, username, repo di localStorage biar gak perlu isi lagi
+    const storageKey = 'deployer_gh';
+    window.onload = () => {
+      const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      if (saved.username) document.getElementById('username').value = saved.username;
+      if (saved.repo) document.getElementById('repo').value = saved.repo;
+      if (saved.token) document.getElementById('token').value = saved.token;
+    };
+
+    function saveToStorage() {
+      const data = {
+        username: document.getElementById('username').value.trim(),
+        repo: document.getElementById('repo').value.trim(),
+        token: document.getElementById('token').value.trim()
+      };
+      localStorage.setItem(storageKey, JSON.stringify(data));
+    }
+
+    async function deploy() {
+      const username = document.getElementById('username').value.trim();
+      const repo = document.getElementById('repo').value.trim();
+      const token = document.getElementById('token').value.trim();
+      const code = document.getElementById('code').value;
+
+      if (!username || !repo || !token || !code) {
+        setStatus('Semua field harus diisi.', 'error');
+        return;
+      }
+
+      saveToStorage();
+      setStatus('⏳ Sedang mengupload...', '');
+
+      // Bungkus kode dengan metadata HTML kalau bukan HTML utuh
+      let finalHTML = code;
+      if (!code.trim().startsWith('<!DOCTYPE html>') && !code.trim().startsWith('<html')) {
+        finalHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI generated site">
+  <title>My AI Site</title>
+  <style>body{font-family:sans-serif;padding:2rem;max-width:700px;margin:auto;}</style>
+</head>
+<body>
+  <h1>My AI Site</h1>
+${code}
+</body>
+</html>`;
+      }
+
+      const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/index.html`;
+      const headers = {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      };
+
+      // Cek apakah file index.html sudah ada (untuk dapetin SHA jika update)
+      let sha = null;
+      try {
+        const getRes = await fetch(apiUrl, { headers });
+        if (getRes.ok) {
+          const data = await getRes.json();
+          sha = data.sha;
+        } else if (getRes.status !== 404) {
+          throw new Error(`Gagal cek file: ${getRes.status} ${await getRes.text()}`);
+        }
+      } catch (err) {
+        setStatus(`❌ Error: ${err.message}`, 'error');
+        return;
+      }
+
+      // Encode ke base64
+      const encoder = new TextEncoder();
+      const bytes = encoder.encode(finalHTML);
+      const base64 = btoa(String.fromCharCode(...bytes));
+
+      const body = {
+        message: 'Deploy from AI chat (HP)',
+        content: base64,
+        branch: 'main'  // ganti 'master' jika perlu
+      };
+      if (sha) body.sha = sha;
+
+      try {
+        const putRes = await fetch(apiUrl, {
+          method: 'PUT',
+          headers: {
+            ...headers,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+        if (putRes.ok) {
+          const result = await putRes.json();
+          const siteUrl = `https://${username}.github.io/${repo}/`;
+          setStatus(
+            `✅ Sukses! File terupload.\n` +
+            `🌐 Situs kamu (jika GitHub Pages aktif): ${siteUrl}\n` +
+            `📄 Commit: ${result.commit.html_url}`,
+            'success'
+          );
+        } else {
+          const err = await putRes.json();
+          throw new Error(err.message || putRes.statusText);
+        }
+      } catch (err) {
+        setStatus(`❌ Gagal upload: ${err.message}`, 'error');
+      }
+    }
+
+    function setStatus(msg, className) {
+      const statusDiv = document.getElementById('status');
+      statusDiv.textContent = msg;
+      statusDiv.className = className;
+    }
+  </script>
+</body>
+</html>
