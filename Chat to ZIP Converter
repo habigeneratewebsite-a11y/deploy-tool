@@ -1,0 +1,81 @@
+> **Buatkan website tool dengan spesifikasi berikut:**
+>
+> **Nama Tool:** Chat to ZIP Converter
+>
+> **Tampilan & UI:**
+> - Desain full UI modern, mewah, mirip tampilan GitHub Dark, dengan warna dominan ungu gelap (#0D1117, #161B22, #6D28D9) dan aksen cyan.
+> - Efek glassmorphism, bayangan halus, animasi transisi di semua elemen.
+> - **Responsif sempurna**, terutama untuk Android. Tidak boleh ada elemen bertumpuk, meleser, atau tidak presisi di layar kecil. Gunakan flexbox/grid dengan breakpoint mobile-first.
+> - Tombol dan input harus memiliki area tap yang cukup besar (min 48px), nyaman di jari.
+>
+> **Logo:**
+> - Buatkan logo keren dengan nama **"HABI STUDIO AI"** di bagian atas halaman.
+> - Logo harus punya animasi: teks gradasi ungu-cyan bergerak, dengan efek glow, dan ikon AI kecil di sampingnya (bisa menggunakan emoji ✨ atau bentuk hexagon animasi).
+> - Di bawah logo, tambahkan tautan ke tool lain berupa **logo/ikon "Github Tool Coding"** yang bisa diklik, dengan animasi hover (scale/glow). Bukan teks link biasa. Link tujuannya: `https://habigeneratewebsite-a11y.github.io/deploy-tool/`. Ikon bisa berupa logo kecil berbentuk segi enam atau ikon GitHub stylized. Tambahkan efek animasi pulse atau rotate pelan.
+>
+> **Fitur Utama (Layout 2 Kolom):**
+> - Halaman terdiri dari dua kolom utama (di desktop berdampingan, di mobile bertumpuk):
+>   1. **Kolom Kiri: "Tempel Percakapan Chat"** – Textarea besar dengan tinggi minimal 300px, monospace, berfungsi untuk menempelkan seluruh percakapan dari ChatGPT, Claude, DeepSeek, dll (campuran teks dan kode).
+>   2. **Kolom Kanan: "Isi Prompt / Instruksi"** – Input teks (textarea kecil atau input, 2-3 baris) untuk menuliskan instruksi tambahan (misal: "Buatkan ZIP dari kode di atas").
+> - Di bawahnya, tombol **"Proses & Buat ZIP"** besar, ungu gradient, dengan efek hover glow.
+>
+> **Catatan / Panel Petunjuk (sebelum proses):**
+> - Tepat di bawah dua kolom, tampilkan **panel catatan** yang berisi dua prompt siap salin:
+>   1. *"Buatkan saya file ZIP dari seluruh kode di atas. Pastikan struktur foldernya persis seperti yang tertera di penanda 📁, termasuk file-file yang ada di dalam folder habi_toolai. Gunakan Python untuk membuat ZIP dan berikan tautan unduhannya."*
+>   2. *"Tampilkan ulang seluruh kode proyek habi_toolai. Hanya blok kode dengan penanda 📁, tanpa narasi apa pun. Mulai dari file pertama sampai terakhir. Format: 📁 path/file lalu blok kode. Tidak boleh ada teks di luar blok kode."*
+> - Masing-masing prompt ditempatkan di kotak kecil dengan tombol **Salin** di sampingnya. Tombol salin harus memberikan **notifikasi toast/alert "Prompt berhasil disalin!"** (bukan tanpa respons). Animasi toast muncul dari atas.
+> - Panel catatan ini akan **otomatis hilang** saat pengguna menekan tombol "Proses & Buat ZIP" (diganti area progress/loading). Namun saat halaman di-refresh, panel catatan akan muncul kembali.
+> - Setelah tombol proses ditekan, panel catatan menghilang, muncul area loading (spinner animasi), lalu setelah selesai, tampilkan **jumlah file yang berhasil diekstrak**, dan **otomatis mengunduh file ZIP** ke perangkat.
+> - Setelah selesai, panel catatan tetap tersembunyi, tetapi di bawah muncul histori hasil generate.
+>
+> **Histori Generate:**
+> - Semua hasil generate disimpan di localStorage dalam array.
+> - Tampilkan daftar histori di bawah area utama, berupa kartu-kartu yang menunjukkan: tanggal, jumlah file, ukuran ZIP, dan tombol **Unduh Ulang**.
+> - Klik pada item histori akan membuka **preview struktur folder** (tree view) dari file yang ada di dalam ZIP tersebut, menggunakan elemen collapsible.
+> - Saat pertama kali dibuka, histori mungkin kosong, tampilkan teks "Belum ada riwayat".
+>
+> **Preview Struktur Folder:**
+> - Sebelum download, tampilkan preview struktur folder yang terdeteksi dari chat, dalam bentuk pohon (tree) dengan indentasi dan ikon folder/file.
+> - Preview ini muncul setelah parsing selesai, di atas tombol unduh, atau sebagai modal.
+> - Pastikan tampilannya rapi dan mudah dibaca.
+>
+> **Cara Kerja Parsing:**
+> - AI harus dapat memisahkan teks naratif dari blok kode.
+> - Blok kode ditandai dengan pola penanda di atasnya: `📁 path/ke/file.js` lalu diikuti blok kode (```). Bisa juga tanpa simbol 📁, yang penting ada path lengkap di atas blok kode.
+> - Parsing dilakukan dengan RegEx: cari baris yang mengandung karakteristik path (mengandung `/`, diakhiri ekstensi file), lalu ambil blok kode setelahnya.
+> - Kumpulkan semua file, lalu susun dalam struktur folder sesuai path.
+> - Generate ZIP menggunakan **JSZip** dan **FileSaver.js**.
+>
+> **Mode Tema:**
+> - Tombol toggle di pojok kanan atas untuk beralih antara Dark Mode (default) dan Light Mode. Simpan preferensi di localStorage.
+> - Light mode menggunakan warna putih bersih, teks gelap, namun tetap ada aksen ungu.
+> - Transisi tema berjalan mulus tanpa reload.
+>
+> **Bahasa:** Semua teks antarmuka, pesan, dan instruksi dalam **Bahasa Indonesia**.
+>
+> **Teknologi:**
+> - Satu file HTML tunggal berisi semua CSS (inline/Tailwind CDN) dan JavaScript.
+> - Library: JSZip (CDN), FileSaver (CDN). Jangan ada dependensi lain.
+> - Icon menggunakan Font Awesome CDN untuk tampilan ikon.
+>
+> **Output:** Kode lengkap dalam satu file `index.html` yang bisa langsung dijalankan di browser atau Replit.
+>
+> **Perbaikan Bug Spesifik:**
+> - Tombol salin prompt harus muncul toast/alert sukses, tidak boleh diam.
+> - Tampilan di Android tidak boleh berantakan; pastikan tidak ada overflow horizontal, input/textarea memiliki ukuran yang pas.
+> - Kolom di mobile harus ditumpuk dengan lebar penuh, margin aman.
+> - Animasi halus (fadeIn, slideDown) untuk panel catatan, histori, dll.
+> - Setelah klik "Proses & Buat ZIP", panel catatan menghilang, dan tidak muncul lagi sampai reload.
+>
+> **BONUS:** Di bagian bawah halaman, tambahkan **tutorial singkat** (bisa disembunyikan di accordion) berisi cara menggunakan alat ini:
+> 1. Tempel percakapan dari AI (ChatGPT, dll) ke kolom kiri.
+> 2. Isi instruksi di kolom kanan (opsional, bisa pakai prompt dari catatan).
+> 3. Klik "Proses & Buat ZIP".
+> 4. Tunggu proses, ZIP akan terunduh otomatis.
+> 5. Riwayat akan tersimpan dan bisa diunduh ulang.
+>
+> **Pastikan:**
+> - Tidak ada error JavaScript, handling null.
+> - ZIP yang dihasilkan mempertahankan struktur folder.
+> - Nama file ZIP: `kode-proyek-` + timestamp.
+> - Semua promise tertangani.
