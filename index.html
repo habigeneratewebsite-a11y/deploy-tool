@@ -3,400 +3,2175 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HABI STUDIO CODING</title>
+  <title>HABI STUDIO CODING .ZIP</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
-    /* ========== GLOBAL ========== */
+    :root {
+      --bg: #0f0c29;
+      --bg2: #302b63;
+      --bg3: #24243e;
+      --card-bg: rgba(20,20,40,0.85);
+      --text: #e0e0e0;
+      --accent: #7c4dff;
+      --accent2: #448aff;
+      --danger: #e53935;
+      --border: rgba(255,255,255,0.15);
+      --input-bg: rgba(0,0,0,0.4);
+      --modal-bg: linear-gradient(145deg, #1e1e2f, #2a2a40);
+    }
+    .light-theme {
+      --bg: #f5f5f5;
+      --bg2: #e0e0e0;
+      --bg3: #ffffff;
+      --card-bg: rgba(255,255,255,0.9);
+      --text: #222;
+      --accent: #6c3fd4;
+      --accent2: #3b6eff;
+      --danger: #e53935;
+      --border: rgba(0,0,0,0.15);
+      --input-bg: rgba(0,0,0,0.05);
+      --modal-bg: linear-gradient(145deg, #ffffff, #f0f0f0);
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #0f0c29;
-      color: #e0e0e0;
+      background: linear-gradient(135deg, var(--bg), var(--bg2), var(--bg3));
+      background-size: 400% 400%;
+      animation: gradientMove 15s ease infinite;
+      color: var(--text);
       min-height: 100vh;
       padding: 1rem;
       display: flex;
       flex-direction: column;
       align-items: center;
-      transition: background 0.3s, color 0.3s;
+      position: relative;
+      overflow-x: hidden;
     }
-    body.light {
-      background: #f5f5f5;
-      color: #222;
-    }
-    .particles {
-      position: fixed; top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none; z-index: 0;
-    }
+    .particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+    .particle { position: absolute; background: rgba(128,128,255,0.15); border-radius: 50%; animation: float linear infinite; opacity: 0.5; }
+    @keyframes float { 0% { transform: translateY(100vh) rotate(0deg); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; } }
+    @keyframes gradientMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
     .container {
       width: 100%; max-width: 550px;
-      background: rgba(20,20,40,0.9);
-      backdrop-filter: blur(20px);
-      border-radius: 24px;
-      padding: 1.5rem;
-      margin: 1rem 0;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-      position: relative;
-      z-index: 1;
+      background: var(--card-bg); backdrop-filter: blur(20px);
+      border-radius: 24px; padding: 1.5rem; margin: 1rem 0;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 60px rgba(100,100,255,0.15);
+      border: 1px solid var(--border);
+      position: relative; z-index: 1;
     }
-    body.light .container {
-      background: rgba(255,255,255,0.9);
-      color: #222;
+    .logo-text {
+      font-size: 2.2rem; font-weight: 900;
+      background: linear-gradient(135deg, #ff4e50, #f9d423, #00c6ff, #7c4dff);
+      background-size: 300% 300%;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: logoGradient 3s ease infinite, logoGlow 1.5s ease-in-out infinite alternate;
+      text-align: center; margin-bottom: 0.5rem;
     }
-
-    /* ========== LOGO SVG ========== */
-    .logo-svg {
-      display: block;
-      margin: 0 auto 0.5rem;
-      width: 180px;
-      animation: logoFloat 3s ease-in-out infinite;
+    @keyframes logoGradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    @keyframes logoGlow { from { filter: drop-shadow(0 0 5px #7c4dff); } to { filter: drop-shadow(0 0 20px #f9d423); } }
+    .login-area { text-align: center; margin: 0.8rem 0; }
+    .login-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: #24292e; color: white; border: none;
+      padding: 0.7rem 1.5rem; border-radius: 12px;
+      font-size: 1rem; font-weight: bold; cursor: pointer;
+      transition: background 0.3s;
     }
-    @keyframes logoFloat {
-      0%,100% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
+    .login-btn:hover { background: #1b1f23; }
+    .login-btn svg { width: 24px; height: 24px; }
+    .user-info {
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      background: rgba(255,255,255,0.05); padding: 0.5rem 1rem; border-radius: 12px;
+      margin-bottom: 0.5rem;
     }
-
-    /* ========== TABS ========== */
-    .tab-buttons { display: flex; gap: 0.3rem; margin: 1rem 0; flex-wrap: wrap; }
+    .user-info .avatar { width: 32px; height: 32px; border-radius: 50%; background: #7c4dff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; }
+    .shortcut-links { display: flex; gap: 0.5rem; margin: 0.8rem 0; flex-wrap: wrap; }
+    .shortcut-link {
+      flex: 1; min-width: 120px; display: flex; align-items: center; justify-content: center;
+      gap: 0.4rem; background: rgba(255,255,255,0.05); padding: 0.5rem 0.8rem;
+      border-radius: 12px; text-decoration: none; color: var(--text);
+      border: 1px solid var(--border); font-size: 0.85rem; cursor: pointer;
+    }
+    .tab-buttons { display: flex; gap: 0.4rem; margin: 1rem 0; flex-wrap: wrap; }
     .tab-btn {
-      flex: 1; min-width: 55px; padding: 0.6rem 0.3rem;
-      border: none; background: rgba(255,255,255,0.08);
-      color: #ccc; border-radius: 12px; font-weight: bold;
+      flex: 1; min-width: 55px; padding: 0.7rem 0.3rem;
+      border: none; background: rgba(255,255,255,0.1);
+      color: #ddd; border-radius: 12px; font-weight: bold;
       cursor: pointer; font-size: 0.75rem;
     }
-    .tab-btn.active {
-      background: linear-gradient(135deg, #7c4dff, #536dfe);
-      color: white;
-    }
+    .tab-btn.active { background: linear-gradient(135deg, #7c4dff, #536dfe); color: white; box-shadow: 0 4px 15px rgba(124,77,255,0.4); }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-
-    /* ========== FORM ========== */
+    label { display: block; margin-top: 1rem; font-weight: bold; color: var(--accent); }
     input, textarea, select {
       width: 100%; padding: 0.8rem; margin-top: 0.3rem;
-      border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
-      background: rgba(0,0,0,0.4); color: white; font-size: 1rem;
+      border-radius: 12px; border: 1px solid var(--border);
+      background: var(--input-bg); color: var(--text); font-size: 1rem;
     }
-    body.light input, body.light textarea, body.light select {
-      background: rgba(0,0,0,0.05);
-      color: #222;
-      border-color: #ccc;
-    }
+    input:focus, textarea:focus, select:focus { border-color: #7c4dff; box-shadow: 0 0 8px #7c4dff; outline: none; }
+    textarea { font-family: 'Courier New', monospace; resize: vertical; min-height: 120px; }
     button.primary {
       width: 100%; padding: 0.9rem;
       background: linear-gradient(135deg, #7c4dff, #448aff);
-      border: none; color: white; font-weight: bold;
-      border-radius: 16px; margin-top: 0.8rem; cursor: pointer;
+      border: none; color: white; font-weight: bold; font-size: 1rem;
+      border-radius: 16px; margin-top: 1rem; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(124,77,255,0.4);
     }
-
-    /* ========== MODAL ========== */
+    button.primary:active { transform: scale(0.97); }
+    .danger-btn { background: #e53935 !important; box-shadow: 0 4px 15px rgba(229,57,53,0.4) !important; }
     .modal-overlay {
-      position: fixed; top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7);
-      display: flex; justify-content: center; align-items: center;
-      z-index: 1000;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+      display: none; justify-content: center; align-items: center; z-index: 1000;
     }
     .modal {
-      background: #1e1e2f;
+      background: var(--modal-bg);
       padding: 2rem; border-radius: 20px;
-      max-width: 400px; width: 90%; text-align: center;
+      max-width: 420px; width: 90%;
+      border: 1px solid var(--border);
+      box-shadow: 0 0 40px rgba(124,77,255,0.3);
+      text-align: center;
     }
-
-    /* ========== REPO LIST ========== */
-    .repo-list-item {
-      display: flex; align-items: center; gap: 0.5rem;
-      padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .repo-name {
-      cursor: pointer;
-      flex: 1;
-      user-select: none;
-    }
-    .repo-name:hover { color: #7c4dff; }
-
-    /* ========== TOAST ========== */
+    .modal h3 { color: #c084fc; margin-bottom: 1rem; }
+    .modal button { margin: 0.5rem; padding: 0.8rem 2rem; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; }
+    .btn-cancel { background: rgba(255,255,255,0.1); color: white; }
+    .btn-confirm { background: #7c4dff; color: white; }
+    .file-browser { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 0.8rem; margin: 0.5rem 0; max-height: 250px; overflow-y: auto; }
+    .file-entry { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0.3rem; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem; }
+    .file-entry button { padding: 0.3rem 0.6rem; font-size: 0.8rem; margin-left: 0.3rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 6px; cursor: pointer; }
+    .repo-list-item { display: flex; align-items: center; gap: 0.3rem; padding: 0.35rem 0.2rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .repo-list-item input[type="checkbox"] { width: auto; margin: 0; flex-shrink: 0; }
+    .repo-list-item .repo-name { flex: 1; font-size: 0.9rem; word-break: normal; overflow-wrap: normal; }
+    .repo-list-item .copy-repo-btn { background: none; border: none; color: #888; cursor: pointer; font-size: 0.9rem; padding: 0 0.3rem; }
+    .protected-badge { background: #e53935; padding: 0.15rem 0.4rem; border-radius: 6px; font-size: 0.7rem; margin-left: 0.3rem; }
+    .history-item { padding: 0.3rem 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.85rem; display: flex; justify-content: space-between; }
     .toast {
-      position: fixed; bottom: 2rem; left: 50%;
-      transform: translateX(-50%);
-      padding: 1rem 2rem; border-radius: 30px;
-      background: #333; color: white;
-      z-index: 2000;
-      animation: slideUp 0.3s ease;
+      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+      padding: 0.9rem 1.8rem; border-radius: 30px; background: #333; color: white;
+      z-index: 2000; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: center;
+      max-width: 90%; font-size: 0.9rem; display: none;
+      animation: toastIn 0.3s ease;
     }
-    @keyframes slideUp {
-      from { bottom: 0; opacity: 0; }
-      to { bottom: 2rem; opacity: 1; }
+    .toast.success { background: #2e7d32; }
+    .toast.error { background: #c62828; }
+    .toast.info { background: #1565c0; }
+    @keyframes toastIn { from { bottom: 0; opacity: 0; } to { bottom: 2rem; opacity: 1; } }
+    .progress-bar {
+      width: 100%; background: rgba(255,255,255,0.1); border-radius: 10px;
+      height: 8px; margin-top: 0.5rem; overflow: hidden;
     }
-
-    /* ========== TOGGLE THEME ========== */
+    .progress-bar .fill {
+      height: 100%; background: #7c4dff; border-radius: 10px;
+      width: 0%; transition: width 0.2s;
+    }
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .3s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+    input:checked + .slider { background-color: #7c4dff; }
+    input:checked + .slider:before { transform: translateX(20px); }
+    footer { text-align: center; margin-top: 2rem; padding: 1rem; color: #8888aa; font-size: 0.9rem; border-top: 1px solid var(--border); width: 100%; }
+    .guide details { background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 10px; margin-bottom: 0.8rem; }
+    .guide summary { font-weight: bold; color: #b388ff; cursor: pointer; }
+    .inline-btn {
+      padding: 0.5rem 0.9rem; background: #536dfe; color: white;
+      border: none; border-radius: 8px; cursor: pointer; font-size: 0.85rem;
+    }
     .theme-toggle {
-      position: fixed; top: 1rem; right: 1rem;
-      background: rgba(255,255,255,0.1);
-      border: none; color: white; padding: 0.5rem 1rem;
-      border-radius: 20px; cursor: pointer; z-index: 10;
+      position: fixed; top: 1rem; right: 1rem; z-index: 500;
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 50%; width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1.2rem;
     }
   </style>
 </head>
 <body>
   <div class="particles" id="particles"></div>
 
-  <!-- Tombol Tema -->
-  <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+  <!-- Toggle Tema -->
+  <div class="theme-toggle" onclick="toggleTheme()" title="Ganti Tema">🌓</div>
 
   <div class="container">
-    <!-- Logo SVG HABI STUDIO CODING -->
-    <svg class="logo-svg" viewBox="0 0 200 50">
-      <defs>
-        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#ff4e50"/>
-          <stop offset="50%" stop-color="#f9d423"/>
-          <stop offset="100%" stop-color="#7c4dff"/>
-        </linearGradient>
-      </defs>
-      <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle"
-            fill="url(#grad)" font-size="24" font-weight="900" font-family="Segoe UI">
-        HABI STUDIO CODING
-      </text>
-    </svg>
+    <div class="logo-text">HABI STUDIO CODING</div>
 
-    <!-- Tombol Login -->
-    <div id="loginArea">
-      <button class="primary" onclick="openLoginModal()">
-        🔐 Login GitHub
+    <!-- Area Login / Info User -->
+    <div class="login-area" id="loginArea">
+      <button class="login-btn" onclick="openLoginModal()">
+        <svg viewBox="0 0 24 24" fill="white"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        Login GitHub
       </button>
+      <div class="user-info" id="userInfo" style="display:none;">
+        <div class="avatar" id="userAvatar">U</div>
+        <span id="userDisplayName">username</span>
+        <button class="inline-btn" onclick="openAccountManager()" style="font-size:0.8rem;">👥</button>
+        <button class="inline-btn" onclick="logoutUser()" style="font-size:0.8rem; background:#e53935;">Logout</button>
+      </div>
     </div>
-    <div id="mainArea" style="display:none;">
-      <!-- Tab Navigasi -->
-      <div class="tab-buttons">
-        <button class="tab-btn active" onclick="switchTab('single')">📄 Single</button>
-        <button class="tab-btn" onclick="switchTab('zip')">📦 ZIP</button>
-        <button class="tab-btn" onclick="switchTab('editor')">✏️ Editor</button>
-        <button class="tab-btn" onclick="switchTab('files')">📂 Files</button>
-        <button class="tab-btn" onclick="switchTab('rename')">✏️ Rename</button>
-        <button class="tab-btn" onclick="switchTab('create-repo')">➕ Buat Repo</button>
-        <button class="tab-btn" onclick="switchTab('list-repo')">📋 Daftar Repo</button>
-      </div>
 
-      <!-- Tab Single -->
-      <div id="tab-single" class="tab-content active">
-        <h3>📄 Single File Upload</h3>
-        <!-- Isi sesuai versi sebelumnya -->
-      </div>
-
-      <!-- Tab ZIP -->
-      <div id="tab-zip" class="tab-content">
-        <h3>📦 Upload ZIP</h3>
-        <input type="file" id="zipFile" accept=".zip">
-        <label><input type="checkbox" id="stripRoot" checked> Hapus folder root</label>
-        <button class="primary" onclick="deployZip()">📤 Upload ZIP & Deploy</button>
-        <div id="zipProgress" style="margin-top:0.5rem;"></div>
-      </div>
-
-      <!-- Tab Daftar Repo (contoh rapi) -->
-      <div id="tab-list-repo" class="tab-content">
-        <h3>📋 Daftar Repo</h3>
-        <button onclick="refreshRepoList()" class="primary" style="width:auto;">🔄 Refresh</button>
-        <div id="repoListContainer" style="max-height:300px; overflow-y:auto; margin:0.5rem 0;"></div>
-        <button class="primary danger-btn" onclick="deleteSelectedRepos()">🗑️ Hapus Terpilih</button>
-        <div id="deleteHistoryContainer" style="margin-top:1rem;"></div>
-      </div>
-
-      <!-- Status -->
-      <div id="globalStatus" style="margin-top:1rem;"></div>
+    <!-- Shortcut Links -->
+    <div class="shortcut-links">
+      <a href="https://github.com/habigeneratewebsite-a11y/deploy-tool/tree/main" target="_blank" class="shortcut-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub Channel
+      </a>
+      <a href="https://code-zipper-tool--linamayasari816.replit.app/chat-to-zip/" target="_blank" class="shortcut-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Chat to ZIP
+      </a>
     </div>
+
+    <!-- Tab Navigasi -->
+    <div class="tab-buttons" id="tabNav" style="display:none;">
+      <button class="tab-btn active" onclick="switchTab('single')">📄 Single</button>
+      <button class="tab-btn" onclick="switchTab('zip')">📦 ZIP</button>
+      <button class="tab-btn" onclick="switchTab('editor')">✏️ Editor</button>
+      <button class="tab-btn" onclick="switchTab('files')">📂 Files</button>
+      <button class="tab-btn" onclick="switchTab('rename')">✏️ Rename</button>
+      <button class="tab-btn" onclick="switchTab('create-repo')">➕ Buat Repo</button>
+      <button class="tab-btn" onclick="switchTab('list-repo')">📋 Daftar Repo</button>
+    </div>
+
+    <!-- Tab Contents (hanya struktur utama, fungsi akan ditambahkan di script) -->
+    <div id="tab-single" class="tab-content active">
+      <label>Folder Tujuan</label>
+      <select id="singleTargetFolder" onchange="onSingleFolderChange()"><option value="">(root)</option></select>
+      <label>Pilih File</label>
+      <select id="singleFileSelect" onchange="onSingleFileSelect()"><option value="">-- pilih file --</option></select>
+      <button onclick="loadSingleFileContent()" style="margin-top:0.3rem; background:#7c4dff;" class="inline-btn">📂 Muat File</button>
+      <label>Tempel Kode</label>
+      <textarea id="singleCode" placeholder="// Pilih file dan klik Muat File"></textarea>
+      <div style="display:flex; gap:0.3rem; margin-top:0.3rem;">
+        <input type="text" id="singleSearch" placeholder="Cari..." style="flex:1;">
+        <button onclick="searchInSingle()" class="inline-btn">🔍</button>
+        <button onclick="replaceInSingle()" class="inline-btn">🔄</button>
+      </div>
+      <button class="primary" onclick="deploySingle()">🚀 Upload File</button>
+      <div id="singleProgress" class="progress-bar" style="display:none;"><div class="fill" style="width:0%;"></div></div>
+    </div>
+
+    <div id="tab-zip" class="tab-content">
+      <label>Pilih file ZIP</label>
+      <input type="file" id="zipFile" accept=".zip">
+      <label style="display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem;">
+        <input type="checkbox" id="stripRoot" checked> Hapus folder root
+      </label>
+      <button class="primary" onclick="deployZip()">📤 Upload ZIP & Deploy</button>
+      <div id="zipProgress" class="progress-bar" style="display:none;"><div class="fill" style="width:0%;"></div></div>
+      <div id="zipStatus" style="margin-top:0.3rem; font-size:0.85rem;"></div>
+    </div>
+
+    <div id="tab-editor" class="tab-content">
+      <label>Pilih File untuk Diedit</label>
+      <select id="editorFileSelect"><option value="">-- pilih file --</option></select>
+      <button onclick="loadSelectedFileForEdit()" style="margin-top:0.3rem; background:#7c4dff;" class="inline-btn">📂 Muat File</button>
+      <label>Isi File</label>
+      <textarea id="editorCode" placeholder="// pilih file dan klik Muat File"></textarea>
+      <div id="editorStatus" style="margin-top:0.5rem; font-size:0.9rem;"></div>
+      <button class="primary" onclick="saveAndUploadEdit()">💾 Simpan & Upload</button>
+    </div>
+
+    <div id="tab-files" class="tab-content">
+      <h3>📂 File & Folder Browser</h3>
+      <div class="file-browser" id="fileBrowser">Klik "Muat Struktur" di bawah.</div>
+      <button onclick="loadRepoTree()" class="inline-btn" style="margin-top:0.3rem;">🔄 Muat Struktur</button>
+      <div id="manageStatus" style="margin-top:0.5rem; font-size:0.9rem;"></div>
+      <button class="primary" onclick="deleteAllFiles()" style="margin-top:0.5rem;">🧹 Hapus Semua File</button>
+      <button class="primary danger-btn" onclick="deleteFolderInteractive()">📁 Hapus Folder</button>
+      <button class="primary danger-btn" onclick="deleteRepoInteractive()">💣 Hapus Repository</button>
+    </div>
+
+    <div id="tab-rename" class="tab-content">
+      <h3>✏️ Rename File / Folder</h3>
+      <label>Pilih Folder</label>
+      <select id="renameFolderSelect" onchange="onRenameFolderSelect()"><option value="">-- pilih folder --</option></select>
+      <label>Pilih File</label>
+      <select id="renameFileSelect" onchange="onRenameFileSelect()"><option value="">-- pilih file --</option></select>
+      <label>Nama Baru</label>
+      <input type="text" id="renameNewPath" placeholder="path baru">
+      <button class="primary" onclick="executeRename()">✏️ Rename</button>
+      <div id="renameStatus" style="margin-top:0.5rem; font-size:0.9rem;"></div>
+    </div>
+
+    <div id="tab-create-repo" class="tab-content">
+      <h3>➕ Buat Repository Baru</h3>
+      <label>Nama repositori</label>
+      <input type="text" id="newRepoName" placeholder="nama-repo-baru">
+      <label>Visibilitas</label>
+      <select id="newRepoVisibility"><option value="public">Public</option><option value="private">Private</option></select>
+      <label style="display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem;">
+        <input type="checkbox" id="newRepoReadme" checked> Tambahkan README
+      </label>
+      <button class="primary" onclick="createRepo()">🚀 Buat Repositori</button>
+      <div id="createRepoResult" style="margin-top:1rem;"></div>
+    </div>
+
+    <div id="tab-list-repo" class="tab-content">
+      <div style="display:flex; gap:0.5rem; margin-bottom:0.3rem; align-items:center;">
+        <button onclick="refreshRepoList()" class="inline-btn">🔄 Refresh</button>
+        <span style="font-size:0.9rem;" id="repoCount">0 repo</span>
+      </div>
+      <p style="font-size:0.85rem; margin-bottom:0.5rem;">📋 Daftar Semua Repositori</p>
+      <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.3rem;">
+        <input type="checkbox" id="selectAllRepos" onchange="toggleAllRepos()"> 
+        <span style="font-size:0.9rem;">Pilih Semua</span>
+      </div>
+      <div id="repoListContainer" style="max-height: 350px; overflow-y: auto; margin-bottom: 0.5rem; background:rgba(0,0,0,0.2); border-radius:8px; padding:0.3rem;"></div>
+      <button class="primary danger-btn" onclick="deleteSelectedRepos()">🗑️ Hapus Repositori Terpilih</button>
+      <div style="margin-top: 1rem;">
+        <h4>📜 Riwayat Penghapusan</h4>
+        <div id="deleteHistoryContainer" style="max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 8px;">Belum ada penghapusan.</div>
+      </div>
+    </div>
+
+    <div id="globalStatus" style="margin-top:1rem; padding:0.8rem; border-radius:12px;"></div>
   </div>
 
-  <!-- Footer -->
-  <footer style="text-align:center; margin-top:2rem; opacity:0.7;">
-    <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;">
-      <a href="https://github.com/habigeneratewebsite-a11y/deploy-tool" target="_blank">GitHub</a>
-      <a href="https://code-zipper-tool--linamayasari816.replit.app/chat-to-zip/" target="_blank">Chat-to-ZIP</a>
-      <label>Mode Anti-Lag <input type="checkbox" id="antiLagToggle" checked onchange="toggleAntiLag()"></label>
-    </div>
-    Powered by <strong>HABI STUDIO AI</strong> — Melampaui Batas Kreativitas
-  </footer>
+  <!-- Panduan -->
+  <div class="container guide">
+    <h3>📘 Panduan Lengkap</h3>
+    <details><summary>🔐 Login GitHub</summary><p>Klik tombol Login GitHub, masukkan Username, Repository, dan Token akses. Klik Login & Simpan untuk mulai. Tool ini dibuat oleh <b>HABI STUDIO AI</b>.</p></details>
+    <details><summary>📄 Single Upload</summary><p>Pilih folder, pilih file, muat kode, edit lalu upload.</p></details>
+    <details><summary>📦 Upload ZIP</summary><p>Upload file ZIP, centang hapus root jika perlu. Progress akan tampil.</p></details>
+    <details><summary>✏️ Editor</summary><p>Edit file yang sudah ada langsung dari repo.</p></details>
+    <details><summary>📂 Files Browser</summary><p>Jelajah file/folder, download, hapus.</p></details>
+    <details><summary>✏️ Rename</summary><p>Ubah nama file atau folder.</p></details>
+    <details><summary>➕ Buat Repo</summary><p>Buat repository baru langsung dari tool.</p></details>
+    <details><summary>📋 Daftar Repo</summary><p>Lihat semua repository, centang untuk hapus massal. deploy-tool dilindungi.</p></details>
+    <details><summary>🌓 Tema</summary><p>Klik ikon bulan di pojok kanan atas untuk ganti tema putih/gelap.</p></details>
+  </div>
 
   <!-- Modal Login -->
-  <div id="loginModal" class="modal-overlay" style="display:none;">
-    <div class="modal">
-      <h3>🔐 Login GitHub</h3>
-      <p style="font-size:0.8rem; margin-bottom:1rem;">Masukkan Personal Access Token untuk mengakses tool ini.</p>
-      <input type="text" id="loginUsername" placeholder="Username GitHub">
-      <input type="text" id="loginRepo" placeholder="Repository default">
+  <div id="loginModal" class="modal-overlay">
+    <div class="modal" style="text-align:left;">
+      <div style="text-align:center; margin-bottom:1rem;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </div>
+      <label>🔑 Username GitHub</label>
+      <input type="text" id="loginUsername" placeholder="username kamu">
+      <label>📁 Repository Tujuan</label>
+      <input type="text" id="loginRepo" placeholder="nama-repo">
+      <label>🪙 Token Akses (PAT) <small><a href="https://github.com/settings/tokens/new?scopes=repo,delete_repo&description=HABI+STUDIO" target="_blank" style="color:#7c4dff;">Buat token</a></small></label>
       <input type="password" id="loginToken" placeholder="ghp_xxxx">
-      <small><a href="https://github.com/settings/tokens/new?scopes=repo,delete_repo" target="_blank">Buat token di sini</a></small>
-      <button class="primary" onclick="doLogin()" style="margin-top:1rem;">Login & Simpan</button>
-      <button onclick="closeLoginModal()" style="background:none; border:none; color:#aaa; margin-top:0.5rem;">Batal</button>
+      <button class="primary" onclick="loginAndSave()" style="margin-top:1rem;">Login & Simpan</button>
+      <button onclick="closeLoginModal()" class="btn-cancel" style="width:100%; margin-top:0.5rem;">Tutup</button>
+      <p style="font-size:0.75rem; margin-top:0.5rem; opacity:0.7;">Dibuat oleh HABI STUDIO AI</p>
     </div>
   </div>
 
   <!-- Toast -->
-  <div id="toast" class="toast" style="display:none;"></div>
+  <div id="toast" class="toast"></div>
+
+  <!-- Modal Konfirmasi -->
+  <div id="confirmModal" class="modal-overlay">
+    <div class="modal">
+      <h3>📝 HABI STUDIO NOTE</h3>
+      <p id="confirmMessage"></p>
+      <button class="btn-confirm" id="confirmOk">Ya</button>
+      <button class="btn-cancel" id="confirmCancel">Batal</button>
+    </div>
+  </div>
+
+  <footer>
+    Powered by <strong>HABI STUDIO AI</strong> — Melampaui Batas Kreativitas
+  </footer>
 
   <script>
-    // ========== GLOBAL STATE ==========
+    // ==================== GLOBAL STATE ====================
+    const storageKey = 'habistudio_profiles';
+    const currentUserKey = 'habistudio_current_user';
+    const themeKey = 'habistudio_theme';
+    const deletedHistoryKey = 'habistudio_deleted_history';
     let repoTree = [];
-    let loggedIn = false;
+    let selectedDeleteFolder = '';
 
+    // ==================== INIT ====================
     window.onload = () => {
-      const creds = JSON.parse(localStorage.getItem('habistudio_creds') || '{}');
-      if (creds.token) {
-        loggedIn = true;
-        document.getElementById('loginArea').style.display = 'none';
-        document.getElementById('mainArea').style.display = 'block';
-        switchTab('single');
-      }
+      loadTheme();
+      generateParticles();
+      checkLoginState();
     };
 
-    // ========== LOGIN ==========
+    // ==================== THEME ====================
+    function loadTheme() {
+      const saved = localStorage.getItem(themeKey);
+      if (saved === 'light') {
+        document.body.classList.add('light-theme');
+      } else {
+        document.body.classList.remove('light-theme');
+      }
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('light-theme');
+      const isLight = document.body.classList.contains('light-theme');
+      localStorage.setItem(themeKey, isLight ? 'light' : 'dark');
+      showToast('Tema ' + (isLight ? 'Terang' : 'Gelap') + ' diterapkan', 'info');
+    }
+
+    // ==================== LOGIN SYSTEM ====================
+    function getCurrentUser() {
+      return JSON.parse(localStorage.getItem(currentUserKey) || 'null');
+    }
+
+    function saveCurrentUser(user) {
+      localStorage.setItem(currentUserKey, JSON.stringify(user));
+    }
+
+    function clearCurrentUser() {
+      localStorage.removeItem(currentUserKey);
+    }
+
+    function getProfiles() {
+      return JSON.parse(localStorage.getItem(storageKey) || '[]');
+    }
+
+    function saveProfiles(profiles) {
+      localStorage.setItem(storageKey, JSON.stringify(profiles));
+    }
+
+    function checkLoginState() {
+      const user = getCurrentUser();
+      if (user) {
+        showLoggedInUI(user);
+        loadRepoTree();
+      } else {
+        showLoggedOutUI();
+      }
+    }
+
+    function showLoggedInUI(user) {
+      document.getElementById('loginArea').querySelector('.login-btn').style.display = 'none';
+      document.getElementById('userInfo').style.display = 'flex';
+      document.getElementById('userDisplayName').textContent = user.username;
+      document.getElementById('userAvatar').textContent = user.username.charAt(0).toUpperCase();
+      document.getElementById('tabNav').style.display = 'flex';
+      // Tampilkan tab content container
+      document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+      document.getElementById('tab-single').classList.add('active');
+      document.getElementById('tab-single').style.display = 'block';
+    }
+
+    function showLoggedOutUI() {
+      document.getElementById('loginArea').querySelector('.login-btn').style.display = 'inline-flex';
+      document.getElementById('userInfo').style.display = 'none';
+      document.getElementById('tabNav').style.display = 'none';
+      document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+    }
+
+    function getCredentials() {
+      const user = getCurrentUser();
+      if (!user) return { username: '', repo: '', token: '' };
+      return { username: user.username, repo: user.repo, token: user.token };
+    }
+
     function openLoginModal() {
+      const user = getCurrentUser();
+      if (user) {
+        document.getElementById('loginUsername').value = user.username;
+        document.getElementById('loginRepo').value = user.repo;
+        document.getElementById('loginToken').value = user.token;
+      }
       document.getElementById('loginModal').style.display = 'flex';
     }
+
     function closeLoginModal() {
       document.getElementById('loginModal').style.display = 'none';
     }
-    function doLogin() {
-      const u = document.getElementById('loginUsername').value.trim();
-      const r = document.getElementById('loginRepo').value.trim();
-      const t = document.getElementById('loginToken').value.trim();
-      if (!u || !t) { showToast('Isi username dan token!'); return; }
-      const creds = { username: u, repo: r || '', token: t };
-      localStorage.setItem('habistudio_creds', JSON.stringify(creds));
-      closeLoginModal();
-      loggedIn = true;
-      document.getElementById('loginArea').style.display = 'none';
-      document.getElementById('mainArea').style.display = 'block';
-      showToast('✅ Login berhasil! Selamat datang, ' + u);
-      switchTab('single');
+
+    async function loginAndSave() {
+      const username = document.getElementById('loginUsername').value.trim();
+      const repo = document.getElementById('loginRepo').value.trim();
+      const token = document.getElementById('loginToken').value.trim();
+      if (!username || !repo || !token) {
+        showToast('Isi semua kolom login.', 'error');
+        return;
+      }
+      // Verifikasi token dengan coba fetch user
+      try {
+        const res = await fetch('https://api.github.com/user', {
+          headers: { 'Authorization': `token ${token}` }
+        });
+        if (!res.ok) throw new Error('Token tidak valid atau jaringan bermasalah.');
+        const userData = await res.json();
+        const userObj = { username: userData.login, repo, token };
+        saveCurrentUser(userObj);
+        // Simpan ke daftar profil
+        const profiles = getProfiles();
+        const exists = profiles.find(p => p.username === userData.login && p.token === token);
+        if (!exists) {
+          profiles.push({ name: userData.login, username: userData.login, repo, token });
+          saveProfiles(profiles);
+        }
+        closeLoginModal();
+        showLoggedInUI(userObj);
+        showToast(`Selamat datang, ${userData.login}! Semua tool siap digunakan.`, 'success');
+        loadRepoTree();
+      } catch (e) {
+        showToast('Login gagal: ' + e.message, 'error');
+      }
     }
 
-    // ========== TOAST ==========
-    function showToast(msg, duration=2500) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.style.display = 'block';
-      setTimeout(() => t.style.display = 'none', duration);
+    function logoutUser() {
+      showConfirm('Apakah kamu yakin ingin logout?', () => {
+        clearCurrentUser();
+        showLoggedOutUI();
+        repoTree = [];
+        setGlobalStatus('', '');
+        showToast('Kamu telah logout.', 'info');
+      });
     }
 
-    // ========== TABS ==========
+    // ==================== TOAST ====================
+    function showToast(msg, type) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.className = 'toast ' + (type || '');
+      toast.style.display = 'block';
+      clearTimeout(toast._timeout);
+      toast._timeout = setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+
+    // ==================== CONFIRM MODAL ====================
+    function showConfirm(message, onConfirm) {
+      const modal = document.getElementById('confirmModal');
+      document.getElementById('confirmMessage').innerHTML = message;
+      modal.style.display = 'flex';
+      document.getElementById('confirmOk').onclick = () => {
+        modal.style.display = 'none';
+        if (onConfirm) onConfirm();
+      };
+      document.getElementById('confirmCancel').onclick = () => {
+        modal.style.display = 'none';
+      };
+    }
+
+    // ==================== STATUS ====================
+    function setGlobalStatus(msg, type) {
+      const div = document.getElementById('globalStatus');
+      if (!msg) { div.textContent = ''; div.style.background = 'transparent'; return; }
+      div.textContent = msg;
+      if (type === 'success') { div.style.background = '#e6ffec'; div.style.color = '#1a7f37'; }
+      else if (type === 'error') { div.style.background = '#ffebe9'; div.style.color = '#cf222e'; }
+      else { div.style.background = 'transparent'; div.style.color = 'inherit'; }
+    }
+
+    // ==================== TABS ====================
     function switchTab(tab) {
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      const el = document.getElementById('tab-' + tab);
-      if (el) el.classList.add('active');
-      const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.textContent.includes(tab === 'single' ? 'Single' : tab === 'zip' ? 'ZIP' : tab === 'editor' ? 'Editor' : tab === 'files' ? 'Files' : tab === 'rename' ? 'Rename' : tab === 'create-repo' ? 'Buat Repo' : 'Daftar Repo'));
-      if (btn) btn.classList.add('active');
+      const tabs = ['single','zip','editor','files','rename','create-repo','list-repo'];
+      document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', tabs[i] === tab);
+      });
+      document.querySelectorAll('.tab-content').forEach(c => {
+        c.classList.remove('active');
+        c.style.display = 'none';
+      });
+      const target = document.getElementById('tab-' + tab);
+      if (target) {
+        target.classList.add('active');
+        target.style.display = 'block';
+      }
       if (tab === 'list-repo') refreshRepoList();
     }
 
-    // ========== DAFTAR REPO ==========
-    function getCreds() {
-      return JSON.parse(localStorage.getItem('habistudio_creds') || '{}');
+    // ==================== GITHUB API ====================
+    function toBase64(str) {
+      const bytes = new TextEncoder().encode(str);
+      return btoa(Array.from(bytes, b => String.fromCharCode(b)).join(''));
     }
 
-    async function refreshRepoList() {
-      const c = getCreds();
-      if (!c.token) { showToast('Login dulu!'); return; }
+    async function githubRequest(url, options) {
+      const res = await fetch(url, options);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try {
+          const err = await res.json();
+          msg = err.message || msg;
+        } catch(e) {}
+        throw new Error(msg);
+      }
+      return res;
+    }
+
+    async function fetchRepoTree(owner, repo, token, branch = 'main') {
+      const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
+      const res = await githubRequest(url, {
+        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+      });
+      const data = await res.json();
+      return data.tree || [];
+    }
+
+    async function githubUpload(owner, repo, path, content, token, branch='main') {
+      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+      const headers = { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' };
+      let sha = null;
       try {
-        const res = await fetch('https://api.github.com/user/repos?per_page=100', {
-          headers: { 'Authorization': 'token ' + c.token }
+        const getRes = await fetch(apiUrl, { headers });
+        if (getRes.ok) {
+          const data = await getRes.json();
+          sha = data.sha;
+        } else if (getRes.status !== 404) {
+          throw new Error(`Gagal cek ${path}: ${getRes.status}`);
+        }
+      } catch(e) {}
+      const body = { message: `Habi Studio: update ${path}`, content: toBase64(content), branch };
+      if (sha) body.sha = sha;
+      const putRes = await fetch(apiUrl, {
+        method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!putRes.ok) {
+        const err = await putRes.json().catch(() => ({}));
+        throw new Error(err.message || putRes.statusText);
+      }
+      return putRes.json();
+    }
+
+    async function githubGetContent(owner, repo, path, token) {
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+      const res = await githubRequest(url, { headers: { 'Authorization': `token ${token}` } });
+      return res.json();
+    }
+
+    async function githubDeleteFile(owner, repo, path, sha, token, branch='main') {
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+      await githubRequest(url, {
+        method: 'DELETE',
+        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: `Delete ${path}`, sha, branch })
+      });
+    }
+
+    // ==================== REPO TREE ====================
+    async function loadRepoTree() {
+      const { username, repo, token } = getCredentials();
+      if (!username || !repo || !token) {
+        showToast('Silakan login terlebih dahulu.', 'error');
+        return;
+      }
+      try {
+        setGlobalStatus('Memuat struktur repo...', '');
+        const tree = await fetchRepoTree(username, repo, token);
+        repoTree = tree || [];
+        setGlobalStatus('Struktur repo dimuat.', 'success');
+        renderFileBrowser();
+        populateAllSelects();
+      } catch (e) {
+        setGlobalStatus('Gagal: ' + e.message, 'error');
+        repoTree = [];
+      }
+    }
+
+    function renderFileBrowser() {
+      const container = document.getElementById('fileBrowser');
+      if (!container) return;
+      if (!repoTree.length) { container.innerHTML = 'Tidak ada file. Klik Muat Struktur.'; return; }
+      const folders = repoTree.filter(item => item.type === 'tree');
+      const files = repoTree.filter(item => item.type === 'blob');
+      let html = '<div><strong>📁 Folder:</strong></div>';
+      if (folders.length === 0) html += '<div style="opacity:0.7;">(tidak ada)</div>';
+      else folders.forEach(f => {
+        html += `<div class="file-entry"><span>📁 ${f.path}</span><button onclick="selectFolderToDelete('${f.path}')">🗑️</button></div>`;
+      });
+      html += '<div style="margin-top:0.8rem;"><strong>📄 File:</strong></div>';
+      if (files.length === 0) html += '<div style="opacity:0.7;">(tidak ada)</div>';
+      else files.forEach(file => {
+        html += `<div class="file-entry"><span>📄 ${file.path}</span>
+          <button onclick="downloadSingleFile('${file.path}')">⬇️</button>
+          <button onclick="deleteSingleFileInteractive('${file.path}')">🗑️</button>
+        </div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    function populateAllSelects() {
+      const folders = repoTree.filter(item => item.type === 'tree').map(item => item.path);
+      const files = repoTree.filter(item => item.type === 'blob').map(item => item.path);
+      const singleFolder = document.getElementById('singleTargetFolder');
+      if (singleFolder) singleFolder.innerHTML = '<option value="">(root)</option>' + folders.map(f => `<option value="${f}">${f}</option>`).join('');
+      const singleFile = document.getElementById('singleFileSelect');
+      if (singleFile) singleFile.innerHTML = '<option value="">-- pilih file --</option>';
+      if (document.getElementById('singleCode')) document.getElementById('singleCode').value = '';
+      const editorSelect = document.getElementById('editorFileSelect');
+      if (editorSelect) editorSelect.innerHTML = '<option value="">-- pilih file --</option>' + files.map(f => `<option value="${f}">${f}</option>`).join('');
+      const renameFolder = document.getElementById('renameFolderSelect');
+      if (renameFolder) renameFolder.innerHTML = '<option value="">-- pilih folder --</option>' + folders.map(f => `<option value="${f}">${f}</option>`).join('');
+      const renameFile = document.getElementById('renameFileSelect');
+      if (renameFile) renameFile.innerHTML = '<option value="">-- pilih file --</option>';
+      if (document.getElementById('renameNewPath')) document.getElementById('renameNewPath').value = '';
+    }
+
+    // ==================== SINGLE TAB ====================
+    function onSingleFolderChange() {
+      const folder = document.getElementById('singleTargetFolder').value;
+      const fileSelect = document.getElementById('singleFileSelect');
+      let files;
+      if (folder === '') {
+        files = repoTree.filter(item => item.type === 'blob' && !item.path.includes('/'));
+      } else {
+        files = repoTree.filter(item => item.type === 'blob' && item.path.startsWith(folder + '/'));
+      }
+      fileSelect.innerHTML = '<option value="">-- pilih file --</option>';
+      files.forEach(file => {
+        fileSelect.innerHTML += `<option value="${file.path}">${file.path}</option>`;
+      });
+      document.getElementById('singleCode').value = '';
+    }
+
+    function onSingleFileSelect() {}
+
+    async function loadSingleFileContent() {
+      const { username, repo, token } = getCredentials();
+      const filePath = document.getElementById('singleFileSelect').value;
+      if (!filePath) { showToast('Pilih file dulu.', 'error'); return; }
+      try {
+        const data = await githubGetContent(username, repo, filePath, token);
+        if (data.content && data.encoding === 'base64') {
+          document.getElementById('singleCode').value = atob(data.content);
+        }
+      } catch (e) {
+        setGlobalStatus('Gagal: ' + e.message, 'error');
+      }
+    }
+
+    async function deploySingle() {
+      const { username, repo, token } = getCredentials();
+      const filePath = document.getElementById('singleFileSelect').value;
+      const code = document.getElementById('singleCode').value;
+      if (!filePath) { showToast('Pilih file yang akan diupdate.', 'error'); return; }
+      if (!code.trim()) { showToast('Kode kosong.', 'error'); return; }
+      showConfirm(`Update file <b>${filePath}</b>?`, async () => {
+        try {
+          setGlobalStatus('Mengupload...', '');
+          await githubUpload(username, repo, filePath, code, token);
+          setGlobalStatus('✅ File diupdate.', 'success');
+          showToast('Upload berhasil!', 'success');
+          loadRepoTree();
+        } catch (e) {
+          setGlobalStatus('❌ Gagal: ' + e.message, 'error');
+          showToast('Gagal: ' + e.message, 'error');
+        }
+      });
+    }
+
+    function searchInSingle() {
+      const query = document.getElementById('singleSearch').value;
+      const editor = document.getElementById('singleCode');
+      if (!query) return;
+      const idx = editor.value.indexOf(query);
+      if (idx === -1) { showToast('Tidak ditemukan.', 'info'); return; }
+      editor.focus();
+      editor.setSelectionRange(idx, idx + query.length);
+    }
+
+    function replaceInSingle() {
+      const query = document.getElementById('singleSearch').value;
+      const replacement = prompt('Ganti dengan:');
+      if (replacement === null) return;
+      const editor = document.getElementById('singleCode');
+      editor.value = editor.value.split(query).join(replacement);
+    }
+
+    // ==================== ZIP TAB ====================
+    async function deployZip() {
+      const { username, repo, token } = getCredentials();
+      const fileInput = document.getElementById('zipFile');
+      const stripRoot = document.getElementById('stripRoot').checked;
+      if (!fileInput.files.length) { showToast('Pilih file ZIP.', 'error'); return; }
+      const zipFile = fileInput.files[0];
+      const progressBar = document.getElementById('zipProgress');
+      const progressFill = progressBar.querySelector('.fill');
+      const statusDiv = document.getElementById('zipStatus');
+      progressBar.style.display = 'block';
+      progressFill.style.width = '0%';
+      statusDiv.textContent = 'Membaca ZIP...';
+      try {
+        const zip = await JSZip.loadAsync(zipFile);
+        let files = [];
+        zip.forEach((relativePath, file) => {
+          if (!file.dir) files.push({ path: relativePath, contentPromise: file.async('string') });
         });
-        if (!res.ok) throw new Error('Gagal fetch');
-        const repos = await res.json();
+        if (files.length === 0) throw new Error('ZIP kosong.');
+        if (stripRoot) {
+          const rootItems = new Set(files.map(f => f.path.split('/')[0]));
+          if (rootItems.size === 1 && files.every(f => f.path.includes('/'))) {
+            const rootFolder = [...rootItems][0];
+            files = files.map(f => ({ ...f, path: f.path.replace(rootFolder + '/', '') }));
+          }
+        }
+        let done = 0;
+        for (const f of files) {
+          const content = await f.contentPromise;
+          statusDiv.textContent = `Upload ${f.path} (${++done}/${files.length})...`;
+          progressFill.style.width = (done / files.length * 100) + '%';
+          await githubUpload(username, repo, f.path, content, token);
+        }
+        statusDiv.textContent = `✅ ${files.length} file berhasil diupload!`;
+        showToast('ZIP berhasil diupload!', 'success');
+        loadRepoTree();
+      } catch (e) {
+        statusDiv.textContent = '❌ Error: ' + e.message;
+        showToast('Gagal: ' + e.message, 'error');
+      }
+      setTimeout(() => { progressBar.style.display = 'none'; statusDiv.textContent = ''; }, 5000);
+    }
+
+    // ==================== EDITOR TAB ====================
+    async function loadSelectedFileForEdit() {
+      const { username, repo, token } = getCredentials();
+      const filePath = document.getElementById('editorFileSelect').value;
+      if (!filePath) { showToast('Pilih file dulu.', 'error'); return; }
+      try {
+        const data = await githubGetContent(username, repo, filePath, token);
+        if (data.content && data.encoding === 'base64') {
+          document.getElementById('editorCode').value = atob(data.content);
+          document.getElementById('editorStatus').textContent = 'File dimuat.';
+        }
+      } catch (e) {
+        document.getElementById('editorStatus').textContent = 'Error: ' + e.message;
+      }
+    }
+
+    async function saveAndUploadEdit() {
+      const { username, repo, token } = getCredentials();
+      const filePath = document.getElementById('editorFileSelect').value;
+      const code = document.getElementById('editorCode').value;
+      if (!filePath) { showToast('Pilih file.', 'error'); return; }
+      if (!code.trim()) { showToast('Kode kosong.', 'error'); return; }
+      showConfirm(`Update file <b>${filePath}</b>?`, async () => {
+        try {
+          setGlobalStatus('Mengupload...', '');
+          await githubUpload(username, repo, filePath, code, token);
+          setGlobalStatus('✅ File diupdate.', 'success');
+          showToast('Upload berhasil!', 'success');
+          document.getElementById('editorStatus').textContent = 'Upload berhasil.';
+          loadRepoTree();
+        } catch (e) {
+          setGlobalStatus('❌ Gagal: ' + e.message, 'error');
+          showToast('Gagal: ' + e.message, 'error');
+        }
+      });
+    }
+
+    // ==================== FILES TAB ====================
+    async function downloadSingleFile(path) {
+      const { username, repo, token } = getCredentials();
+      try {
+        const data = await githubGetContent(username, repo, path, token);
+        if (data.content && data.encoding === 'base64') {
+          const content = atob(data.content);
+          const blob = new Blob([content], { type: 'text/plain' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = path.split('/').pop(); a.click();
+          URL.revokeObjectURL(url);
+        }
+      } catch (e) { showToast('Gagal download.', 'error'); }
+    }
+
+    async function deleteSingleFileInteractive(path) {
+      const { username, repo, token } = getCredentials();
+      showConfirm(`Hapus file <b>${path}</b>?`, async () => {
+        try {
+          const data = await githubGetContent(username, repo, path, token);
+          await githubDeleteFile(username, repo, path, data.sha, token);
+          setGlobalStatus('File dihapus.', 'success');
+          showToast('File dihapus.', 'success');
+          loadRepoTree();
+        } catch (e) {
+          setGlobalStatus('Gagal: ' + e.message, 'error');
+          showToast('Gagal: ' + e.message, 'error');
+        }
+      });
+    }
+
+    function selectFolderToDelete(folderPath) {
+      selectedDeleteFolder = folderPath;
+      document.getElementById('manageStatus').textContent = `Folder terpilih: ${folderPath}. Klik "Hapus Folder".`;
+    }
+
+    async function deleteFolderInteractive() {
+      if (!selectedDeleteFolder) { showToast('Pilih folder dulu.', 'error'); return; }
+      const { username, repo, token } = getCredentials();
+      showConfirm(`Hapus folder <b>${selectedDeleteFolder}</b> dan isinya?`, async () => {
+        try {
+          const tree = await fetchRepoTree(username, repo, token);
+          const filesToDelete = tree.filter(item => item.type === 'blob' && item.path.startsWith(selectedDeleteFolder + '/'));
+          if (filesToDelete.length === 0) { showToast('Folder kosong.', 'info'); return; }
+          let deleted = 0;
+          for (const file of filesToDelete) {
+            try {
+              await githubDeleteFile(username, repo, file.path, file.sha, token);
+              deleted++;
+            } catch(e) {}
+          }
+          setGlobalStatus(`Folder dibersihkan (${deleted} file).`, 'success');
+          showToast('Folder dihapus.', 'success');
+          loadRepoTree();
+        } catch (e) {
+          setGlobalStatus('Gagal: ' + e.message, 'error');
+          showToast('Gagal: ' + e.message, 'error');
+        }
+      });
+    }
+
+    async function deleteAllFiles() {
+      const { username, repo, token } = getCredentials();
+      showConfirm(`⚠️ Hapus SEMUA file di <b>${username}/${repo}</b>?`, async () => {
+        try {
+          const tree = await fetchRepoTree(username, repo, token);
+          const files = tree.filter(item => item.type === 'blob');
+          if (files.length === 0) { showToast('Repo kosong.', 'info'); return; }
+          let deleted = 0;
+          for (const file of files) {
+            try { await githubDeleteFile(username, repo, file.path, file.sha, token); deleted++; } catch(e) {}
+          }
+          setGlobalStatus(`${deleted} file dihapus.`, 'success');
+          showToast('Semua file dihapus.', 'success');
+          loadRepoTree();
+        } catch (e) {
+          setGlobalStatus('Gagal: ' + e.message, 'error');
+          showToast('Gagal: ' + e.message, 'error');
+        }
+      });
+    }
+
+    async function deleteRepoInteractive() {
+      const { username, repo, token } = getCredentials();
+      showConfirm(`⚠️ HAPUS REPO <b>${username}/${repo}</b>? Tidak bisa dibatalkan.`, async () => {
+        try {
+          const res = await fetch(`https://api.github.com/repos/${username}/${repo}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `token ${token}` }
+          });
+          if (res.ok || res.status === 204) {
+            setGlobalStatus('Repo dihapus.', 'success');
+            showToast('Repository dihapus.', 'success');
+            repoTree = [];
+            renderFileBrowser();
+            populateAllSelects();
+          } else {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || 'Gagal');
+          }
+        } catch (e) {
+          setGlobalStatus('Gagal: ' + e.message, 'error');
+          showToast('Gagal: ' + e.message, 'error');
+        }
+      });
+    }
+
+    // ==================== RENAME TAB ====================
+    function onRenameFolderSelect() {
+      const folder = document.getElementById('renameFolderSelect').value;
+      const fileSelect = document.getElementById('renameFileSelect');
+      const newPath = document.getElementById('renameNewPath');
+      fileSelect.innerHTML = '<option value="">-- pilih file --</option>';
+      if (!folder) { newPath.value = ''; return; }
+      newPath.value = folder;
+      const files = repoTree.filter(item => item.type === 'blob' && item.path.startsWith(folder + '/'));
+      files.forEach(f => {
+        fileSelect.innerHTML += `<option value="${f.path}">${f.path}</option>`;
+      });
+    }
+
+    function onRenameFileSelect() {
+      const file = document.getElementById('renameFileSelect').value;
+      if (file) document.getElementById('renameNewPath').value = file;
+    }
+
+    async function executeRename() {
+      const { username, repo, token } = getCredentials();
+      const oldFolder = document.getElementById('renameFolderSelect').value;
+      const oldFile = document.getElementById('renameFileSelect').value;
+      const newPath = document.getElementById('renameNewPath').value.trim();
+      let oldPath = '', isFile = false, isFolder = false;
+      if (oldFile) { oldPath = oldFile; isFile = true; }
+      else if (oldFolder) { oldPath = oldFolder; isFolder = true; }
+      else { showToast('Pilih folder atau file.', 'error'); return; }
+      if (!newPath) { showToast('Masukkan path baru.', 'error'); return; }
+      if (oldPath === newPath) { showToast('Nama sama.', 'info'); return; }
+
+      showConfirm(`Rename <b>${oldPath}</b> menjadi <b>${newPath}</b>?`, async () => {
+        try {
+          if (isFile) {
+            const data = await githubGetContent(username, repo, oldPath, token);
+            if (!data.content || data.encoding !== 'base64') throw new Error('Bukan file teks.');
+            const content = atob(data.content);
+            await githubUpload(username, repo, newPath, content, token);
+            await githubDeleteFile(username, repo, oldPath, data.sha, token);
+            document.getElementById('renameStatus').textContent = '✅ File di-rename.';
+          } else {
+            const tree = await fetchRepoTree(username, repo, token);
+            const filesInFolder = tree.filter(item => item.type === 'blob' && item.path.startsWith(oldPath + '/'));
+            if (filesInFolder.length === 0) {
+              await githubUpload(username, repo, newPath + '/.gitkeep', '', token);
+              const phData = await githubGetContent(username, repo, newPath + '/.gitkeep', token);
+              await githubDeleteFile(username, repo, newPath + '/.gitkeep', phData.sha, token);
+              document.getElementById('renameStatus').textContent = '✅ Folder di-rename.';
+            } else {
+              let done = 0;
+              for (const file of filesInFolder) {
+                const nfp = file.path.replace(oldPath, newPath);
+                const fd = await githubGetContent(username, repo, file.path, token);
+                if (!fd.content || fd.encoding !== 'base64') continue;
+                await githubUpload(username, repo, nfp, atob(fd.content), token);
+                await githubDeleteFile(username, repo, file.path, fd.sha, token);
+                done++;
+              }
+              document.getElementById('renameStatus').textContent = `✅ ${done} file dipindahkan.`;
+            }
+          }
+          showToast('Rename berhasil.', 'success');
+          loadRepoTree();
+        } catch (e) {
+          document.getElementById('renameStatus').textContent = '❌ Gagal: ' + e.message;
+          showToast('Gagal: ' + e.message, 'error');
+        }
+      });
+    }
+
+    // ==================== CREATE REPO ====================
+    async function createRepo() {
+      const { token } = getCredentials();
+      const repoName = document.getElementById('newRepoName').value.trim();
+      const visibility = document.getElementById('newRepoVisibility').value;
+      const addReadme = document.getElementById('newRepoReadme').checked;
+      if (!repoName) { showToast('Masukkan nama repo.', 'error'); return; }
+      try {
+        setGlobalStatus('Membuat repo...', '');
+        const res = await fetch('https://api.github.com/user/repos', {
+          method: 'POST',
+          headers: {
+            'Authorization': `token ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name: repoName, private: visibility === 'private', auto_init: addReadme })
+        });
+        if (!res.ok) throw new Error((await res.json()).message || 'Gagal');
+        const data = await res.json();
+        document.getElementById('createRepoResult').innerHTML = `
+          <div class="result-box">
+            <input type="text" value="${data.html_url}" readonly id="newRepoUrl">
+            <button onclick="navigator.clipboard.writeText(document.getElementById('newRepoUrl').value); showToast('URL disalin!','success');" class="inline-btn">📋</button>
+          </div>`;
+        setGlobalStatus('Repo berhasil dibuat!', 'success');
+        showToast('Repository berhasil dibuat!', 'success');
+      } catch (e) {
+        setGlobalStatus('Gagal: ' + e.message, 'error');
+        showToast('Gagal: ' + e.message, 'error');
+      }
+    }
+
+    // ==================== DAFTAR REPO ====================
+    async function refreshRepoList() {
+      const { username, token } = getCredentials();
+      if (!username || !token) { showToast('Login dulu.', 'error'); return; }
+      try {
+        document.getElementById('repoListContainer').innerHTML = 'Memuat...';
+        let repos = [];
+        let page = 1;
+        while (true) {
+          const res = await fetch(`https://api.github.com/user/repos?per_page=100&page=${page}`, {
+            headers: { 'Authorization': `token ${token}` }
+          });
+          if (!res.ok) throw new Error('Gagal fetch repo');
+          const data = await res.json();
+          if (data.length === 0) break;
+          repos = repos.concat(data);
+          if (data.length < 100) break;
+          page++;
+        }
         renderRepoList(repos);
-      } catch(e) {
-        showToast('Gagal: ' + e.message);
+        document.getElementById('selectAllRepos').checked = false;
+        document.getElementById('repoCount').textContent = repos.length + ' repo';
+      } catch (e) {
+        document.getElementById('repoListContainer').innerHTML = '<p style="color:red;">Error: ' + e.message + '</p>';
       }
     }
 
     function renderRepoList(repos) {
       const container = document.getElementById('repoListContainer');
+      if (repos.length === 0) { container.innerHTML = '<p>Tidak ada repositori.</p>'; return; }
       let html = '';
       repos.forEach(repo => {
-        const prot = repo.name === 'deploy-tool';
+        const isProtected = (repo.name === 'deploy-tool');
         html += `<div class="repo-list-item">
-          ${prot ? '🔒' : '<input type="checkbox" class="repo-checkbox" value="' + repo.name + '" data-owner="' + repo.owner.login + '">'}
-          <span class="repo-name" onclick="copyRepoName('${repo.name}')">${repo.name}</span>
-          ${prot ? '<span style="background:#e53935; padding:2px 8px; border-radius:8px; font-size:0.7rem;">DILINDUNGI</span>' : ''}
+          ${isProtected ? 
+            `<span style="color:#aaa;">🔒 ${repo.name} <span class="protected-badge">DILINDUNGI</span></span>` :
+            `<input type="checkbox" class="repo-checkbox" value="${repo.name}" data-owner="${repo.owner.login}">
+             <span class="repo-name">${repo.name}</span>
+             <button class="copy-repo-btn" onclick="copyRepoName('${repo.name}')" title="Copy nama">📋</button>`
+          }
         </div>`;
       });
-      container.innerHTML = html || '<p>Tidak ada repo.</p>';
+      container.innerHTML = html;
+      renderDeleteHistory();
     }
 
     function copyRepoName(name) {
-      navigator.clipboard.writeText(name).then(() => showToast('📋 Nama repo disalin!'));
+      navigator.clipboard.writeText(name).then(() => showToast('Nama repo disalin!', 'success'));
+    }
+
+    function toggleAllRepos() {
+      const selectAll = document.getElementById('selectAllRepos').checked;
+      document.querySelectorAll('.repo-checkbox').forEach(cb => { cb.checked = selectAll; });
     }
 
     async function deleteSelectedRepos() {
-      const boxes = document.querySelectorAll('.repo-checkbox:checked');
-      if (boxes.length === 0) { showToast('Pilih repo dulu.'); return; }
-      const c = getCreds();
-      for (const box of boxes) {
-        try {
-          await fetch(`https://api.github.com/repos/${box.dataset.owner}/${box.value}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': 'token ' + c.token }
-          });
-        } catch(e) {}
-      }
-      showToast('✅ Repo terpilih dihapus.');
-      refreshRepoList();
-    }
+      const checkboxes = document.querySelectorAll('.repo-checkbox:checked');
+      if (checkboxes.length === 0) { showToast('Pilih repo yang akan dihapus.', 'error'); return; }
+      const { token } = getCredentials();
+      const reposToDelete = Array.from(checkboxes).map(cb => ({ name: cb.value, owner: cb.dataset.owner }));
+      const filtered = reposToDelete.filter(r => r.name !== 'deploy-tool');
+      if (filtered.length === 0) { showToast('deploy-tool tidak bisa dihapus.', 'error'); return; }
 
-    // ========== ZIP UPLOAD (contoh progress) ==========
-    async function deployZip() {
-      const c = getCreds();
-      const fileInput = document.getElementById('zipFile');
-      if (!fileInput.files.length) { showToast('Pilih file ZIP.'); return; }
-      const zip = await JSZip.loadAsync(fileInput.files[0]);
-      const files = [];
-      zip.forEach((path, f) => { if (!f.dir) files.push({ path, data: f.async('string') }); });
-      const strip = document.getElementById('stripRoot').checked;
-      let paths = files.map(f => f.path);
-      if (strip && paths.length > 0) {
-        const root = paths[0].split('/')[0];
-        if (paths.every(p => p.startsWith(root + '/'))) {
-          files.forEach(f => f.path = f.path.replace(root + '/', ''));
+      const repoListStr = filtered.map(r => `${r.owner}/${r.name}`).join(', ');
+      showConfirm(`⚠️ Hapus repositori:<br><b>${repoListStr}</b><br>Ini tidak dapat dibatalkan.`, async () => {
+        let deletedCount = 0;
+        const errors = [];
+        for (const repo of filtered) {
+          try {
+            const res = await fetch(`https://api.github.com/repos/${repo.owner}/${repo.name}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `token ${token}` }
+            });
+            if (res.ok || res.status === 204) {
+              addDeleteHistory(repo.name);
+              deletedCount++;
+            } else {
+              const errData = await res.json().catch(() => ({}));
+              errors.push(`${repo.name}: ${errData.message}`);
+            }
+          } catch (e) {
+            errors.push(`${repo.name}: ${e.message}`);
+          }
         }
+        if (errors.length > 0) {
+          showToast(`Berhasil hapus ${deletedCount} repo. Error: ${errors.join('; ')}`, 'error');
+        } else {
+          showToast(`${deletedCount} repositori dihapus.`, 'success');
+        }
+        refreshRepoList();
+      });
+    }
+
+    function getDeleteHistory() {
+      return JSON.parse(localStorage.getItem(deletedHistoryKey) || '[]');
+    }
+
+    function addDeleteHistory(repoName) {
+      const history = getDeleteHistory();
+      history.push({ repoName, deletedAt: new Date().toISOString() });
+      localStorage.setItem(deletedHistoryKey, JSON.stringify(history));
+    }
+
+    function renderDeleteHistory() {
+      const container = document.getElementById('deleteHistoryContainer');
+      const history = getDeleteHistory();
+      if (history.length === 0) { container.innerHTML = '<p style="opacity:0.5;">Belum ada penghapusan.</p>'; return; }
+      let html = '';
+      history.slice().reverse().forEach(item => {
+        const date = new Date(item.deletedAt);
+        const formatted = date.toLocaleString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+        html += `<div class="history-item"><span>🗑️ ${item.repoName}</span><span style="opacity:0.6;font-size:0.8rem;">${formatted}</span></div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    // ==================== MANAJEMEN AKUN ====================
+    function openAccountManager() {
+      const profiles = getProfiles();
+      const list = document.getElementById('accountList');
+      if (profiles.length === 0) {
+        list.innerHTML = '<p>Belum ada akun tersimpan.</p>';
+      } else {
+        let html = '';
+        profiles.forEach((p, i) => {
+          html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.3rem;background:rgba(255,255,255,0.05);border-radius:8px;margin-bottom:0.2rem;">
+            <div><strong>${p.name}</strong> (${p.username}/${p.repo})</div>
+            <div>
+              <button onclick="switchAccount(${i})" class="inline-btn" style="padding:0.2rem 0.5rem;">✅</button>
+              <button onclick="deleteAccount(${i})" class="inline-btn" style="background:#e53935;padding:0.2rem 0.5rem;">🗑️</button>
+            </div>
+          </div>`;
+        });
+        list.innerHTML = html;
       }
-      let done = 0;
-      const progress = document.getElementById('zipProgress');
-      for (const f of files) {
-        const content = await f.data;
-        // upload logic here (call githubUpload)
-        done++;
-        progress.textContent = `Upload ${done}/${files.length}...`;
-      }
-      showToast('✅ ZIP berhasil diupload!');
-      progress.textContent = '';
+      document.getElementById('accountModal').style.display = 'flex';
     }
 
-    // ========== THEME ==========
-    function toggleTheme() {
-      document.body.classList.toggle('light');
+    function closeAccountModal() { document.getElementById('accountModal').style.display = 'none'; }
+
+    function switchAccount(index) {
+      const profiles = getProfiles();
+      const p = profiles[index];
+      const userObj = { username: p.username, repo: p.repo, token: p.token };
+      saveCurrentUser(userObj);
+      closeAccountModal();
+      showLoggedInUI(userObj);
+      showToast(`Beralih ke akun ${p.name}`, 'success');
+      loadRepoTree();
     }
 
-    // ========== ANTI LAG ==========
-    function toggleAntiLag() {
-      const p = document.getElementById('particles');
-      p.style.display = document.getElementById('antiLagToggle').checked ? 'none' : 'block';
+    function deleteAccount(index) {
+      const profiles = getProfiles();
+      profiles.splice(index, 1);
+      saveProfiles(profiles);
+      openAccountManager();
+      showToast('Akun dihapus.', 'info');
     }
 
-    // ========== BACKGROUND PARTICLES ==========
-    (function() {
+    // ==================== BACKGROUND ====================
+    function generateParticles() {
       const container = document.getElementById('particles');
-      for (let i=0;i<25;i++) {
+      for (let i = 0; i < 25; i++) {
         const p = document.createElement('div');
-        p.style.cssText = 'position:absolute; background:rgba(255,255,255,0.1); border-radius:50%; animation: float linear infinite;';
-        p.style.width = Math.random()*6+3+'px';
-        p.style.height = p.style.width;
-        p.style.left = Math.random()*100+'%';
-        p.style.animationDuration = Math.random()*12+8+'s';
-        p.style.animationDelay = Math.random()*8+'s';
+        p.className = 'particle';
+        const size = Math.random() * 6 + 3;
+        p.style.width = size + 'px'; p.style.height = size + 'px';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.animationDuration = (Math.random() * 12 + 8) + 's';
+        p.style.animationDelay = (Math.random() * 8) + 's';
         container.appendChild(p);
       }
-    })();
+    }
+  </script>
+</body>
+</html>
+  <!-- Lanjutan dari file index.html - Bagian Modal dan Script yang belum lengkap -->
+
+  <!-- Modal Manajemen Akun -->
+  <div id="accountModal" class="modal-overlay" style="display: none;">
+    <div class="modal" style="text-align: left;">
+      <h3>👥 Manajemen Akun</h3>
+      <div id="accountList" style="max-height: 300px; overflow-y: auto;"></div>
+      <button onclick="closeAccountModal()" class="btn-cancel" style="width:100%; margin-top:0.5rem;">Tutup</button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="margin-top:1rem; text-align:center; display:flex; flex-direction:column; align-items:center; gap:0.5rem;">
+    <!-- Mode Anti-Lag -->
+    <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem;">
+      <span>⚡ Mode Anti-Lag</span>
+      <label class="switch">
+        <input type="checkbox" id="antiLagToggle" checked onchange="toggleAntiLag()">
+        <span class="slider"></span>
+      </label>
+      <span id="antiLagLabel">ON</span>
+    </div>
+  </div>
+
+  <footer>
+    Powered by <strong>HABI STUDIO AI</strong> — Melampaui Batas Kreativitas
+  </footer>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Modal Konfirmasi -->
+  <div id="confirmModal" class="modal-overlay">
+    <div class="modal">
+      <h3>📝 HABI STUDIO NOTE</h3>
+      <p id="confirmMessage"></p>
+      <button class="btn-confirm" id="confirmOk">Ya</button>
+      <button class="btn-cancel" id="confirmCancel">Batal</button>
+    </div>
+  </div>
+
+  <script>
+    // ==================== GLOBAL STATE ====================
+    const storageKey = 'habistudio_profiles';
+    const currentUserKey = 'habistudio_current_user';
+    const themeKey = 'habistudio_theme';
+    const deletedHistoryKey = 'habistudio_deleted_history';
+    const antiLagKey = 'habistudio_antilag';
+    let repoTree = [];
+    let selectedDeleteFolder = '';
+
+    // ==================== INIT ====================
+    window.onload = () => {
+      loadTheme();
+      generateParticles();
+      initAntiLag();
+      checkLoginState();
+    };
+
+    // ==================== THEME ====================
+    function loadTheme() {
+      const saved = localStorage.getItem(themeKey);
+      if (saved === 'light') {
+        document.body.classList.add('light-theme');
+      } else {
+        document.body.classList.remove('light-theme');
+      }
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('light-theme');
+      const isLight = document.body.classList.contains('light-theme');
+      localStorage.setItem(themeKey, isLight ? 'light' : 'dark');
+      showToast('Tema ' + (isLight ? 'Terang' : 'Gelap') + ' diterapkan', 'info');
+    }
+
+    // ==================== ANTI-LAG ====================
+    function initAntiLag() {
+      const saved = localStorage.getItem(antiLagKey);
+      const isOn = saved !== null ? JSON.parse(saved) : true;
+      const toggle = document.getElementById('antiLagToggle');
+      if (toggle) toggle.checked = isOn;
+      applyAntiLag(isOn);
+    }
+
+    function toggleAntiLag() {
+      const isOn = document.getElementById('antiLagToggle').checked;
+      localStorage.setItem(antiLagKey, JSON.stringify(isOn));
+      applyAntiLag(isOn);
+      document.getElementById('antiLagLabel').textContent = isOn ? 'ON' : 'OFF';
+    }
+
+    function applyAntiLag(isOn) {
+      const particles = document.getElementById('particles');
+      if (particles) {
+        particles.style.display = isOn ? 'none' : 'block';
+      }
+    }
+
+    // ==================== LOGIN SYSTEM ====================
+    function getCurrentUser() {
+      return JSON.parse(localStorage.getItem(currentUserKey) || 'null');
+    }
+
+    function saveCurrentUser(user) {
+      localStorage.setItem(currentUserKey, JSON.stringify(user));
+    }
+
+    function clearCurrentUser() {
+      localStorage.removeItem(currentUserKey);
+    }
+
+    function getProfiles() {
+      return JSON.parse(localStorage.getItem(storageKey) || '[]');
+    }
+
+    function saveProfiles(profiles) {
+      localStorage.setItem(storageKey, JSON.stringify(profiles));
+    }
+
+    function checkLoginState() {
+      const user = getCurrentUser();
+      if (user) {
+        showLoggedInUI(user);
+        loadRepoTree();
+      } else {
+        showLoggedOutUI();
+      }
+    }
+
+    function showLoggedInUI(user) {
+      const loginBtn = document.getElementById('loginArea').querySelector('.login-btn');
+      if (loginBtn) loginBtn.style.display = 'none';
+      const userInfo = document.getElementById('userInfo');
+      if (userInfo) userInfo.style.display = 'flex';
+      const userDisplay = document.getElementById('userDisplayName');
+      if (userDisplay) userDisplay.textContent = user.username;
+      const avatar = document.getElementById('userAvatar');
+      if (avatar) avatar.textContent = user.username.charAt(0).toUpperCase();
+      const tabNav = document.getElementById('tabNav');
+      if (tabNav) tabNav.style.display = 'flex';
+      document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+      const singleTab = document.getElementById('tab-single');
+      if (singleTab) {
+        singleTab.classList.add('active');
+        singleTab.style.display = 'block';
+      }
+    }
+
+    function showLoggedOutUI() {
+      const loginBtn = document.getElementById('loginArea').querySelector('.login-btn');
+      if (loginBtn) loginBtn.style.display = 'inline-flex';
+      const userInfo = document.getElementById('userInfo');
+      if (userInfo) userInfo.style.display = 'none';
+      const tabNav = document.getElementById('tabNav');
+      if (tabNav) tabNav.style.display = 'none';
+      document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+    }
+
+    function getCredentials() {
+      const user = getCurrentUser();
+      if (!user) return { username: '', repo: '', token: '' };
+      return { username: user.username, repo: user.repo, token: user.token };
+    }
+
+    function openLoginModal() {
+      const user = getCurrentUser();
+      if (user) {
+        document.getElementById('loginUsername').value = user.username || '';
+        document.getElementById('loginRepo').value = user.repo || '';
+        document.getElementById('loginToken').value = user.token || '';
+      }
+      document.getElementById('loginModal').style.display = 'flex';
+    }
+
+    function closeLoginModal() {
+      document.getElementById('loginModal').style.display = 'none';
+    }
+
+    async function loginAndSave() {
+      const username = document.getElementById('loginUsername').value.trim();
+      const repo = document.getElementById('loginRepo').value.trim();
+      const token = document.getElementById('loginToken').value.trim();
+      if (!username || !repo || !token) {
+        showToast('Isi semua kolom login.', 'error');
+        return;
+      }
+      try {
+        const res = await fetch('https://api.github.com/user', {
+          headers: { 'Authorization': `token ${token}` }
+        });
+        if (!res.ok) throw new Error('Token tidak valid atau jaringan bermasalah.');
+        const userData = await res.json();
+        const userObj = { username: userData.login, repo, token };
+        saveCurrentUser(userObj);
+        const profiles = getProfiles();
+        const exists = profiles.find(p => p.username === userData.login && p.token === token);
+        if (!exists) {
+          profiles.push({ name: userData.login, username: userData.login, repo, token });
+          saveProfiles(profiles);
+        }
+        closeLoginModal();
+        showLoggedInUI(userObj);
+        showToast(`Selamat datang, ${userData.login}! Semua tool siap digunakan.`, 'success');
+        loadRepoTree();
+      } catch (e) {
+        showToast('Login gagal: ' + e.message, 'error');
+      }
+    }
+
+    function logoutUser() {
+      showConfirm('Apakah kamu yakin ingin logout?', () => {
+        clearCurrentUser();
+        showLoggedOutUI();
+        repoTree = [];
+        setGlobalStatus('', '');
+        showToast('Kamu telah logout.', 'info');
+      });
+    }
+
+    // ==================== TOAST ====================
+    function showToast(msg, type) {
+      const toast = document.getElementById('toast');
+      if (!toast) return;
+      toast.textContent = msg;
+      toast.className = 'toast ' + (type || '');
+      toast.style.display = 'block';
+      clearTimeout(toast._timeout);
+      toast._timeout = setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+
+    // ==================== CONFIRM MODAL ====================
+    function showConfirm(message, onConfirm) {
+      const modal = document.getElementById('confirmModal');
+      if (!modal) return;
+      document.getElementById('confirmMessage').innerHTML = message;
+      modal.style.display = 'flex';
+      document.getElementById('confirmOk').onclick = () => {
+        modal.style.display = 'none';
+        if (onConfirm) onConfirm();
+      };
+      document.getElementById('confirmCancel').onclick = () => {
+        modal.style.display = 'none';
+      };
+    }
+
+    // ==================== STATUS ====================
+    function setGlobalStatus(msg, type) {
+      const div = document.getElementById('globalStatus');
+      if (!div) return;
+      if (!msg) { div.textContent = ''; div.style.background = 'transparent'; return; }
+      div.textContent = msg;
+      if (type === 'success') { div.style.background = '#e6ffec'; div.style.color = '#1a7f37'; }
+      else if (type === 'error') { div.style.background = '#ffebe9'; div.style.color = '#cf222e'; }
+      else { div.style.background = 'transparent'; div.style.color = 'inherit'; }
+    }
+
+    // ==================== TABS ====================
+    function switchTab(tab) {
+      const tabs = ['single','zip','editor','files','rename','create-repo','list-repo'];
+      document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', tabs[i] === tab);
+      });
+      document.querySelectorAll('.tab-content').forEach(c => {
+        c.classList.remove('active');
+        c.style.display = 'none';
+      });
+      const target = document.getElementById('tab-' + tab);
+      if (target) {
+        target.classList.add('active');
+        target.style.display = 'block';
+      }
+      if (tab === 'list-repo') refreshRepoList();
+    }
+
+    // ==================== GITHUB API ====================
+    function toBase64(str) {
+      const bytes = new TextEncoder().encode(str);
+      return btoa(Array.from(bytes, b => String.fromCharCode(b)).join(''));
+    }
+
+    async function githubRequest(url, options) {
+      const res = await fetch(url, options);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try { const err = await res.json(); msg = err.message || msg; } catch(e) {}
+        throw new Error(msg);
+      }
+      return res;
+    }
+
+    async function fetchRepoTree(owner, repo, token, branch = 'main') {
+      const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
+      const res = await githubRequest(url, {
+        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+      });
+      const data = await res.json();
+      return data.tree || [];
+    }
+
+    async function githubUpload(owner, repo, path, content, token, branch='main') {
+      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+      const headers = { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' };
+      let sha = null;
+      try {
+        const getRes = await fetch(apiUrl, { headers });
+        if (getRes.ok) { const data = await getRes.json(); sha = data.sha; }
+        else if (getRes.status !== 404) throw new Error(`Gagal cek ${path}: ${getRes.status}`);
+      } catch(e) {}
+      const body = { message: `Habi Studio: update ${path}`, content: toBase64(content), branch };
+      if (sha) body.sha = sha;
+      const putRes = await fetch(apiUrl, {
+        method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!putRes.ok) {
+        const err = await putRes.json().catch(() => ({}));
+        throw new Error(err.message || putRes.statusText);
+      }
+      return putRes.json();
+    }
+
+    async function githubGetContent(owner, repo, path, token) {
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+      const res = await githubRequest(url, { headers: { 'Authorization': `token ${token}` } });
+      return res.json();
+    }
+
+    async function githubDeleteFile(owner, repo, path, sha, token, branch='main') {
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+      await githubRequest(url, {
+        method: 'DELETE',
+        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: `Delete ${path}`, sha, branch })
+      });
+    }
+
+    // ==================== REPO TREE ====================
+    async function loadRepoTree() {
+      const { username, repo, token } = getCredentials();
+      if (!username || !repo || !token) {
+        showToast('Silakan login terlebih dahulu.', 'error');
+        return;
+      }
+      try {
+        setGlobalStatus('Memuat struktur repo...', '');
+        const tree = await fetchRepoTree(username, repo, token);
+        repoTree = tree || [];
+        setGlobalStatus('Struktur repo dimuat.', 'success');
+        renderFileBrowser();
+        populateAllSelects();
+      } catch (e) {
+        setGlobalStatus('Gagal: ' + e.message, 'error');
+        repoTree = [];
+      }
+    }
+
+    function renderFileBrowser() {
+      const container = document.getElementById('fileBrowser');
+      if (!container) return;
+      if (!repoTree.length) { container.innerHTML = 'Tidak ada file. Klik Muat Struktur.'; return; }
+      const folders = repoTree.filter(item => item.type === 'tree');
+      const files = repoTree.filter(item => item.type === 'blob');
+      let html = '<div><strong>Folder:</strong></div>';
+      if (folders.length === 0) html += '<div style="opacity:0.7;">(tidak ada)</div>';
+      else folders.forEach(f => {
+        html += `<div class="file-entry"><span> ${f.path}</span><button onclick="selectFolderToDelete('${f.path}')">Hapus</button></div>`;
+      });
+      html += '<div style="margin-top:0.8rem;"><strong>File:</strong></div>';
+      if (files.length === 0) html += '<div style="opacity:0.7;">(tidak ada)</div>';
+      else files.forEach(file => {
+        html += `<div class="file-entry"><span> ${file.path}</span>
+          <button onclick="downloadSingleFile('${file.path}')">Unduh</button>
+          <button onclick="deleteSingleFileInteractive('${file.path}')">Hapus</button>
+        </div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    function populateAllSelects() {
+      const folders = repoTree.filter(item => item.type === 'tree').map(item => item.path);
+      const files = repoTree.filter(item => item.type === 'blob').map(item => item.path);
+      const singleFolder = document.getElementById('singleTargetFolder');
+      if (singleFolder) singleFolder.innerHTML = '<option value="">(root)</option>' + folders.map(f => `<option value="${f}">${f}</option>`).join('');
+      const singleFile = document.getElementById('singleFileSelect');
+      if (singleFile) singleFile.innerHTML = '<option value="">-- pilih file --</option>';
+      if (document.getElementById('singleCode')) document.getElementById('singleCode').value = '';
+      const editorSelect = document.getElementById('editorFileSelect');
+      if (editorSelect) editorSelect.innerHTML = '<option value="">-- pilih file --</option>' + files.map(f => `<option value="${f}">${f}</option>`).join('');
+      const renameFolder = document.getElementById('renameFolderSelect');
+      if (renameFolder) renameFolder.innerHTML = '<option value="">-- pilih folder --</option>' + folders.map(f => `<option value="${f}">${f}</option>`).join('');
+      const renameFile = document.getElementById('renameFileSelect');
+      if (renameFile) renameFile.innerHTML = '<option value="">-- pilih file --</option>';
+      if (document.getElementById('renameNewPath')) document.getElementById('renameNewPath').value = '';
+    }
+
+    // ==================== SINGLE TAB ====================
+    function onSingleFolderChange() {
+      const folder = document.getElementById('singleTargetFolder').value;
+      const fileSelect = document.getElementById('singleFileSelect');
+      let files;
+      if (folder === '') {
+        files = repoTree.filter(item => item.type === 'blob' && !item.path.includes('/'));
+      } else {
+        files = repoTree.filter(item => item.type === 'blob' && item.path.startsWith(folder + '/'));
+      }
+      fileSelect.innerHTML = '<option value="">-- pilih file --</option>';
+      files.forEach(file => {
+        fileSelect.innerHTML += `<option value="${file.path}">${file.path}</option>`;
+      });
+      document.getElementById('singleCode').value = '';
+    }
+
+    function onSingleFileSelect() {}
+
+    async function loadSingleFileContent() {
+      const { username, repo, token } = getCredentials();
+      const filePath = document.getElementById('singleFileSelect').value;
+      if (!filePath) { showToast('Pilih file dulu.', 'error'); return; }
+      try {
+        const data = await githubGetContent(username, repo, filePath, token);
+        if (data.content && data.encoding === 'base64') {
+          document.getElementById('singleCode').value = atob(data.content);
+        }
+      } catch (e) {
+        setGlobalStatus('Gagal: ' + e.message, 'error');
+      }
+    }
+
+    async function deploySingle() {
+      const { username, repo, token } = getCredentials();
+      const filePath = document.getElementById('singleFileSelect').value;
+      const code = document.getElementById('singleCode').value;
+      if (!filePath) { showToast('Pilih file yang akan diupdate.', 'error'); return; }
+      if (!code.trim()) { showToast('Kode kosong.', 'error'); return; }
+      showConfirm(`Update file <b>${filePath}</b>?`, async () => {
+        try {
+          setGlobalStatus('Mengupload...', '');
+          await githubUpload(username, repo, filePath, code, token);
+          setGlobalStatus('File diupdate.', 'success');
+          showToast('Upload berhasil!', 'success');
+          loadRepoTree();
+        } catch (e) {
+          setGlobalStatus('Gagal: ' + e.message, 'error');
+          showToast('Gagal: ' + e.message, 'error');
+        }
+      });
+    }
+
+    function searchInSingle() {
+      const query = document.getElementById('singleSearch').value;
+      const editor = document.getElementById('singleCode');
+      if (!query) return;
+      const idx = editor.value.indexOf(query);
+      if (idx === -1) { showToast('Tidak ditemukan.', 'info'); return; }
+      editor.focus();
+      editor.setSelectionRange(idx, idx + query.length);
+    }
+
+    function replaceInSingle() {
+      const query = document.getElementById('singleSearch').value;
+      const replacement = prompt('Ganti dengan:');
+      if (replacement === null) return;
+      const editor = document.getElementById('singleCode');
+      editor.value = editor.value.split(query).join(replacement);
+    }
+
+    // ==================== ZIP TAB ====================
+    async function deployZip() {
+      const { username, repo, token } = getCredentials();
+      const fileInput = document.getElementById('zipFile');
+      const stripRoot = document.getElementById('stripRoot').checked;
+      if (!fileInput.files.length) { showToast('Pilih file ZIP.', 'error'); return; }
+      const zipFile = fileInput.files[0];
+      const progressBar = document.getElementById('zipProgress');
+      const progressFill = progressBar ? progressBar.querySelector('.fill') : null;
+      const statusDiv = document.getElementById('zipStatus');
+      if (progressBar) progressBar.style.display = 'block';
+      if (progressFill) progressFill.style.width = '0%';
+      if (statusDiv) statusDiv.textContent = 'Membaca ZIP...';
+      try {
+        const zip = await JSZip.loadAsync(zipFile);
+        let files = [];
+        zip.forEach((relativePath, file) => {
+          if (!file.dir) files.push({ path: relativePath, contentPromise: file.async('string') });
+        });
+        if (files.length === 0) throw new Error('ZIP kosong.');
+        if (stripRoot) {
+          const rootItems = new Set(files.map(f => f.path.split('/')[0]));
+          if (rootItems.size === 1 && files.every(f => f.path.includes('/'))) {
+            const rootFolder = [...rootItems][0];
+            files = files.map(f => ({ ...f, path: f.path.replace(rootFolder + '/', '') }));
+          }
+        }
+        let done = 0;
+        for (const f of files) {
+          const content = await f.contentPromise;
+          if (statusDiv) statusDiv.textContent = `Upload ${f.path} (${++done}/${files.length})...`;
+          if (progressFill) progressFill.style.width = (done / files.length * 100) + '%';
+          await githubUpload(username, repo, f.path, content, token);
+        }
+        if (statusDiv) statusDiv.textContent = `${files.length} file berhasil diupload!`;
+        showToast('ZIP berhasil diupload!', 'success');
+        loadRepoTree();
+      } catch (e) {
+        if (statusDiv) statusDiv.textContent = 'Error: ' + e.message;
+        showToast('Gagal: ' + e.message, 'error');
+      }
+      setTimeout(() => {
+        if (progressBar) progressBar.style.display = 'none';
+        if (statusDiv) statusDiv.textContent = '';
+      }, 5000);
+    }
+
+    // ==================== EDITOR TAB ====================
+    async function loadSelectedFileForEdit() {
+      const { username, repo, token } = getCredentials();
+      const filePath = document.getElementById('editorFileSelect').value;
+      if (!filePath) { showToast('Pilih file dulu.', 'error'); return; }
+      try {
+        const data = await githubGetContent(username, repo, filePath, token);
+        if (data.content && data.encoding === 'base64') {
+          document.getElementById('editorCode').value = atob(data.content);
+          document.getElementById('editorStatus').textContent = 'File dimuat.';
+        }
+      } catch (e) {
+        document.getElementById('editorStatus').textContent = 'Error: ' + e.message;
+      }
+    }
+
+    async function saveAndUploadEdit() {
+      const { username, repo, token } = getCredentials();
+      const filePath = document.getElementById('editorFileSelect').value;
+      const code = document.getElementById('editorCode').value;
+      if (!filePath) { showToast('Pilih file.', 'error'); return; }
+      if (!code.trim()) { showToast('Kode kosong.', 'error'); return; }
+      showConfirm(`Update file <b>${filePath}</b>?`, async () => {
+        try {
+          setGlobalStatus('Mengupload...', '');
+          await githubUpload(username, repo, filePath, code, token);
+          setGlobalStatus('File diupdate.', 'success');
+          showToast('Upload berhasil!', 'success');
+          document.getElementById('editorStatus').textContent = 'Upload berhasil.';
+          loadRepoTree();
+        } catch (e) {
+          setGlobalStatus('Gagal: ' + e.message, 'error');
+          showToast('Gagal: ' + e.message, 'error');
+        }
+      });
+    }
+
+    // ==================== FILES TAB ====================
+    async function downloadSingleFile(path) {
+      const { username, repo, token } = getCredentials();
+      try {
+        const data = await githubGetContent(username, repo, path, token);
+        if (data.content && data.encoding === 'base64') {
+          const content = atob(data.content);
+          const blob = new Blob([content], { type: 'text/plain' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = path.split('/').pop(); a.click();
+          URL.revokeObjectURL(url);
+        }
+      } catch (e) { showToast('Gagal download.', 'error'); }
+    }
+
+    async function deleteSingleFileInteractive(path) {
+      const { username, repo, token } = getCredentials();
+      showConfirm(`Hapus file <b>${path}</b>?`, async () => {
+        try {
+          const data = await githubGetContent(username, repo, path, token);
+          await githubDeleteFile(username, repo, path, data.sha, token);
+          setGlobalStatus('File dihapus.', 'success');
+          showToast('File dihapus.', 'success');
+          loadRepoTree();
+        } catch (e) {
+          setGlobalStatus('Gagal: ' + e.message, 'error');
+          showToast('Gagal: ' + e.message, 'error');
+        }
+      });
+    }
+
+    function selectFolderToDelete(folderPath) {
+      selectedDeleteFolder = folderPath;
+      document.getElementById('manageStatus').textContent = `Folder terpilih: ${folderPath}. Klik "Hapus Folder".`;
+    }
+
+    async function deleteFolderInteractive() {
+      if (!selectedDeleteFolder) { showToast('Pilih folder dulu.', 'error'); return; }
+      const { username, repo, token } = getCredentials();
+      showConfirm(`Hapus folder <b>${selectedDeleteFolder}</b> dan isinya?`, async () => {
+        try {
+          const tree = await fetchRepoTree(username, repo, token);
+          const filesToDelete = tree.filter(item => item.type === 'blob' && item.path.startsWith(selectedDeleteFolder + '/'));
+          if (filesToDelete.length === 0) { showToast('Folder kosong.', 'info'); return; }
+          let deleted = 0;
+          for (const file of filesToDelete) {
+            try { await githubDeleteFile(username, repo, file.path, file.sha, token); deleted++; } catch(e) {}
+          }
+          setGlobalStatus(`Folder dibersihkan (${deleted} file).`, 'success');
+          showToast('Folder dihapus.', 'success');
+          loadRepoTree();
+        } catch (e) {
+          setGlobalStatus('Gagal: ' + e.message, 'error');
+          showToast('Gagal: ' + e.message, 'error');
+        }
+      });
+    }
+
+    async function deleteAllFiles() {
+      const { username, repo, token } = getCredentials();
+      showConfirm(`Hapus SEMUA file di <b>${username}/${repo}</b>?`, async () => {
+        try {
+          const tree = await fetchRepoTree(username, repo, token);
+          const files = tree.filter(item => item.type === 'blob');
+          if (files.length === 0) { showToast('Repo kosong.', 'info'); return; }
+          let deleted = 0;
+          for (const file of files) {
+            try { await githubDeleteFile(username, repo, file.path, file.sha, token); deleted++; } catch(e) {}
+          }
+          setGlobalStatus(`${deleted} file dihapus.`, 'success');
+          showToast('Semua file dihapus.', 'success');
+          loadRepoTree();
+        } catch (e) {
+          setGlobalStatus('Gagal: ' + e.message, 'error');
+          showToast('Gagal: ' + e.message, 'error');
+        }
+      });
+    }
+
+    async function deleteRepoInteractive() {
+      const { username, repo, token } = getCredentials();
+      showConfirm(`HAPUS REPO <b>${username}/${repo}</b>? Tidak bisa dibatalkan.`, async () => {
+        try {
+          const res = await fetch(`https://api.github.com/repos/${username}/${repo}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `token ${token}` }
+          });
+          if (res.ok || res.status === 204) {
+            setGlobalStatus('Repo dihapus.', 'success');
+            showToast('Repository dihapus.', 'success');
+            repoTree = [];
+            renderFileBrowser();
+            populateAllSelects();
+          } else {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || 'Gagal');
+          }
+        } catch (e) {
+          setGlobalStatus('Gagal: ' + e.message, 'error');
+          showToast('Gagal: ' + e.message, 'error');
+        }
+      });
+    }
+
+    // ==================== RENAME TAB ====================
+    function onRenameFolderSelect() {
+      const folder = document.getElementById('renameFolderSelect').value;
+      const fileSelect = document.getElementById('renameFileSelect');
+      const newPath = document.getElementById('renameNewPath');
+      fileSelect.innerHTML = '<option value="">-- pilih file --</option>';
+      if (!folder) { newPath.value = ''; return; }
+      newPath.value = folder;
+      const files = repoTree.filter(item => item.type === 'blob' && item.path.startsWith(folder + '/'));
+      files.forEach(f => {
+        fileSelect.innerHTML += `<option value="${f.path}">${f.path}</option>`;
+      });
+    }
+
+    function onRenameFileSelect() {
+      const file = document.getElementById('renameFileSelect').value;
+      if (file) document.getElementById('renameNewPath').value = file;
+    }
+
+    async function executeRename() {
+      const { username, repo, token } = getCredentials();
+      const oldFolder = document.getElementById('renameFolderSelect').value;
+      const oldFile = document.getElementById('renameFileSelect').value;
+      const newPath = document.getElementById('renameNewPath').value.trim();
+      let oldPath = '', isFile = false, isFolder = false;
+      if (oldFile) { oldPath = oldFile; isFile = true; }
+      else if (oldFolder) { oldPath = oldFolder; isFolder = true; }
+      else { showToast('Pilih folder atau file.', 'error'); return; }
+      if (!newPath) { showToast('Masukkan path baru.', 'error'); return; }
+      if (oldPath === newPath) { showToast('Nama sama.', 'info'); return; }
+
+      showConfirm(`Rename <b>${oldPath}</b> menjadi <b>${newPath}</b>?`, async () => {
+        try {
+          if (isFile) {
+            const data = await githubGetContent(username, repo, oldPath, token);
+            if (!data.content || data.encoding !== 'base64') throw new Error('Bukan file teks.');
+            const content = atob(data.content);
+            await githubUpload(username, repo, newPath, content, token);
+            await githubDeleteFile(username, repo, oldPath, data.sha, token);
+            document.getElementById('renameStatus').textContent = 'File di-rename.';
+          } else {
+            const tree = await fetchRepoTree(username, repo, token);
+            const filesInFolder = tree.filter(item => item.type === 'blob' && item.path.startsWith(oldPath + '/'));
+            if (filesInFolder.length === 0) {
+              await githubUpload(username, repo, newPath + '/.gitkeep', '', token);
+              const phData = await githubGetContent(username, repo, newPath + '/.gitkeep', token);
+              await githubDeleteFile(username, repo, newPath + '/.gitkeep', phData.sha, token);
+              document.getElementById('renameStatus').textContent = 'Folder di-rename.';
+            } else {
+              let done = 0;
+              for (const file of filesInFolder) {
+                const nfp = file.path.replace(oldPath, newPath);
+                const fd = await githubGetContent(username, repo, file.path, token);
+                if (!fd.content || fd.encoding !== 'base64') continue;
+                await githubUpload(username, repo, nfp, atob(fd.content), token);
+                await githubDeleteFile(username, repo, file.path, fd.sha, token);
+                done++;
+              }
+              document.getElementById('renameStatus').textContent = `${done} file dipindahkan.`;
+            }
+          }
+          showToast('Rename berhasil.', 'success');
+          loadRepoTree();
+        } catch (e) {
+          document.getElementById('renameStatus').textContent = 'Gagal: ' + e.message;
+          showToast('Gagal: ' + e.message, 'error');
+        }
+      });
+    }
+
+    // ==================== CREATE REPO ====================
+    async function createRepo() {
+      const { token } = getCredentials();
+      const repoName = document.getElementById('newRepoName').value.trim();
+      const visibility = document.getElementById('newRepoVisibility').value;
+      const addReadme = document.getElementById('newRepoReadme').checked;
+      if (!repoName) { showToast('Masukkan nama repo.', 'error'); return; }
+      try {
+        setGlobalStatus('Membuat repo...', '');
+        const res = await fetch('https://api.github.com/user/repos', {
+          method: 'POST',
+          headers: {
+            'Authorization': `token ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name: repoName, private: visibility === 'private', auto_init: addReadme })
+        });
+        if (!res.ok) throw new Error((await res.json()).message || 'Gagal');
+        const data = await res.json();
+        document.getElementById('createRepoResult').innerHTML = `
+          <div class="result-box">
+            <input type="text" value="${data.html_url}" readonly id="newRepoUrl">
+            <button onclick="navigator.clipboard.writeText(document.getElementById('newRepoUrl').value); showToast('URL disalin!','success');" class="inline-btn">Copy</button>
+          </div>`;
+        setGlobalStatus('Repo berhasil dibuat!', 'success');
+        showToast('Repository berhasil dibuat!', 'success');
+      } catch (e) {
+        setGlobalStatus('Gagal: ' + e.message, 'error');
+        showToast('Gagal: ' + e.message, 'error');
+      }
+    }
+
+    // ==================== DAFTAR REPO ====================
+    async function refreshRepoList() {
+      const { username, token } = getCredentials();
+      if (!username || !token) { showToast('Login dulu.', 'error'); return; }
+      try {
+        document.getElementById('repoListContainer').innerHTML = 'Memuat...';
+        let repos = [];
+        let page = 1;
+        while (true) {
+          const res = await fetch(`https://api.github.com/user/repos?per_page=100&page=${page}`, {
+            headers: { 'Authorization': `token ${token}` }
+          });
+          if (!res.ok) throw new Error('Gagal fetch repo');
+          const data = await res.json();
+          if (data.length === 0) break;
+          repos = repos.concat(data);
+          if (data.length < 100) break;
+          page++;
+        }
+        renderRepoList(repos);
+        document.getElementById('selectAllRepos').checked = false;
+        document.getElementById('repoCount').textContent = repos.length + ' repo';
+      } catch (e) {
+        document.getElementById('repoListContainer').innerHTML = '<p style="color:red;">Error: ' + e.message + '</p>';
+      }
+    }
+
+    function renderRepoList(repos) {
+      const container = document.getElementById('repoListContainer');
+      if (repos.length === 0) { container.innerHTML = '<p>Tidak ada repositori.</p>'; return; }
+      let html = '';
+      repos.forEach(repo => {
+        const isProtected = (repo.name === 'deploy-tool');
+        html += `<div class="repo-list-item">
+          ${isProtected ? 
+            `<span style="color:#aaa;">${repo.name} <span class="protected-badge">DILINDUNGI</span></span>` :
+            `<input type="checkbox" class="repo-checkbox" value="${repo.name}" data-owner="${repo.owner.login}">
+             <span class="repo-name">${repo.name}</span>
+             <button class="copy-repo-btn" onclick="copyRepoName('${repo.name}')" title="Copy nama">Copy</button>`
+          }
+        </div>`;
+      });
+      container.innerHTML = html;
+      renderDeleteHistory();
+    }
+
+    function copyRepoName(name) {
+      navigator.clipboard.writeText(name).then(() => showToast('Nama repo disalin!', 'success'));
+    }
+
+    function toggleAllRepos() {
+      const selectAll = document.getElementById('selectAllRepos').checked;
+      document.querySelectorAll('.repo-checkbox').forEach(cb => { cb.checked = selectAll; });
+    }
+
+    async function deleteSelectedRepos() {
+      const checkboxes = document.querySelectorAll('.repo-checkbox:checked');
+      if (checkboxes.length === 0) { showToast('Pilih repo yang akan dihapus.', 'error'); return; }
+      const { token } = getCredentials();
+      const reposToDelete = Array.from(checkboxes).map(cb => ({ name: cb.value, owner: cb.dataset.owner }));
+      const filtered = reposToDelete.filter(r => r.name !== 'deploy-tool');
+      if (filtered.length === 0) { showToast('deploy-tool tidak bisa dihapus.', 'error'); return; }
+
+      const repoListStr = filtered.map(r => `${r.owner}/${r.name}`).join(', ');
+      showConfirm(`Hapus repositori:<br><b>${repoListStr}</b><br>Ini tidak dapat dibatalkan.`, async () => {
+        let deletedCount = 0;
+        const errors = [];
+        for (const repo of filtered) {
+          try {
+            const res = await fetch(`https://api.github.com/repos/${repo.owner}/${repo.name}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `token ${token}` }
+            });
+            if (res.ok || res.status === 204) {
+              addDeleteHistory(repo.name);
+              deletedCount++;
+            } else {
+              const errData = await res.json().catch(() => ({}));
+              errors.push(`${repo.name}: ${errData.message}`);
+            }
+          } catch (e) {
+            errors.push(`${repo.name}: ${e.message}`);
+          }
+        }
+        if (errors.length > 0) {
+          showToast(`Berhasil hapus ${deletedCount} repo. Error: ${errors.join('; ')}`, 'error');
+        } else {
+          showToast(`${deletedCount} repositori dihapus.`, 'success');
+        }
+        refreshRepoList();
+      });
+    }
+
+    function getDeleteHistory() {
+      return JSON.parse(localStorage.getItem(deletedHistoryKey) || '[]');
+    }
+
+    function addDeleteHistory(repoName) {
+      const history = getDeleteHistory();
+      history.push({ repoName, deletedAt: new Date().toISOString() });
+      localStorage.setItem(deletedHistoryKey, JSON.stringify(history));
+    }
+
+    function renderDeleteHistory() {
+      const container = document.getElementById('deleteHistoryContainer');
+      const history = getDeleteHistory();
+      if (history.length === 0) { container.innerHTML = '<p style="opacity:0.5;">Belum ada penghapusan.</p>'; return; }
+      let html = '';
+      history.slice().reverse().forEach(item => {
+        const date = new Date(item.deletedAt);
+        const formatted = date.toLocaleString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+        html += `<div class="history-item"><span> ${item.repoName}</span><span style="opacity:0.6;font-size:0.8rem;">${formatted}</span></div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    // ==================== MANAJEMEN AKUN ====================
+    function openAccountManager() {
+      const profiles = getProfiles();
+      const list = document.getElementById('accountList');
+      if (profiles.length === 0) {
+        list.innerHTML = '<p>Belum ada akun tersimpan.</p>';
+      } else {
+        let html = '';
+        profiles.forEach((p, i) => {
+          html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.3rem;background:rgba(255,255,255,0.05);border-radius:8px;margin-bottom:0.2rem;">
+            <div><strong>${p.name}</strong> (${p.username}/${p.repo})</div>
+            <div>
+              <button onclick="switchAccount(${i})" class="inline-btn" style="padding:0.2rem 0.5rem;">Pilih</button>
+              <button onclick="deleteAccount(${i})" class="inline-btn" style="background:#e53935;padding:0.2rem 0.5rem;">Hapus</button>
+            </div>
+          </div>`;
+        });
+        list.innerHTML = html;
+      }
+      document.getElementById('accountModal').style.display = 'flex';
+    }
+
+    function closeAccountModal() { document.getElementById('accountModal').style.display = 'none'; }
+
+    function switchAccount(index) {
+      const profiles = getProfiles();
+      const p = profiles[index];
+      const userObj = { username: p.username, repo: p.repo, token: p.token };
+      saveCurrentUser(userObj);
+      closeAccountModal();
+      showLoggedInUI(userObj);
+      showToast(`Beralih ke akun ${p.name}`, 'success');
+      loadRepoTree();
+    }
+
+    function deleteAccount(index) {
+      const profiles = getProfiles();
+      profiles.splice(index, 1);
+      saveProfiles(profiles);
+      openAccountManager();
+      showToast('Akun dihapus.', 'info');
+    }
+
+    // ==================== BACKGROUND ====================
+    function generateParticles() {
+      const container = document.getElementById('particles');
+      if (!container) return;
+      for (let i = 0; i < 25; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random() * 6 + 3;
+        p.style.width = size + 'px'; p.style.height = size + 'px';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.animationDuration = (Math.random() * 12 + 8) + 's';
+        p.style.animationDelay = (Math.random() * 8) + 's';
+        container.appendChild(p);
+      }
+    }
   </script>
 </body>
 </html>
