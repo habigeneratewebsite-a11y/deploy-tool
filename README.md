@@ -1,6 +1,6 @@
 # 🚀 HABI STUDIO CODING .ZIP
 
-Website: https on air://habigeneratewebsite-a11y.github.io/deploy-tool/
+Website publik: https://habigeneratewebsite-a11y.github.io/deploy-tool/
 
 Tool serba guna untuk mengelola repository GitHub langsung dari browser HP atau desktop. Dibangun oleh **HABI STUDIO AI**, tool ini memungkinkan kamu melakukan deploy kode dari chat AI, mengelola file, mengedit, merename, hingga menghapus repo hanya dengan satu klik.
 
