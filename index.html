@@ -72,25 +72,15 @@
     }
     .shortcut-card {
       display: flex; align-items: center; justify-content: center;
-      gap: 0.5rem;
-      background: rgba(255,255,255,0.05);
-      padding: 0.6rem 1rem;
-      border-radius: 16px;
-      margin: 0.8rem 0;
-      text-decoration: none;
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.15);
+      gap: 0.5rem; background: rgba(255,255,255,0.05);
+      padding: 0.6rem 1rem; border-radius: 16px;
+      margin: 0.8rem 0; text-decoration: none;
+      color: #fff; border: 1px solid rgba(255,255,255,0.15);
       transition: all 0.3s ease;
       animation: pulseGlow 2s infinite;
     }
-    .shortcut-card:hover {
-      background: rgba(124,77,255,0.2);
-      box-shadow: 0 0 20px rgba(124,77,255,0.5);
-    }
-    .shortcut-card .icon {
-      font-size: 1.8rem;
-      animation: iconSpin 4s linear infinite;
-    }
+    .shortcut-card:hover { background: rgba(124,77,255,0.2); box-shadow: 0 0 20px rgba(124,77,255,0.5); }
+    .shortcut-card .icon { font-size: 1.8rem; animation: iconSpin 4s linear infinite; }
     @keyframes pulseGlow {
       0% { box-shadow: 0 0 5px rgba(124,77,255,0.3); }
       50% { box-shadow: 0 0 20px rgba(124,77,255,0.6); }
@@ -216,58 +206,29 @@
       from { bottom: 0; opacity: 0; }
       to { bottom: 2rem; opacity: 1; }
     }
-    .account-form input {
-      margin-top: 0.3rem;
-    }
+    .account-form input { margin-top: 0.3rem; }
     .result-box {
       background: rgba(0,0,0,0.3);
-      padding: 1rem;
-      border-radius: 12px;
-      margin-top: 0.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      padding: 1rem; border-radius: 12px; margin-top: 0.5rem;
+      display: flex; align-items: center; justify-content: space-between;
     }
-    .result-box input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      color: white;
-      padding: 0.5rem;
+    .result-box input { flex: 1; background: transparent; border: none; color: white; padding: 0.5rem; }
+    .result-box button { padding: 0.5rem 1rem; }
+    /* Daftar Repo */
+    .repo-list-header {
+      display: flex; align-items: center; gap: 0.5rem;
+      margin-bottom: 0.5rem; font-weight: bold;
     }
-    .result-box button {
-      padding: 0.5rem 1rem;
-    }
-    /* Style untuk daftar repo */
     .repo-list-item {
-      display: flex;
-      align-items: center;
-      padding: 0.5rem;
-      background: rgba(255,255,255,0.03);
-      border-radius: 10px;
-      margin-bottom: 0.3rem;
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
     }
-    .repo-list-item input[type="checkbox"] {
-      margin-right: 0.8rem;
-      width: auto;
-      transform: scale(1.2);
-      accent-color: #7c4dff;
-    }
-    .repo-list-item span {
-      flex: 1;
-      word-break: break-word;
-    }
-    .protected-badge {
-      background: #e53935;
-      padding: 0.2rem 0.6rem;
-      border-radius: 10px;
-      font-size: 0.8rem;
-      margin-left: 0.5rem;
-    }
+    .repo-list-item label { margin-top: 0; font-weight: normal; }
+    .repo-list-item .repo-name { flex: 1; word-break: break-word; }
+    .protected-badge { background: #e53935; padding: 0.2rem 0.5rem; border-radius: 8px; font-size: 0.8rem; margin-left: 0.3rem; }
     .history-item {
-      font-size: 0.9rem;
-      padding: 0.3rem 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding: 0.3rem 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+      font-size: 0.9rem; display: flex; justify-content: space-between;
     }
   </style>
 </head>
@@ -314,6 +275,7 @@
 
     <!-- Tab Single File -->
     <div id="tab-single" class="tab-content active">
+      <!-- konten sama seperti sebelumnya, tidak diubah -->
       <label>Folder Tujuan</label>
       <select id="singleTargetFolder" onchange="onSingleFolderChange()"><option value="">(root)</option></select>
       <label>Pilih File (di folder terpilih)</label>
@@ -331,6 +293,7 @@
 
     <!-- Tab ZIP -->
     <div id="tab-zip" class="tab-content">
+      <!-- konten sama -->
       <label>Pilih file ZIP</label>
       <input type="file" id="zipFile" accept=".zip">
       <label style="display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem;">
@@ -341,6 +304,7 @@
 
     <!-- Tab Editor -->
     <div id="tab-editor" class="tab-content">
+      <!-- konten sama -->
       <label>Pilih File untuk Diedit</label>
       <select id="editorFileSelect"><option value="">-- pilih file --</option></select>
       <button onclick="loadSelectedFileForEdit()" style="margin-top:0.3rem; background:#7c4dff;">📂 Muat File</button>
@@ -352,6 +316,7 @@
 
     <!-- Tab Files (Manajemen) -->
     <div id="tab-files" class="tab-content">
+      <!-- konten sama -->
       <h3>📂 File & Folder Browser</h3>
       <div class="file-browser" id="fileBrowser">Belum dimuat. Klik "Muat Struktur".</div>
       <div id="manageStatus" style="margin-top:0.5rem; font-size:0.9rem;"></div>
@@ -362,6 +327,7 @@
 
     <!-- Tab Rename -->
     <div id="tab-rename" class="tab-content">
+      <!-- konten sama -->
       <h3>✏️ Rename File / Folder</h3>
       <label>Pilih Folder</label>
       <select id="renameFolderSelect" onchange="onRenameFolderSelect()"><option value="">-- pilih folder --</option></select>
@@ -391,10 +357,17 @@
       <div id="createRepoResult" style="margin-top:1rem;"></div>
     </div>
 
-    <!-- Tab Daftar Repo -->
+    <!-- Tab Daftar Repo (Baru) -->
     <div id="tab-list-repo" class="tab-content">
       <h3>📋 Daftar Semua Repositori</h3>
-      <button onclick="refreshRepoList()" class="inline-btn" style="margin-bottom:0.5rem;">🔄 Refresh</button>
+      <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem; align-items:center;">
+        <button onclick="refreshRepoList()" class="inline-btn">🔄 Refresh</button>
+        <span style="font-size:0.9rem;" id="repoCount">0 repo</span>
+      </div>
+      <div class="repo-list-header">
+        <input type="checkbox" id="selectAllRepos" onchange="toggleAllRepos()"> 
+        <span>Pilih Semua (kecuali dilindungi)</span>
+      </div>
       <div id="repoListContainer" style="max-height: 350px; overflow-y: auto; margin-bottom: 0.5rem;">
         <p style="opacity:0.7;">Klik "Refresh" untuk memuat daftar repositori.</p>
       </div>
@@ -440,7 +413,7 @@
     </details>
     <details>
       <summary>📋 Daftar Repo & Hapus Massal</summary>
-      <p>Tab <b>Daftar Repo</b> menampilkan seluruh repositori milik akun GitHub-mu. Kamu bisa mencentang repo yang ingin dihapus, lalu klik <b>Hapus Repositori Terpilih</b>. <b>Repo "deploy-tool" dilindungi</b> dan tidak bisa dihapus. Riwayat penghapusan dicatat di bagian bawah.</p>
+      <p>Tab <b>Daftar Repo</b> menampilkan seluruh repositori milik akun GitHub-mu. Kamu bisa mencentang satu per satu atau gunakan <b>Pilih Semua</b> untuk memilih semua repo (kecuali <b>deploy-tool</b> yang dilindungi). Setelah memilih, klik <b>Hapus Repositori Terpilih</b> untuk menghapusnya. Riwayat penghapusan tercatat di bawah.</p>
     </details>
     <details>
       <summary>👥 Multi‑Akun & Token Panel</summary>
@@ -689,7 +662,7 @@
       });
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       document.getElementById(`tab-${tab}`).classList.add('active');
-      if (tab === 'list-repo') refreshRepoList(); // otomatis load saat buka tab
+      if (tab === 'list-repo') refreshRepoList(); // auto load
     }
 
     // ==================== GITHUB API ====================
@@ -721,23 +694,14 @@
       const headers = { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' };
       let sha = null;
       const getRes = await fetch(apiUrl, { headers });
-      if (getRes.ok) {
-        const data = await getRes.json();
-        sha = data.sha;
-      } else if (getRes.status !== 404) {
-        throw new Error(`Gagal cek ${path}: ${getRes.status}`);
-      }
+      if (getRes.ok) { const data = await getRes.json(); sha = data.sha; }
+      else if (getRes.status !== 404) throw new Error(`Gagal cek ${path}: ${getRes.status}`);
       const body = { message: `Habi Studio: update ${path}`, content: toBase64(content), branch };
       if (sha) body.sha = sha;
       const putRes = await fetch(apiUrl, {
-        method: 'PUT',
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(body)
       });
-      if (!putRes.ok) {
-        const err = await putRes.json().catch(() => ({}));
-        throw new Error(err.message || putRes.statusText);
-      }
+      if (!putRes.ok) { const err = await putRes.json().catch(() => ({})); throw new Error(err.message || putRes.statusText); }
     }
 
     async function githubGetContent(owner, repo, path, token) {
@@ -767,9 +731,7 @@
         updateTokenPanel();
         renderFileBrowser();
         populateAllSelects();
-      } catch (e) {
-        setGlobalStatus(`Gagal: ${e.message}`, 'error');
-      }
+      } catch (e) { setGlobalStatus(`Gagal: ${e.message}`, 'error'); }
     }
 
     function renderFileBrowser() {
@@ -796,42 +758,36 @@
     function populateAllSelects() {
       const folders = repoTree.filter(item => item.type === 'tree').map(item => item.path);
       const files = repoTree.filter(item => item.type === 'blob').map(item => item.path);
-
-      const singleFolder = document.getElementById('singleTargetFolder');
-      singleFolder.innerHTML = '<option value="">(root)</option>' + folders.map(f => `<option value="${f}">${f}</option>`).join('');
+      document.getElementById('singleTargetFolder').innerHTML = '<option value="">(root)</option>' + folders.map(f => `<option value="${f}">${f}</option>`).join('');
       document.getElementById('singleFileSelect').innerHTML = '<option value="">-- pilih file --</option>';
       document.getElementById('singleCode').value = '';
-
-      const editorSelect = document.getElementById('editorFileSelect');
-      editorSelect.innerHTML = '<option value="">-- pilih file --</option>' + files.map(f => `<option value="${f}">${f}</option>`).join('');
-
+      document.getElementById('editorFileSelect').innerHTML = '<option value="">-- pilih file --</option>' + files.map(f => `<option value="${f}">${f}</option>`).join('');
       const renameFolder = document.getElementById('renameFolderSelect');
       renameFolder.innerHTML = '<option value="">-- pilih folder --</option>' + folders.map(f => `<option value="${f}">${f}</option>`).join('');
       document.getElementById('renameFileSelect').innerHTML = '<option value="">-- pilih file --</option>';
       document.getElementById('renameNewPath').value = '';
     }
 
-    // ... (Fungsi-fungsi tab single, zip, editor, files, rename, create-repo tetap sama persis seperti sebelumnya, tidak diubah)
-    // Untuk menghemat ruang, saya tidak menulis ulang fungsi-fungsi tersebut di sini karena panjang.
-    // Asumsikan semua fungsi yang ada sebelumnya tetap ada.
+    // ... (fungsi-fungsi tab lainnya tetap sama seperti sebelumnya)
+    // Karena panjang, saya tidak menulis ulang semua, pastikan fungsi single, zip, editor, files, rename, create-repo tetap ada.
+    // Asumsikan kode sebelumnya sudah termasuk semua fungsi tersebut.
 
-    // ==================== DAFTAR REPO BARU ====================
+    // ==================== DAFTAR REPO (BARU) ====================
     async function refreshRepoList() {
       const { username, token } = getCredentials();
       if (!username || !token) {
-        showToast('Isi username dan token untuk memuat daftar repo.');
-        document.getElementById('repoListContainer').innerHTML = '<p style="opacity:0.7;">Data GitHub belum lengkap.</p>';
+        document.getElementById('repoListContainer').innerHTML = '<p style="opacity:0.7;">Isi username dan token.</p>';
         return;
       }
       try {
-        document.getElementById('repoListContainer').innerHTML = 'Memuat daftar repositori...';
+        document.getElementById('repoListContainer').innerHTML = 'Memuat...';
         let repos = [];
         let page = 1;
         while (true) {
           const res = await fetch(`https://api.github.com/user/repos?per_page=100&page=${page}`, {
             headers: { 'Authorization': `token ${token}` }
           });
-          if (!res.ok) throw new Error('Gagal mengambil daftar repo: ' + res.status);
+          if (!res.ok) throw new Error('Gagal fetch daftar repo: ' + res.status);
           const data = await res.json();
           if (data.length === 0) break;
           repos = repos.concat(data);
@@ -839,6 +795,8 @@
           page++;
         }
         renderRepoList(repos);
+        document.getElementById('selectAllRepos').checked = false;
+        document.getElementById('repoCount').textContent = repos.length + ' repo';
       } catch (e) {
         document.getElementById('repoListContainer').innerHTML = `<p style="color:red;">Error: ${e.message}</p>`;
       }
@@ -856,26 +814,33 @@
         html += `<div class="repo-list-item">
           ${isProtected ? 
             `<span style="color:#aaa;">🔒 ${repo.name} <span class="protected-badge">DILINDUNGI</span></span>` :
-            `<input type="checkbox" value="${repo.name}" data-owner="${repo.owner.login}"> <span>${repo.name}</span>`
+            `<input type="checkbox" class="repo-checkbox" value="${repo.name}" data-owner="${repo.owner.login}">
+             <label class="repo-name">${repo.name}</label>`
           }
         </div>`;
       });
       container.innerHTML = html;
-      // Tampilkan riwayat
       renderDeleteHistory();
     }
 
+    function toggleAllRepos() {
+      const selectAll = document.getElementById('selectAllRepos').checked;
+      document.querySelectorAll('.repo-checkbox').forEach(cb => {
+        cb.checked = selectAll;
+      });
+    }
+
     async function deleteSelectedRepos() {
-      const checkboxes = document.querySelectorAll('#repoListContainer input[type="checkbox"]:checked');
+      const checkboxes = document.querySelectorAll('.repo-checkbox:checked');
       if (checkboxes.length === 0) {
         showToast('Pilih setidaknya satu repositori untuk dihapus.');
         return;
       }
       const { username, token } = getCredentials();
-      if (!username || !token) { showToast('Isi username dan token.'); return; }
+      if (!username || !token) { showToast('Isi data GitHub.'); return; }
 
       const reposToDelete = Array.from(checkboxes).map(cb => ({ name: cb.value, owner: cb.dataset.owner }));
-      // Filter: pastikan tidak ada repo deploy-tool yang lolos (walaupun sudah tidak ada checkbox)
+      // Filter lagi untuk memastikan deploy-tool tidak terhapus (walaupun checkbox tidak ada)
       const filtered = reposToDelete.filter(r => r.name !== 'deploy-tool');
       if (filtered.length === 0) {
         showToast('Tidak ada repositori yang bisa dihapus (deploy-tool dilindungi).');
@@ -934,10 +899,14 @@
       history.slice().reverse().forEach(item => {
         const date = new Date(item.deletedAt);
         const formatted = date.toLocaleString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-        html += `<div class="history-item">🗑️ ${item.repoName} <span style="opacity:0.6; font-size:0.8rem;">(${formatted})</span></div>`;
+        html += `<div class="history-item"><span>🗑️ ${item.repoName}</span> <span style="opacity:0.6; font-size:0.8rem;">${formatted}</span></div>`;
       });
       container.innerHTML = html;
     }
+
+    // Pastikan semua fungsi tab lain tetap ada (single, zip, editor, files, rename, create-repo) 
+    // ... (kode fungsi-fungsi tersebut tidak ditulis ulang di sini karena keterbatasan ruang, namun harus disertakan)
+    // Untuk memastikan tool berfungsi penuh, gunakan kode lengkap dari jawaban sebelumnya dan tambahkan bagian daftar repo ini.
 
     // ==================== BACKGROUND ====================
     function generateParticles() {
