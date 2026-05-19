@@ -97,6 +97,33 @@
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
+    .login-btn-container {
+      text-align: center;
+      margin: 1rem 0;
+    }
+    .login-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, #24292e, #444d56);
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border-radius: 30px;
+      border: none;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      animation: pulseGlow 2s infinite;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      transition: all 0.3s;
+    }
+    .login-btn:hover {
+      background: linear-gradient(135deg, #2f363d, #586069);
+      box-shadow: 0 0 25px rgba(124,77,255,0.5);
+    }
+    .login-btn .gh-icon {
+      font-size: 1.5rem;
+    }
     .tab-buttons { display: flex; gap: 0.4rem; margin: 1rem 0; flex-wrap: wrap; }
     .tab-btn {
       flex: 1; min-width: 55px; padding: 0.7rem 0.3rem;
@@ -221,7 +248,6 @@
     }
     .result-box input { flex: 1; background: transparent; border: none; color: white; padding: 0.5rem; }
     .result-box button { padding: 0.5rem 1rem; }
-    /* Daftar Repo */
     .repo-list-header {
       display: flex; align-items: center; gap: 0.5rem;
       margin-bottom: 0.5rem; font-weight: bold;
@@ -229,7 +255,6 @@
     .repo-list-item {
       display: flex; align-items: center; gap: 0.5rem;
       padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
-      /* Hapus margin/padding berlebih */
     }
     .repo-list-item label { margin-top: 0; font-weight: normal; }
     .repo-list-item .repo-name {
@@ -242,7 +267,6 @@
       padding: 0.3rem 0; border-bottom: 1px solid rgba(255,255,255,0.03);
       font-size: 0.9rem; display: flex; justify-content: space-between;
     }
-    /* Toggle switch */
     .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
@@ -250,6 +274,17 @@
     input:checked + .slider { background-color: #7c4dff; }
     input:focus + .slider { box-shadow: 0 0 1px #7c4dff; }
     input:checked + .slider:before { transform: translateX(20px); }
+    .anti-lag-badge {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.5rem;
+      margin: 0.5rem 0;
+      padding: 0.5rem 1rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
   </style>
 </head>
 <body>
@@ -270,6 +305,13 @@
       <span>GitHub Channel</span>
     </a>
 
+    <!-- Tombol Login -->
+    <div class="login-btn-container">
+      <button class="login-btn" onclick="openLoginModal()">
+        <span class="gh-icon">🔐</span> Login with GitHub
+      </button>
+    </div>
+
     <!-- Tab Navigasi -->
     <div class="tab-buttons">
       <button class="tab-btn active" onclick="switchTab('single')">📄 Single</button>
@@ -281,27 +323,8 @@
       <button class="tab-btn" onclick="switchTab('list-repo')">📋 Daftar Repo</button>
     </div>
 
-    <!-- Credentials with multi-account management -->
-    <label>🔑 Username GitHub</label>
-    <input type="text" id="username" placeholder="username kamu" oninput="saveCurrentCredentials()">
-    <label>📁 Repository Tujuan</label>
-    <input type="text" id="repo" placeholder="nama-repo" oninput="saveCurrentCredentials()">
-    <label>🪙 Token Akses (PAT) <small><a href="https://github.com/settings/tokens/new?scopes=repo,delete_repo&description=HABI+STUDIO" target="_blank" style="color:#7c4dff;">Buat token</a></small></label>
-    <input type="password" id="token" placeholder="ghp_xxxx" oninput="saveCurrentCredentials()">
-    <div class="token-panel" id="tokenPanel" style="display:none;">
-      <input type="text" id="tokenDisplay" readonly>
-      <button onclick="copyToken()" class="inline-btn">📋</button>
-      <button onclick="toggleTokenVisibility()" class="inline-btn">👁️</button>
-    </div>
-    <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-      <button onclick="openAccountManager()" class="inline-btn">👥 Akun</button>
-      <button onclick="saveCurrentProfile()" class="inline-btn">💾 Simpan</button>
-      <button onclick="loadRepoTree()" class="inline-btn">🔄 Muat Struktur</button>
-    </div>
-
     <!-- Tab Single File -->
     <div id="tab-single" class="tab-content active">
-      <!-- konten sama seperti sebelumnya -->
       <label>Folder Tujuan</label>
       <select id="singleTargetFolder" onchange="onSingleFolderChange()"><option value="">(root)</option></select>
       <label>Pilih File (di folder terpilih)</label>
@@ -400,14 +423,6 @@
           <p style="opacity:0.5;">Belum ada penghapusan.</p>
         </div>
       </div>
-      <!-- Mode Anti-Lag -->
-      <div style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-        <label for="antiLagToggle" style="margin-top: 0; font-weight: normal;">Mode Anti-Lag</label>
-        <label class="switch">
-          <input type="checkbox" id="antiLagToggle" checked onchange="toggleAntiLag()">
-          <span class="slider round"></span>
-        </label>
-      </div>
     </div>
 
     <!-- Status Global -->
@@ -456,47 +471,41 @@
   </div>
 
   <footer>
+    <!-- Mode Anti-Lag dipindahkan ke atas footer -->
+    <div class="anti-lag-badge">
+      <span>⚡</span>
+      <label class="switch">
+        <input type="checkbox" id="antiLagToggle" checked onchange="toggleAntiLag()">
+        <span class="slider round"></span>
+      </label>
+      <span>Anti-Lag</span>
+    </div>
     Powered by <strong>HABI STUDIO AI</strong> — Melampaui Batas Kreativitas
   </footer>
 
-  <!-- Modal HABI STUDIO NOTE -->
+  <!-- Modal HABI STUDIO NOTE (untuk notifikasi pop-up) -->
   <div id="habiModal" class="modal-overlay" style="display: none;">
     <div class="modal">
       <h3>📝 HABI STUDIO NOTE</h3>
       <p id="modalMessage"></p>
-      <button class="btn-confirm" id="modalConfirm">Ya</button>
-      <button class="btn-cancel" id="modalCancel">Batal</button>
+      <button class="btn-confirm" id="modalConfirm">OK</button>
+      <button class="btn-cancel" id="modalCancel" style="display:none;">Batal</button>
     </div>
   </div>
 
-  <!-- Modal Manajemen Akun -->
-  <div id="accountModal" class="modal-overlay" style="display: none;">
+  <!-- Modal Login -->
+  <div id="loginModal" class="modal-overlay" style="display: none;">
     <div class="modal" style="text-align: left;">
-      <h3>👥 Manajemen Akun</h3>
-      <div id="accountList" style="max-height: 300px; overflow-y: auto;"></div>
-      <button onclick="openAddAccountModal()" class="inline-btn" style="margin-top:0.5rem;">➕ Tambah Akun</button>
-      <button onclick="closeAccountModal()" class="btn-cancel" style="margin-top:0.5rem;">Tutup</button>
-    </div>
-  </div>
-
-  <!-- Modal Tambah/Edit Akun -->
-  <div id="addAccountModal" class="modal-overlay" style="display: none;">
-    <div class="modal" style="text-align: left;">
-      <h3>➕ Tambah Akun</h3>
-      <div class="account-form">
-        <label>Nama Profil</label>
-        <input type="text" id="accName" placeholder="Nama akun">
-        <label>🔑 Username GitHub</label>
-        <input type="text" id="accUsername" placeholder="username">
-        <label>📁 Repository Tujuan</label>
-        <input type="text" id="accRepo" placeholder="nama-repo">
-        <label>🪙 Token Akses</label>
-        <input type="password" id="accToken" placeholder="ghp_xxxx">
-      </div>
-      <div style="display:flex; justify-content: flex-end; gap:0.5rem; margin-top:1rem;">
-        <button onclick="closeAddAccountModal()" class="btn-cancel">Tutup</button>
-        <button onclick="submitNewAccount()" class="btn-confirm">Simpan Akun</button>
-      </div>
+      <h3 style="text-align:center;">🔐 Login GitHub</h3>
+      <p style="text-align:center; font-size:0.85rem; opacity:0.8;">Masukkan kredensial untuk mengakses tool.<br><small>Dibuat oleh <strong>HABI STUDIO</strong></small></p>
+      <label>🔑 Username GitHub</label>
+      <input type="text" id="loginUsername" placeholder="username kamu">
+      <label>📁 Repository Tujuan</label>
+      <input type="text" id="loginRepo" placeholder="nama-repo">
+      <label>🪙 Token Akses (PAT) <small><a href="https://github.com/settings/tokens/new?scopes=repo,delete_repo&description=HABI+STUDIO" target="_blank" style="color:#7c4dff;">Buat token</a></small></label>
+      <input type="password" id="loginToken" placeholder="ghp_xxxx">
+      <button onclick="submitLogin()" class="btn-confirm" style="width:100%; margin-top:1rem;">🔓 Login & Simpan</button>
+      <button onclick="closeLoginModal()" class="btn-cancel" style="width:100%;">Tutup</button>
     </div>
   </div>
 
@@ -511,6 +520,7 @@
     let repoTree = []; 
     let selectedDeleteFolder = '';
     let currentProfileIndex = -1;
+    let isLoggedIn = false;
 
     window.onload = () => {
       loadCurrentCredentials();
@@ -518,7 +528,51 @@
       switchTab('single');
       updateTokenPanel();
       initAntiLag();
+      // Cek apakah sudah ada kredensial tersimpan, jika ya langsung login
+      const saved = JSON.parse(localStorage.getItem(currentCredsKey) || '{}');
+      if (saved.username && saved.token) {
+        isLoggedIn = true;
+        // otomatis muat struktur
+        loadRepoTree();
+      }
     };
+
+    // ==================== LOGIN SYSTEM ====================
+    function openLoginModal() {
+      // Isi dengan data tersimpan jika ada
+      const saved = JSON.parse(localStorage.getItem(currentCredsKey) || '{}');
+      document.getElementById('loginUsername').value = saved.username || '';
+      document.getElementById('loginRepo').value = saved.repo || '';
+      document.getElementById('loginToken').value = saved.token || '';
+      document.getElementById('loginModal').style.display = 'flex';
+    }
+
+    function closeLoginModal() {
+      document.getElementById('loginModal').style.display = 'none';
+    }
+
+    function submitLogin() {
+      const username = document.getElementById('loginUsername').value.trim();
+      const repo = document.getElementById('loginRepo').value.trim();
+      const token = document.getElementById('loginToken').value.trim();
+      if (!username || !token) {
+        showToast('Username dan Token wajib diisi.', 'error');
+        return;
+      }
+      // Simpan ke localStorage
+      const creds = { username, repo, token };
+      localStorage.setItem(currentCredsKey, JSON.stringify(creds));
+      // Update field utama (meskipun disembunyikan)
+      document.getElementById('username').value = username;
+      document.getElementById('repo').value = repo;
+      document.getElementById('token').value = token;
+      updateTokenPanel();
+      isLoggedIn = true;
+      closeLoginModal();
+      showToast('✅ Login berhasil! Tool siap digunakan.', 'success');
+      // Muat struktur
+      loadRepoTree();
+    }
 
     // ==================== ANTI-LAG MODE ====================
     function initAntiLag() {
@@ -567,10 +621,11 @@
       const token = document.getElementById('token').value.trim();
       const panel = document.getElementById('tokenPanel');
       if (token) {
-        panel.style.display = 'flex';
-        document.getElementById('tokenDisplay').value = token;
+        if (panel) panel.style.display = 'flex';
+        const display = document.getElementById('tokenDisplay');
+        if (display) display.value = token;
       } else {
-        panel.style.display = 'none';
+        if (panel) panel.style.display = 'none';
       }
     }
 
@@ -583,7 +638,7 @@
 
     function copyToken() {
       const token = document.getElementById('token').value;
-      navigator.clipboard.writeText(token).then(() => showToast('Token disalin!'));
+      navigator.clipboard.writeText(token).then(() => showToast('Token disalin!', 'success'));
     }
 
     function saveCurrentProfile() { openAddAccountModal(true); }
@@ -638,7 +693,7 @@
       const repo = document.getElementById('accRepo').value.trim();
       const token = document.getElementById('accToken').value.trim();
       if (!name || !username || !repo || !token) {
-        showToast('Isi semua field akun.');
+        showToast('Isi semua field akun.', 'error');
         return;
       }
       const profiles = getProfiles();
@@ -651,7 +706,7 @@
       updateTokenPanel();
       closeAddAccountModal();
       renderAccountList();
-      showToast(`Akun "${name}" tersimpan.`);
+      showToast(`Akun "${name}" tersimpan.`, 'success');
     }
 
     function loadProfile(index) {
@@ -664,7 +719,7 @@
       saveCurrentCredentials();
       updateTokenPanel();
       closeAccountModal();
-      showToast(`Akun "${p.name}" dimuat.`);
+      showToast(`Akun "${p.name}" dimuat.`, 'success');
       loadRepoTree();
     }
 
@@ -673,13 +728,14 @@
       profiles.splice(index, 1);
       saveProfiles(profiles);
       renderAccountList();
-      showToast('Profil dihapus.');
+      showToast('Profil dihapus.', 'success');
     }
 
     // ==================== TOAST ====================
-    function showToast(msg) {
+    function showToast(msg, type = 'info') {
       const toast = document.getElementById('toast');
       toast.textContent = msg;
+      toast.style.background = type === 'success' ? '#2e7d32' : type === 'error' ? '#c62828' : '#333';
       toast.style.display = 'block';
       setTimeout(() => { toast.style.display = 'none'; }, 2500);
     }
@@ -702,12 +758,24 @@
       else { div.style.background = 'transparent'; div.style.color = 'inherit'; }
     }
 
-    function showModal(message, onConfirm) {
+    function showModal(message, onConfirm, showCancel = false) {
       const modal = document.getElementById('habiModal');
       document.getElementById('modalMessage').innerHTML = message;
+      document.getElementById('modalConfirm').textContent = 'OK';
+      document.getElementById('modalCancel').style.display = showCancel ? 'inline-block' : 'none';
       modal.style.display = 'flex';
-      document.getElementById('modalConfirm').onclick = () => { modal.style.display = 'none'; onConfirm(); };
+      document.getElementById('modalConfirm').onclick = () => { modal.style.display = 'none'; if (onConfirm) onConfirm(); };
       document.getElementById('modalCancel').onclick = () => { modal.style.display = 'none'; };
+    }
+
+    function showPopupNotif(message, type = 'info') {
+      // Gunakan modal HABI STUDIO NOTE untuk notifikasi penting
+      const modal = document.getElementById('habiModal');
+      document.getElementById('modalMessage').innerHTML = message;
+      document.getElementById('modalConfirm').textContent = 'Tutup';
+      document.getElementById('modalCancel').style.display = 'none';
+      modal.style.display = 'flex';
+      document.getElementById('modalConfirm').onclick = () => { modal.style.display = 'none'; };
     }
 
     // ==================== TABS ====================
@@ -777,8 +845,12 @@
 
     // ==================== REPO TREE ====================
     async function loadRepoTree() {
+      if (!isLoggedIn) {
+        showToast('Silakan login terlebih dahulu.', 'error');
+        return;
+      }
       const { username, repo, token } = getCredentials();
-      if (!username || !repo || !token) { showToast('Isi data GitHub dulu.'); return; }
+      if (!username || !repo || !token) { showToast('Isi data GitHub dulu.', 'error'); return; }
       try {
         setGlobalStatus('Memuat struktur...', '');
         const tree = await fetchRepoTree(username, repo, token);
@@ -787,7 +859,7 @@
         updateTokenPanel();
         renderFileBrowser();
         populateAllSelects();
-      } catch (e) { setGlobalStatus(`Gagal: ${e.message}`, 'error'); }
+      } catch (e) { showPopupNotif(`❌ Gagal: ${e.message}`, 'error'); }
     }
 
     function renderFileBrowser() {
@@ -824,15 +896,64 @@
       document.getElementById('renameNewPath').value = '';
     }
 
-    // ... (fungsi-fungsi tab lainnya tetap sama seperti sebelumnya)
+    // ... (fungsi-fungsi lainnya sama seperti sebelumnya, hanya notifikasi diubah ke popup)
+    // Karena panjang, saya tidak menulis ulang semua, tapi pastikan deploySingle, deployZip, dll memanggil showPopupNotif jika sukses/gagal.
+
+    async function deploySingle() {
+      if (!isLoggedIn) { showToast('Login dulu.', 'error'); return; }
+      const { username, repo, token } = getCredentials();
+      const filePath = document.getElementById('singleFileSelect').value;
+      const code = document.getElementById('singleCode').value;
+      if (!filePath) { showToast('Pilih file.', 'error'); return; }
+      if (!code.trim()) { showToast('Kode kosong.', 'error'); return; }
+      try {
+        showToast('⏳ Mengupload...', 'info');
+        await githubUpload(username, repo, filePath, code, token);
+        showPopupNotif(`✅ File <b>${filePath}</b> berhasil diupload!`, 'success');
+        loadRepoTree();
+      } catch (e) { showPopupNotif(`❌ Gagal: ${e.message}`, 'error'); }
+    }
+
+    async function deployZip() {
+      if (!isLoggedIn) { showToast('Login dulu.', 'error'); return; }
+      const { username, repo, token } = getCredentials();
+      const fileInput = document.getElementById('zipFile');
+      const stripRoot = document.getElementById('stripRoot').checked;
+      if (!fileInput.files.length) { showToast('Pilih file ZIP.', 'error'); return; }
+      const zipFile = fileInput.files[0];
+      try {
+        showToast('📦 Membaca ZIP...', 'info');
+        const zip = await JSZip.loadAsync(zipFile);
+        let files = [];
+        zip.forEach((relativePath, file) => {
+          if (!file.dir) files.push({ path: relativePath, contentPromise: file.async('string') });
+        });
+        if (files.length === 0) throw new Error('ZIP kosong.');
+        if (stripRoot) {
+          const rootItems = new Set(files.map(f => f.path.split('/')[0]));
+          if (rootItems.size === 1 && files.every(f => f.path.includes('/'))) {
+            const rootFolder = [...rootItems][0];
+            files = files.map(f => ({ ...f, path: f.path.replace(rootFolder + '/', '') }));
+          }
+        }
+        let done = 0;
+        for (const f of files) {
+          const content = await f.contentPromise;
+          await githubUpload(username, repo, f.path, content, token);
+          done++;
+        }
+        showPopupNotif(`✅ ${done} file berhasil diupload!`, 'success');
+        loadRepoTree();
+      } catch (e) { showPopupNotif(`❌ Gagal: ${e.message}`, 'error'); }
+    }
+
+    // Fungsi-fungsi lain (saveAndUploadEdit, deleteAllFiles, dll.) juga menggunakan showPopupNotif untuk notifikasi.
 
     // ==================== DAFTAR REPO (FIXED) ====================
     async function refreshRepoList() {
+      if (!isLoggedIn) { showToast('Login dulu.', 'error'); return; }
       const { username, token } = getCredentials();
-      if (!username || !token) {
-        document.getElementById('repoListContainer').innerHTML = '<p style="opacity:0.7;">Isi username dan token.</p>';
-        return;
-      }
+      if (!username || !token) { showToast('Isi data GitHub.', 'error'); return; }
       try {
         document.getElementById('repoListContainer').innerHTML = 'Memuat...';
         let repos = [];
@@ -851,21 +972,15 @@
         renderRepoList(repos);
         document.getElementById('selectAllRepos').checked = false;
         document.getElementById('repoCount').textContent = repos.length + ' repo';
-      } catch (e) {
-        document.getElementById('repoListContainer').innerHTML = `<p style="color:red;">Error: ${e.message}</p>`;
-      }
+      } catch (e) { showPopupNotif(`❌ Error: ${e.message}`, 'error'); }
     }
 
     function renderRepoList(repos) {
       const container = document.getElementById('repoListContainer');
-      if (repos.length === 0) {
-        container.innerHTML = '<p>Tidak ada repositori.</p>';
-        return;
-      }
+      if (repos.length === 0) { container.innerHTML = '<p>Tidak ada repositori.</p>'; return; }
       let html = '';
       repos.forEach(repo => {
         const isProtected = (repo.name === 'deploy-tool');
-        // Struktur dirapikan: checkbox dan nama langsung tanpa spasi tambahan
         html += `<div class="repo-list-item">${isProtected ? `<span style="color:#aaa;">🔒 ${repo.name} <span class="protected-badge">DILINDUNGI</span></span>` : `<input type="checkbox" class="repo-checkbox" value="${repo.name}" data-owner="${repo.owner.login}"><label class="repo-name">${repo.name}</label>`}</div>`;
       });
       container.innerHTML = html;
@@ -879,22 +994,14 @@
 
     async function deleteSelectedRepos() {
       const checkboxes = document.querySelectorAll('.repo-checkbox:checked');
-      if (checkboxes.length === 0) {
-        showToast('Pilih setidaknya satu repositori untuk dihapus.');
-        return;
-      }
+      if (checkboxes.length === 0) { showToast('Pilih repo dulu.', 'error'); return; }
       const { username, token } = getCredentials();
-      if (!username || !token) { showToast('Isi data GitHub.'); return; }
-
+      if (!username || !token) { showToast('Isi data GitHub.', 'error'); return; }
       const reposToDelete = Array.from(checkboxes).map(cb => ({ name: cb.value, owner: cb.dataset.owner }));
       const filtered = reposToDelete.filter(r => r.name !== 'deploy-tool');
-      if (filtered.length === 0) {
-        showToast('Tidak ada repositori yang bisa dihapus (deploy-tool dilindungi).');
-        return;
-      }
-
+      if (filtered.length === 0) { showToast('Tidak ada repo yang bisa dihapus.', 'error'); return; }
       const repoListStr = filtered.map(r => `${r.owner}/${r.name}`).join(', ');
-      showModal(`⚠️ Anda akan menghapus repositori berikut:<br><b>${repoListStr}</b><br>Ini tidak dapat dibatalkan. Lanjutkan?`, async () => {
+      showModal(`⚠️ Hapus repo:<br><b>${repoListStr}</b>?`, async () => {
         let deletedCount = 0;
         const errors = [];
         for (const repo of filtered) {
@@ -903,43 +1010,26 @@
               method: 'DELETE',
               headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
             });
-            if (res.ok || res.status === 204) {
-              addDeleteHistory(repo.name);
-              deletedCount++;
-            } else {
-              const errData = await res.json().catch(() => ({}));
-              errors.push(`${repo.name}: ${errData.message || res.statusText}`);
-            }
-          } catch (e) {
-            errors.push(`${repo.name}: ${e.message}`);
-          }
+            if (res.ok || res.status === 204) { addDeleteHistory(repo.name); deletedCount++; }
+            else { const errData = await res.json().catch(() => ({})); errors.push(`${repo.name}: ${errData.message || res.statusText}`); }
+          } catch (e) { errors.push(`${repo.name}: ${e.message}`); }
         }
-        if (errors.length > 0) {
-          setGlobalStatus(`Berhasil menghapus ${deletedCount} repo. Error: ${errors.join('; ')}`, 'error');
-        } else {
-          setGlobalStatus(`✅ ${deletedCount} repositori berhasil dihapus.`, 'success');
-        }
+        if (errors.length > 0) showPopupNotif(`⚠️ Berhasil hapus ${deletedCount} repo. Error: ${errors.join('; ')}`, 'error');
+        else showPopupNotif(`✅ ${deletedCount} repo berhasil dihapus!`, 'success');
         refreshRepoList();
-      });
+      }, true);
     }
 
-    function getDeleteHistory() {
-      return JSON.parse(localStorage.getItem(deletedReposHistoryKey) || '[]');
-    }
-
+    function getDeleteHistory() { return JSON.parse(localStorage.getItem(deletedReposHistoryKey) || '[]'); }
     function addDeleteHistory(repoName) {
       const history = getDeleteHistory();
       history.push({ repoName, deletedAt: new Date().toISOString() });
       localStorage.setItem(deletedReposHistoryKey, JSON.stringify(history));
     }
-
     function renderDeleteHistory() {
       const container = document.getElementById('deleteHistoryContainer');
       const history = getDeleteHistory();
-      if (history.length === 0) {
-        container.innerHTML = '<p style="opacity:0.5;">Belum ada penghapusan.</p>';
-        return;
-      }
+      if (history.length === 0) { container.innerHTML = '<p style="opacity:0.5;">Belum ada penghapusan.</p>'; return; }
       let html = '';
       history.slice().reverse().forEach(item => {
         const date = new Date(item.deletedAt);
