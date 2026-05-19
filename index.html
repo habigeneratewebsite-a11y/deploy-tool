@@ -70,17 +70,24 @@
       from { filter: drop-shadow(0 0 5px #7c4dff); }
       to { filter: drop-shadow(0 0 20px #f9d423); }
     }
-    .shortcut-card {
+    .shortcut-card, .github-card {
       display: flex; align-items: center; justify-content: center;
       gap: 0.5rem; background: rgba(255,255,255,0.05);
       padding: 0.6rem 1rem; border-radius: 16px;
       margin: 0.8rem 0; text-decoration: none;
       color: #fff; border: 1px solid rgba(255,255,255,0.15);
       transition: all 0.3s ease;
-      animation: pulseGlow 2s infinite;
     }
-    .shortcut-card:hover { background: rgba(124,77,255,0.2); box-shadow: 0 0 20px rgba(124,77,255,0.5); }
-    .shortcut-card .icon { font-size: 1.8rem; animation: iconSpin 4s linear infinite; }
+    .shortcut-card { animation: pulseGlow 2s infinite; }
+    .github-card { animation: pulseGlow 3s infinite; }
+    .shortcut-card:hover, .github-card:hover {
+      background: rgba(124,77,255,0.2);
+      box-shadow: 0 0 20px rgba(124,77,255,0.5);
+    }
+    .shortcut-card .icon, .github-card .icon {
+      font-size: 1.8rem;
+      animation: iconSpin 4s linear infinite;
+    }
     @keyframes pulseGlow {
       0% { box-shadow: 0 0 5px rgba(124,77,255,0.3); }
       50% { box-shadow: 0 0 20px rgba(124,77,255,0.6); }
@@ -222,12 +229,11 @@
     .repo-list-item {
       display: flex; align-items: center; gap: 0.5rem;
       padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+      /* Hapus margin/padding berlebih */
     }
     .repo-list-item label { margin-top: 0; font-weight: normal; }
     .repo-list-item .repo-name {
       flex: 1;
-      margin-right: 0.5rem;
-      /* Hapus word-break agar nama tidak terpisah per karakter */
       word-break: normal;
       overflow-wrap: normal;
     }
@@ -256,6 +262,12 @@
     <a href="https://code-zipper-tool--linamayasari816.replit.app/chat-to-zip/" target="_blank" class="shortcut-card">
       <span class="icon">⚡</span>
       <span>Chat Coding to ZIP Converter</span>
+    </a>
+
+    <!-- Link GitHub Channel -->
+    <a href="https://github.com/habigeneratewebsite-a11y/deploy-tool/tree/main" target="_blank" class="github-card">
+      <span class="icon" style="font-family: sans-serif;">🐙</span>
+      <span>GitHub Channel</span>
     </a>
 
     <!-- Tab Navigasi -->
@@ -812,7 +824,7 @@
       document.getElementById('renameNewPath').value = '';
     }
 
-    // ... (fungsi-fungsi lainnya tetap sama)
+    // ... (fungsi-fungsi tab lainnya tetap sama seperti sebelumnya)
 
     // ==================== DAFTAR REPO (FIXED) ====================
     async function refreshRepoList() {
@@ -853,13 +865,8 @@
       let html = '';
       repos.forEach(repo => {
         const isProtected = (repo.name === 'deploy-tool');
-        html += `<div class="repo-list-item">
-          ${isProtected ? 
-            `<span style="color:#aaa;">🔒 ${repo.name} <span class="protected-badge">DILINDUNGI</span></span>` :
-            `<input type="checkbox" class="repo-checkbox" value="${repo.name}" data-owner="${repo.owner.login}">
-             <label class="repo-name">${repo.name}</label>`
-          }
-        </div>`;
+        // Struktur dirapikan: checkbox dan nama langsung tanpa spasi tambahan
+        html += `<div class="repo-list-item">${isProtected ? `<span style="color:#aaa;">🔒 ${repo.name} <span class="protected-badge">DILINDUNGI</span></span>` : `<input type="checkbox" class="repo-checkbox" value="${repo.name}" data-owner="${repo.owner.login}"><label class="repo-name">${repo.name}</label>`}</div>`;
       });
       container.innerHTML = html;
       renderDeleteHistory();
@@ -867,9 +874,7 @@
 
     function toggleAllRepos() {
       const selectAll = document.getElementById('selectAllRepos').checked;
-      document.querySelectorAll('.repo-checkbox').forEach(cb => {
-        cb.checked = selectAll;
-      });
+      document.querySelectorAll('.repo-checkbox').forEach(cb => { cb.checked = selectAll; });
     }
 
     async function deleteSelectedRepos() {
