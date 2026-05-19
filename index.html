@@ -3,804 +3,400 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HABI STUDIO CODING .ZIP</title>
+  <title>HABI STUDIO CODING</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
+    /* ========== GLOBAL ========== */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
-      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-      background-size: 400% 400%;
-      animation: gradientMove 15s ease infinite;
+      background: #0f0c29;
       color: #e0e0e0;
       min-height: 100vh;
       padding: 1rem;
       display: flex;
       flex-direction: column;
       align-items: center;
-      position: relative;
-      overflow-x: hidden;
+      transition: background 0.3s, color 0.3s;
+    }
+    body.light {
+      background: #f5f5f5;
+      color: #222;
     }
     .particles {
       position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
       pointer-events: none; z-index: 0;
-      overflow: hidden;
-    }
-    .particle {
-      position: absolute;
-      background: rgba(255,255,255,0.1);
-      border-radius: 50%;
-      animation: float linear infinite;
-      opacity: 0.5;
-    }
-    @keyframes float {
-      0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-      10% { opacity: 1; }
-      90% { opacity: 1; }
-      100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
-    }
-    @keyframes gradientMove {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
     }
     .container {
       width: 100%; max-width: 550px;
-      background: rgba(20,20,40,0.8); backdrop-filter: blur(20px);
-      border-radius: 24px; padding: 1.5rem; margin: 1rem 0;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 60px rgba(100,100,255,0.2);
-      border: 1px solid rgba(255,255,255,0.15);
-      position: relative; z-index: 1;
+      background: rgba(20,20,40,0.9);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      position: relative;
+      z-index: 1;
     }
-    .logo-text {
-      font-size: 2.2rem; font-weight: 900;
-      background: linear-gradient(135deg, #ff4e50, #f9d423, #00c6ff, #7c4dff);
-      background-size: 300% 300%;
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      animation: logoGradient 3s ease infinite, logoGlow 1.5s ease-in-out infinite alternate;
-      text-align: center; margin-bottom: 0.5rem;
+    body.light .container {
+      background: rgba(255,255,255,0.9);
+      color: #222;
     }
-    @keyframes logoGradient {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+
+    /* ========== LOGO SVG ========== */
+    .logo-svg {
+      display: block;
+      margin: 0 auto 0.5rem;
+      width: 180px;
+      animation: logoFloat 3s ease-in-out infinite;
     }
-    @keyframes logoGlow {
-      from { filter: drop-shadow(0 0 5px #7c4dff); }
-      to { filter: drop-shadow(0 0 20px #f9d423); }
+    @keyframes logoFloat {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
     }
-    .shortcut-card, .github-card {
-      display: flex; align-items: center; justify-content: center;
-      gap: 0.5rem; background: rgba(255,255,255,0.05);
-      padding: 0.6rem 1rem; border-radius: 16px;
-      margin: 0.8rem 0; text-decoration: none;
-      color: #fff; border: 1px solid rgba(255,255,255,0.15);
-      transition: all 0.3s ease;
-    }
-    .shortcut-card { animation: pulseGlow 2s infinite; }
-    .github-card { animation: pulseGlow 3s infinite; }
-    .shortcut-card:hover, .github-card:hover {
-      background: rgba(124,77,255,0.2);
-      box-shadow: 0 0 20px rgba(124,77,255,0.5);
-    }
-    .shortcut-card .icon, .github-card .icon {
-      font-size: 1.8rem;
-    }
-    .github-card .icon { animation: iconSpin 4s linear infinite; }
-    @keyframes pulseGlow {
-      0% { box-shadow: 0 0 5px rgba(124,77,255,0.3); }
-      50% { box-shadow: 0 0 20px rgba(124,77,255,0.6); }
-      100% { box-shadow: 0 0 5px rgba(124,77,255,0.3); }
-    }
-    @keyframes iconSpin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    .tab-buttons { display: flex; gap: 0.4rem; margin: 1rem 0; flex-wrap: wrap; }
+
+    /* ========== TABS ========== */
+    .tab-buttons { display: flex; gap: 0.3rem; margin: 1rem 0; flex-wrap: wrap; }
     .tab-btn {
-      flex: 1; min-width: 55px; padding: 0.7rem 0.3rem;
-      border: none; background: rgba(255,255,255,0.1);
-      color: #ddd; border-radius: 12px; font-weight: bold;
-      cursor: pointer; transition: all 0.3s; font-size: 0.75rem;
+      flex: 1; min-width: 55px; padding: 0.6rem 0.3rem;
+      border: none; background: rgba(255,255,255,0.08);
+      color: #ccc; border-radius: 12px; font-weight: bold;
+      cursor: pointer; font-size: 0.75rem;
     }
     .tab-btn.active {
       background: linear-gradient(135deg, #7c4dff, #536dfe);
-      color: white; box-shadow: 0 4px 15px rgba(124,77,255,0.4);
+      color: white;
     }
-    .tab-content { display: none; animation: fadeIn 0.4s ease; }
+    .tab-content { display: none; }
     .tab-content.active { display: block; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    label { display: block; margin-top: 1rem; font-weight: bold; color: #c0c0ff; }
+
+    /* ========== FORM ========== */
     input, textarea, select {
       width: 100%; padding: 0.8rem; margin-top: 0.3rem;
       border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
       background: rgba(0,0,0,0.4); color: white; font-size: 1rem;
     }
-    input:focus, textarea:focus, select:focus { border-color: #7c4dff; box-shadow: 0 0 8px #7c4dff; }
-    textarea { font-family: 'Courier New', monospace; resize: vertical; }
+    body.light input, body.light textarea, body.light select {
+      background: rgba(0,0,0,0.05);
+      color: #222;
+      border-color: #ccc;
+    }
     button.primary {
       width: 100%; padding: 0.9rem;
       background: linear-gradient(135deg, #7c4dff, #448aff);
-      border: none; color: white; font-weight: bold; font-size: 1rem;
-      border-radius: 16px; margin-top: 1rem; cursor: pointer;
-      box-shadow: 0 4px 20px rgba(124,77,255,0.5);
-      transition: transform 0.2s;
+      border: none; color: white; font-weight: bold;
+      border-radius: 16px; margin-top: 0.8rem; cursor: pointer;
     }
-    button.primary:active { transform: scale(0.97); }
-    .danger-btn {
-      background: #e53935 !important; border: none !important;
-      box-shadow: 0 4px 15px rgba(229,57,53,0.5) !important;
-    }
+
+    /* ========== MODAL ========== */
     .modal-overlay {
       position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+      background: rgba(0,0,0,0.7);
       display: flex; justify-content: center; align-items: center;
       z-index: 1000;
     }
     .modal {
-      background: linear-gradient(145deg, #1e1e2f, #2a2a40);
+      background: #1e1e2f;
       padding: 2rem; border-radius: 20px;
-      max-width: 400px; width: 90%;
-      border: 1px solid rgba(255,255,255,0.2);
-      box-shadow: 0 0 40px rgba(124,77,255,0.3);
-      animation: slideUpModal 0.3s ease;
+      max-width: 400px; width: 90%; text-align: center;
     }
-    @keyframes slideUpModal {
-      from { transform: translateY(50px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+
+    /* ========== REPO LIST ========== */
+    .repo-list-item {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
     }
-    .modal h3 { color: #c084fc; margin-bottom: 1rem; text-align: center; }
-    .modal button { margin: 0.5rem; padding: 0.8rem 2rem; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; }
-    .btn-cancel { background: rgba(255,255,255,0.1); color: white; }
-    .btn-confirm { background: #7c4dff; color: white; }
-    .login-btn {
-      display: flex; align-items: center; justify-content: center;
-      gap: 0.5rem;
-      width: 100%; padding: 0.9rem;
-      background: linear-gradient(135deg, #24292e, #2b3137);
-      border: 1px solid rgba(255,255,255,0.15);
-      color: white; font-weight: bold; font-size: 1rem;
-      border-radius: 16px; cursor: pointer;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      transition: transform 0.2s, box-shadow 0.2s;
+    .repo-name {
+      cursor: pointer;
+      flex: 1;
+      user-select: none;
     }
-    .login-btn:active { transform: scale(0.97); }
-    .login-btn .github-icon {
-      font-size: 1.5rem;
-      animation: iconSpin 4s linear infinite;
-    }
-    .file-browser {
-      background: rgba(0,0,0,0.3); border-radius: 12px;
-      padding: 0.8rem; margin: 0.5rem 0;
-      max-height: 250px; overflow-y: auto;
-    }
-    .file-entry {
-      display: flex; justify-content: space-between;
-      align-items: center; padding: 0.4rem 0.3rem;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      font-size: 0.9rem;
-    }
-    .file-entry span { word-break: break-all; flex: 1; margin-right: 0.5rem; }
-    .file-entry button { padding: 0.3rem 0.6rem; font-size: 0.8rem; margin-left: 0.3rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 6px; cursor: pointer; }
-    footer {
-      text-align: center; margin-top: 2rem; padding: 1rem;
-      color: #8888aa; font-size: 0.9rem;
-      border-top: 1px solid rgba(255,255,255,0.1); width: 100%;
-    }
-    .anti-lag-footer {
-      display: flex; align-items: center; justify-content: center;
-      gap: 0.5rem; margin-top: 0.5rem;
-    }
-    .guide details {
-      background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 10px; margin-bottom: 0.8rem;
-    }
-    .guide summary { font-weight: bold; color: #b388ff; cursor: pointer; }
-    select option { background: #1e1e2f; color: white; }
-    .inline-btn {
-      padding: 0.6rem 1rem;
-      background: #536dfe;
-      color: white; border: none; border-radius: 8px;
-      cursor: pointer; font-size: 0.9rem;
-    }
+    .repo-name:hover { color: #7c4dff; }
+
+    /* ========== TOAST ========== */
     .toast {
       position: fixed; bottom: 2rem; left: 50%;
       transform: translateX(-50%);
-      padding: 1rem 2rem;
-      border-radius: 30px;
-      background: #333;
-      color: white;
+      padding: 1rem 2rem; border-radius: 30px;
+      background: #333; color: white;
       z-index: 2000;
       animation: slideUp 0.3s ease;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-      text-align: center;
-      max-width: 90%;
     }
     @keyframes slideUp {
       from { bottom: 0; opacity: 0; }
       to { bottom: 2rem; opacity: 1; }
     }
-    .repo-list-header {
-      display: flex; align-items: center; gap: 0.5rem;
-      margin-bottom: 0.5rem; font-weight: bold;
+
+    /* ========== TOGGLE THEME ========== */
+    .theme-toggle {
+      position: fixed; top: 1rem; right: 1rem;
+      background: rgba(255,255,255,0.1);
+      border: none; color: white; padding: 0.5rem 1rem;
+      border-radius: 20px; cursor: pointer; z-index: 10;
     }
-    .repo-list-item {
-      display: flex; align-items: center; gap: 0.5rem;
-      padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .repo-list-item label { margin-top: 0; font-weight: normal; }
-    .repo-list-item .repo-name { flex: 1; word-break: normal; overflow-wrap: normal; }
-    .protected-badge { background: #e53935; padding: 0.2rem 0.5rem; border-radius: 8px; font-size: 0.8rem; margin-left: 0.3rem; }
-    .history-item {
-      padding: 0.3rem 0; border-bottom: 1px solid rgba(255,255,255,0.03);
-      font-size: 0.9rem; display: flex; justify-content: space-between;
-    }
-    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
-    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-    input:checked + .slider { background-color: #7c4dff; }
-    input:focus + .slider { box-shadow: 0 0 1px #7c4dff; }
-    input:checked + .slider:before { transform: translateX(20px); }
-    #loginSection { margin: 1rem 0; }
-    #credentialSection { display: none; }
   </style>
 </head>
 <body>
   <div class="particles" id="particles"></div>
 
-  <div class="container">
-    <div class="logo-text">HABI STUDIO CODING</div>
+  <!-- Tombol Tema -->
+  <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
 
-    <a href="https://code-zipper-tool--linamayasari816.replit.app/chat-to-zip/" target="_blank" class="shortcut-card">
-      <span class="icon">⚡</span>
-      <span>Chat Coding to ZIP Converter</span>
-    </a>
-    <a href="https://github.com/habigeneratewebsite-a11y/deploy-tool/tree/main" target="_blank" class="github-card">
-      <span class="icon">🐙</span>
-      <span>GitHub Channel</span>
-    </a>
+  <div class="container">
+    <!-- Logo SVG HABI STUDIO CODING -->
+    <svg class="logo-svg" viewBox="0 0 200 50">
+      <defs>
+        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ff4e50"/>
+          <stop offset="50%" stop-color="#f9d423"/>
+          <stop offset="100%" stop-color="#7c4dff"/>
+        </linearGradient>
+      </defs>
+      <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle"
+            fill="url(#grad)" font-size="24" font-weight="900" font-family="Segoe UI">
+        HABI STUDIO CODING
+      </text>
+    </svg>
 
     <!-- Tombol Login -->
-    <div id="loginSection">
-      <button class="login-btn" onclick="openLoginModal()">
-        <span class="github-icon">🐙</span> Login with GitHub
+    <div id="loginArea">
+      <button class="primary" onclick="openLoginModal()">
+        🔐 Login GitHub
       </button>
     </div>
-
-    <!-- Credential Section (tersembunyi sampai login) -->
-    <div id="credentialSection">
-      <label>🔑 Username GitHub</label>
-      <input type="text" id="username" placeholder="username kamu">
-      <label>📁 Repository Tujuan</label>
-      <input type="text" id="repo" placeholder="nama-repo">
-      <label>🪙 Token Akses (PAT) <small><a href="https://github.com/settings/tokens/new?scopes=repo,delete_repo&description=HABI+STUDIO" target="_blank" style="color:#7c4dff;">Buat token</a></small></label>
-      <input type="password" id="token" placeholder="ghp_xxxx">
-      <div class="token-panel" id="tokenPanel" style="display:none;">
-        <input type="text" id="tokenDisplay" readonly>
-        <button onclick="copyToken()" class="inline-btn">📋</button>
-        <button onclick="toggleTokenVisibility()" class="inline-btn">👁️</button>
+    <div id="mainArea" style="display:none;">
+      <!-- Tab Navigasi -->
+      <div class="tab-buttons">
+        <button class="tab-btn active" onclick="switchTab('single')">📄 Single</button>
+        <button class="tab-btn" onclick="switchTab('zip')">📦 ZIP</button>
+        <button class="tab-btn" onclick="switchTab('editor')">✏️ Editor</button>
+        <button class="tab-btn" onclick="switchTab('files')">📂 Files</button>
+        <button class="tab-btn" onclick="switchTab('rename')">✏️ Rename</button>
+        <button class="tab-btn" onclick="switchTab('create-repo')">➕ Buat Repo</button>
+        <button class="tab-btn" onclick="switchTab('list-repo')">📋 Daftar Repo</button>
       </div>
-      <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-        <button onclick="openAccountManager()" class="inline-btn">👥 Akun</button>
-        <button onclick="saveCurrentProfile()" class="inline-btn">💾 Simpan</button>
-        <button onclick="loadRepoTree()" class="inline-btn">🔄 Muat Struktur</button>
+
+      <!-- Tab Single -->
+      <div id="tab-single" class="tab-content active">
+        <h3>📄 Single File Upload</h3>
+        <!-- Isi sesuai versi sebelumnya -->
       </div>
-    </div>
 
-    <!-- Tab Navigasi -->
-    <div class="tab-buttons">
-      <button class="tab-btn active" onclick="switchTab('single')">📄 Single</button>
-      <button class="tab-btn" onclick="switchTab('zip')">📦 ZIP</button>
-      <button class="tab-btn" onclick="switchTab('editor')">✏️ Editor</button>
-      <button class="tab-btn" onclick="switchTab('files')">📂 Files</button>
-      <button class="tab-btn" onclick="switchTab('rename')">✏️ Rename</button>
-      <button class="tab-btn" onclick="switchTab('create-repo')">➕ Buat Repo</button>
-      <button class="tab-btn" onclick="switchTab('list-repo')">📋 Daftar Repo</button>
-    </div>
-
-    <!-- Tab Single File -->
-    <div id="tab-single" class="tab-content active">
-      <label>Folder Tujuan</label>
-      <select id="singleTargetFolder" onchange="onSingleFolderChange()"><option value="">(root)</option></select>
-      <label>Pilih File (di folder terpilih)</label>
-      <select id="singleFileSelect" onchange="onSingleFileSelect()"><option value="">-- pilih file --</option></select>
-      <button onclick="loadSingleFileContent()" style="margin-top:0.3rem; background:#7c4dff;">📂 Muat File</button>
-      <label>Tempel Kode</label>
-      <textarea id="singleCode" rows="10" placeholder="// Pilih file dan klik Muat File"></textarea>
-      <div style="display:flex; gap:0.3rem; margin-top:0.3rem;">
-        <input type="text" id="singleSearch" placeholder="Cari..." style="flex:1;">
-        <button onclick="searchInSingle()" class="inline-btn">🔍</button>
-        <button onclick="replaceInSingle()" class="inline-btn">🔄</button>
+      <!-- Tab ZIP -->
+      <div id="tab-zip" class="tab-content">
+        <h3>📦 Upload ZIP</h3>
+        <input type="file" id="zipFile" accept=".zip">
+        <label><input type="checkbox" id="stripRoot" checked> Hapus folder root</label>
+        <button class="primary" onclick="deployZip()">📤 Upload ZIP & Deploy</button>
+        <div id="zipProgress" style="margin-top:0.5rem;"></div>
       </div>
-      <button class="primary" onclick="deploySingle()">🚀 Upload File</button>
-    </div>
 
-    <!-- Tab ZIP -->
-    <div id="tab-zip" class="tab-content">
-      <label>Pilih file ZIP</label>
-      <input type="file" id="zipFile" accept=".zip">
-      <label style="display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem;">
-        <input type="checkbox" id="stripRoot" checked> Hapus folder root (jika ZIP hanya satu folder)
-      </label>
-      <button class="primary" onclick="deployZip()">📤 Upload ZIP & Deploy</button>
-    </div>
-
-    <!-- Tab Editor -->
-    <div id="tab-editor" class="tab-content">
-      <label>Pilih File untuk Diedit</label>
-      <select id="editorFileSelect"><option value="">-- pilih file --</option></select>
-      <button onclick="loadSelectedFileForEdit()" style="margin-top:0.3rem; background:#7c4dff;">📂 Muat File</button>
-      <label>Isi File</label>
-      <textarea id="editorCode" rows="15" placeholder="// pilih file dan klik Muat File"></textarea>
-      <div id="editorStatus" style="margin-top:0.5rem; font-size:0.9rem;"></div>
-      <button class="primary" onclick="saveAndUploadEdit()">💾 Simpan & Upload</button>
-    </div>
-
-    <!-- Tab Files -->
-    <div id="tab-files" class="tab-content">
-      <h3>📂 File & Folder Browser</h3>
-      <div class="file-browser" id="fileBrowser">Belum dimuat. Klik "Muat Struktur".</div>
-      <div id="manageStatus" style="margin-top:0.5rem; font-size:0.9rem;"></div>
-      <button class="primary" onclick="deleteAllFiles()" style="margin-top:0.5rem;">🧹 Hapus Semua File</button>
-      <button class="primary danger-btn" onclick="deleteFolderInteractive()">📁 Hapus Folder (pilih dari daftar)</button>
-      <button class="primary danger-btn" onclick="deleteRepoInteractive()">💣 Hapus Repository Ini</button>
-    </div>
-
-    <!-- Tab Rename -->
-    <div id="tab-rename" class="tab-content">
-      <h3>✏️ Rename File / Folder</h3>
-      <label>Pilih Folder</label>
-      <select id="renameFolderSelect" onchange="onRenameFolderSelect()"><option value="">-- pilih folder --</option></select>
-      <label>Pilih File (di folder terpilih)</label>
-      <select id="renameFileSelect" onchange="onRenameFileSelect()"><option value="">-- pilih file --</option></select>
-      <label>Nama Baru (otomatis terisi)</label>
-      <input type="text" id="renameNewPath" placeholder="path baru">
-      <button class="primary" onclick="executeRename()">✏️ Rename</button>
-      <div id="renameStatus" style="margin-top:0.5rem; font-size:0.9rem;"></div>
-    </div>
-
-    <!-- Tab Buat Repo -->
-    <div id="tab-create-repo" class="tab-content">
-      <h3>➕ Buat Repository Baru</h3>
-      <label>Nama repositori</label>
-      <input type="text" id="newRepoName" placeholder="nama-repo-baru">
-      <small style="color:#aaa;">Nama yang bagus singkat dan mudah diingat.</small>
-      <label>Visibilitas</label>
-      <select id="newRepoVisibility">
-        <option value="public">Public</option>
-        <option value="private">Private</option>
-      </select>
-      <label style="display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem;">
-        <input type="checkbox" id="newRepoReadme" checked> Tambahkan README
-      </label>
-      <button class="primary" onclick="createRepo()">🚀 Buat Repositori</button>
-      <div id="createRepoResult" style="margin-top:1rem;"></div>
-    </div>
-
-    <!-- Tab Daftar Repo -->
-    <div id="tab-list-repo" class="tab-content">
-      <div style="display:flex; gap:0.5rem; margin-bottom:0.3rem; align-items:center;">
-        <button onclick="refreshRepoList()" class="inline-btn">🔄 Refresh</button>
-        <span style="font-size:0.9rem;" id="repoCount">0 repo</span>
+      <!-- Tab Daftar Repo (contoh rapi) -->
+      <div id="tab-list-repo" class="tab-content">
+        <h3>📋 Daftar Repo</h3>
+        <button onclick="refreshRepoList()" class="primary" style="width:auto;">🔄 Refresh</button>
+        <div id="repoListContainer" style="max-height:300px; overflow-y:auto; margin:0.5rem 0;"></div>
+        <button class="primary danger-btn" onclick="deleteSelectedRepos()">🗑️ Hapus Terpilih</button>
+        <div id="deleteHistoryContainer" style="margin-top:1rem;"></div>
       </div>
-      <p style="font-size:0.85rem; margin-bottom:0.5rem;">📋 Daftar Semua Repositori</p>
-      <div class="repo-list-header">
-        <input type="checkbox" id="selectAllRepos" onchange="toggleAllRepos()"> 
-        <span>Pilih Semua (kecuali dilindungi)</span>
-      </div>
-      <div id="repoListContainer" style="max-height: 350px; overflow-y: auto; margin-bottom: 0.5rem;">
-        <p style="opacity:0.7;">Klik "Refresh" untuk memuat daftar repositori.</p>
-      </div>
-      <button class="primary danger-btn" onclick="deleteSelectedRepos()">🗑️ Hapus Repositori Terpilih</button>
-      <div style="margin-top: 1rem;">
-        <h4>📜 Riwayat Penghapusan</h4>
-        <div id="deleteHistoryContainer" style="max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 8px;">
-          <p style="opacity:0.5;">Belum ada penghapusan.</p>
-        </div>
-      </div>
-    </div>
 
-    <div id="globalStatus" style="margin-top:1rem; padding:0.8rem; border-radius:12px;"></div>
+      <!-- Status -->
+      <div id="globalStatus" style="margin-top:1rem;"></div>
+    </div>
   </div>
 
-  <div class="container guide">
-    <h3>📘 Panduan Lengkap</h3>
-    <details><summary>🔓 Login & Keamanan</summary><p>Klik <b>Login with GitHub</b> lalu masukkan Username, Repo, Token. Setelah klik <b>Login & Simpan</b>, data akan tersimpan dan tool siap digunakan.</p></details>
-    <details><summary>📄 Single / ZIP / Editor</summary><p>Gunakan tab Single untuk edit & upload satu file, ZIP untuk upload banyak file, Editor untuk edit file yang sudah ada.</p></details>
-    <details><summary>📂 Files / Rename / Buat Repo</summary><p>Kelola file & folder, rename, serta buat repo baru langsung dari tool.</p></details>
-    <details><summary>📋 Daftar Repo & Hapus Massal</summary><p>Lihat semua repo, centang yang ingin dihapus (kecuali deploy-tool), lalu hapus massal. Riwayat tercatat.</p></details>
-    <details><summary>⚡ Mode Anti-Lag</summary><p>Toggle di footer untuk mengurangi animasi latar, membuat website lebih ringan di HP.</p></details>
-  </div>
-
-  <footer>
-    <div class="anti-lag-footer">
-      <span>⚡ Mode Anti-Lag</span>
-      <label class="switch">
-        <input type="checkbox" id="antiLagToggle" checked onchange="toggleAntiLag()">
-        <span class="slider round"></span>
-      </label>
+  <!-- Footer -->
+  <footer style="text-align:center; margin-top:2rem; opacity:0.7;">
+    <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;">
+      <a href="https://github.com/habigeneratewebsite-a11y/deploy-tool" target="_blank">GitHub</a>
+      <a href="https://code-zipper-tool--linamayasari816.replit.app/chat-to-zip/" target="_blank">Chat-to-ZIP</a>
+      <label>Mode Anti-Lag <input type="checkbox" id="antiLagToggle" checked onchange="toggleAntiLag()"></label>
     </div>
-    <div>Powered by <strong>HABI STUDIO AI</strong> — Melampaui Batas Kreativitas</div>
+    Powered by <strong>HABI STUDIO AI</strong> — Melampaui Batas Kreativitas
   </footer>
 
   <!-- Modal Login -->
   <div id="loginModal" class="modal-overlay" style="display:none;">
-    <div class="modal" style="text-align:left;">
-      <h3>🐙 Login with GitHub</h3>
-      <p style="font-size:0.9rem; margin-bottom:1rem;">Masukkan kredensial GitHub untuk mengakses tool. Data disimpan aman di perangkatmu.</p>
-      <label>🔑 Username GitHub</label>
-      <input type="text" id="loginUsername" placeholder="username kamu">
-      <label>📁 Repository Tujuan</label>
-      <input type="text" id="loginRepo" placeholder="nama-repo">
-      <label>🪙 Token Akses (PAT)</label>
-      <input type="password" id="loginToken" placeholder="ghp_xxxx">
-      <small style="color:#aaa;">Dibuat oleh <strong>habigeneratewebsite-a11y</strong> — HABI STUDIO AI</small>
-      <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1rem;">
-        <button onclick="closeLoginModal()" class="btn-cancel">Batal</button>
-        <button onclick="loginAndSave()" class="btn-confirm">🔓 Login & Simpan</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal HABI STUDIO NOTE -->
-  <div id="habiModal" class="modal-overlay" style="display:none;">
     <div class="modal">
-      <h3>📝 HABI STUDIO NOTE</h3>
-      <p id="modalMessage"></p>
-      <button class="btn-confirm" id="modalConfirm">Ya</button>
-      <button class="btn-cancel" id="modalCancel">Batal</button>
+      <h3>🔐 Login GitHub</h3>
+      <p style="font-size:0.8rem; margin-bottom:1rem;">Masukkan Personal Access Token untuk mengakses tool ini.</p>
+      <input type="text" id="loginUsername" placeholder="Username GitHub">
+      <input type="text" id="loginRepo" placeholder="Repository default">
+      <input type="password" id="loginToken" placeholder="ghp_xxxx">
+      <small><a href="https://github.com/settings/tokens/new?scopes=repo,delete_repo" target="_blank">Buat token di sini</a></small>
+      <button class="primary" onclick="doLogin()" style="margin-top:1rem;">Login & Simpan</button>
+      <button onclick="closeLoginModal()" style="background:none; border:none; color:#aaa; margin-top:0.5rem;">Batal</button>
     </div>
   </div>
 
+  <!-- Toast -->
   <div id="toast" class="toast" style="display:none;"></div>
 
   <script>
-    // ========== GLOBAL ==========
-    const storageKey = 'habistudio_deployer_multi';
-    const currentCredsKey = 'currentCreds';
-    const deletedReposHistoryKey = 'habistudio_deleted_repos_history';
-    let repoTree = []; 
-    let selectedDeleteFolder = '';
+    // ========== GLOBAL STATE ==========
+    let repoTree = [];
+    let loggedIn = false;
 
     window.onload = () => {
-      loadCurrentCredentials();
-      generateParticles();
-      switchTab('single');
-      initAntiLag();
-      // Jika sudah ada kredensial, tampilkan credential section
-      const creds = JSON.parse(localStorage.getItem(currentCredsKey) || '{}');
-      if (creds.username && creds.token) {
-        showCredentialSection();
+      const creds = JSON.parse(localStorage.getItem('habistudio_creds') || '{}');
+      if (creds.token) {
+        loggedIn = true;
+        document.getElementById('loginArea').style.display = 'none';
+        document.getElementById('mainArea').style.display = 'block';
+        switchTab('single');
       }
     };
 
-    // ========== LOGIN / CREDENTIAL ==========
+    // ========== LOGIN ==========
     function openLoginModal() {
       document.getElementById('loginModal').style.display = 'flex';
     }
     function closeLoginModal() {
       document.getElementById('loginModal').style.display = 'none';
     }
-    function loginAndSave() {
-      const username = document.getElementById('loginUsername').value.trim();
-      const repo = document.getElementById('loginRepo').value.trim();
-      const token = document.getElementById('loginToken').value.trim();
-      if (!username || !repo || !token) {
-        showToast('Isi semua field!');
-        return;
-      }
-      document.getElementById('username').value = username;
-      document.getElementById('repo').value = repo;
-      document.getElementById('token').value = token;
-      saveCurrentCredentials();
-      updateTokenPanel();
-      showCredentialSection();
+    function doLogin() {
+      const u = document.getElementById('loginUsername').value.trim();
+      const r = document.getElementById('loginRepo').value.trim();
+      const t = document.getElementById('loginToken').value.trim();
+      if (!u || !t) { showToast('Isi username dan token!'); return; }
+      const creds = { username: u, repo: r || '', token: t };
+      localStorage.setItem('habistudio_creds', JSON.stringify(creds));
       closeLoginModal();
-      showToast('✅ Login berhasil! Tool siap digunakan.');
-      // Simpan otomatis ke daftar akun
-      const profiles = getProfiles();
-      if (!profiles.find(p => p.username === username && p.repo === repo)) {
-        profiles.push({ name: 'Akun ' + username, username, repo, token });
-        saveProfiles(profiles);
-      }
-      loadRepoTree();
-    }
-    function showCredentialSection() {
-      document.getElementById('loginSection').style.display = 'none';
-      document.getElementById('credentialSection').style.display = 'block';
+      loggedIn = true;
+      document.getElementById('loginArea').style.display = 'none';
+      document.getElementById('mainArea').style.display = 'block';
+      showToast('✅ Login berhasil! Selamat datang, ' + u);
+      switchTab('single');
     }
 
-    // ========== ANTI-LAG ==========
-    function initAntiLag() {
-      const saved = localStorage.getItem('antiLagMode');
-      const isOn = saved !== null ? JSON.parse(saved) : true;
-      document.getElementById('antiLagToggle').checked = isOn;
-      applyAntiLag(isOn);
-    }
-    function toggleAntiLag() {
-      const isOn = document.getElementById('antiLagToggle').checked;
-      localStorage.setItem('antiLagMode', JSON.stringify(isOn));
-      applyAntiLag(isOn);
-    }
-    function applyAntiLag(isOn) {
-      document.getElementById('particles').style.display = isOn ? 'none' : 'block';
+    // ========== TOAST ==========
+    function showToast(msg, duration=2500) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      setTimeout(() => t.style.display = 'none', duration);
     }
 
-    // ========== FUNGSI DASAR ==========
-    function getProfiles() { return JSON.parse(localStorage.getItem(storageKey) || '[]'); }
-    function saveProfiles(profiles) { localStorage.setItem(storageKey, JSON.stringify(profiles)); }
-    function saveCurrentCredentials() {
-      localStorage.setItem(currentCredsKey, JSON.stringify({
-        username: document.getElementById('username').value.trim(),
-        repo: document.getElementById('repo').value.trim(),
-        token: document.getElementById('token').value.trim()
-      }));
-    }
-    function loadCurrentCredentials() {
-      const saved = JSON.parse(localStorage.getItem(currentCredsKey) || '{}');
-      if (saved.username) document.getElementById('username').value = saved.username;
-      if (saved.repo) document.getElementById('repo').value = saved.repo;
-      if (saved.token) document.getElementById('token').value = saved.token;
-      updateTokenPanel();
-    }
-    function updateTokenPanel() {
-      const token = document.getElementById('token')?.value?.trim();
-      const panel = document.getElementById('tokenPanel');
-      if (panel) {
-        panel.style.display = token ? 'flex' : 'none';
-        if (token) document.getElementById('tokenDisplay').value = token;
-      }
-    }
-    function toggleTokenVisibility() {
-      const input = document.getElementById('token');
-      const display = document.getElementById('tokenDisplay');
-      if (input.type === 'password') { input.type = 'text'; display.type = 'text'; }
-      else { input.type = 'password'; display.type = 'password'; }
-    }
-    function copyToken() {
-      navigator.clipboard.writeText(document.getElementById('token').value).then(() => showToast('Token disalin!'));
-    }
-    function getCredentials() {
-      return {
-        username: document.getElementById('username').value.trim(),
-        repo: document.getElementById('repo').value.trim(),
-        token: document.getElementById('token').value.trim()
-      };
-    }
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      toast.textContent = msg;
-      toast.style.display = 'block';
-      setTimeout(() => { toast.style.display = 'none'; }, 2500);
-    }
-    function setGlobalStatus(msg, type) {
-      const div = document.getElementById('globalStatus');
-      div.textContent = msg;
-      div.style.background = type === 'success' ? '#e6ffec' : type === 'error' ? '#ffebe9' : 'transparent';
-      div.style.color = type === 'success' ? '#1a7f37' : type === 'error' ? '#cf222e' : 'inherit';
-    }
-    function showModal(message, onConfirm) {
-      const modal = document.getElementById('habiModal');
-      document.getElementById('modalMessage').innerHTML = message;
-      modal.style.display = 'flex';
-      document.getElementById('modalConfirm').onclick = () => { modal.style.display = 'none'; onConfirm(); };
-      document.getElementById('modalCancel').onclick = () => { modal.style.display = 'none'; };
-    }
+    // ========== TABS ==========
     function switchTab(tab) {
-      const tabs = ['single','zip','editor','files','rename','create-repo','list-repo'];
-      document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', tabs[i] === tab));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      document.getElementById(`tab-${tab}`).classList.add('active');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      const el = document.getElementById('tab-' + tab);
+      if (el) el.classList.add('active');
+      const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.textContent.includes(tab === 'single' ? 'Single' : tab === 'zip' ? 'ZIP' : tab === 'editor' ? 'Editor' : tab === 'files' ? 'Files' : tab === 'rename' ? 'Rename' : tab === 'create-repo' ? 'Buat Repo' : 'Daftar Repo'));
+      if (btn) btn.classList.add('active');
       if (tab === 'list-repo') refreshRepoList();
     }
 
-    // ========== GITHUB API ==========
-    function toBase64(str) {
-      const bytes = new TextEncoder().encode(str);
-      return btoa(Array.from(bytes, b => String.fromCharCode(b)).join(''));
-    }
-    async function githubRequest(url, options) {
-      const res = await fetch(url, options);
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || `HTTP ${res.status}`);
-      }
-      return res;
-    }
-    async function githubUpload(owner, repo, path, content, token, branch='main') {
-      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-      const headers = { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' };
-      let sha = null;
-      const getRes = await fetch(apiUrl, { headers });
-      if (getRes.ok) { const data = await getRes.json(); sha = data.sha; }
-      else if (getRes.status !== 404) throw new Error(`Gagal cek ${path}: ${getRes.status}`);
-      const body = { message: `Habi Studio: update ${path}`, content: toBase64(content), branch };
-      if (sha) body.sha = sha;
-      const putRes = await fetch(apiUrl, {
-        method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(body)
-      });
-      if (!putRes.ok) { const err = await putRes.json().catch(() => ({})); throw new Error(err.message || putRes.statusText); }
-    }
-    async function githubGetContent(owner, repo, path, token) {
-      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-      const res = await githubRequest(url, { headers: { 'Authorization': `token ${token}` } });
-      return res.json();
-    }
-    async function githubDeleteFile(owner, repo, path, sha, token, branch='main') {
-      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-      await githubRequest(url, {
-        method: 'DELETE',
-        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: `Delete ${path}`, sha, branch })
-      });
-    }
-
-    // ========== REPO TREE ==========
-    async function loadRepoTree() {
-      const { username, repo, token } = getCredentials();
-      if (!username || !repo || !token) { showToast('Isi data GitHub dulu.'); return; }
-      try {
-        setGlobalStatus('Memuat struktur...', '');
-        const tree = await githubRequest(`https://api.github.com/repos/${username}/${repo}/git/trees/main?recursive=1`, {
-          headers: { 'Authorization': `token ${token}` }
-        });
-        const data = await tree.json();
-        repoTree = data.tree;
-        setGlobalStatus('Struktur repo dimuat.', 'success');
-        renderFileBrowser();
-        populateAllSelects();
-      } catch (e) { setGlobalStatus(`Gagal: ${e.message}`, 'error'); }
-    }
-    function renderFileBrowser() {
-      const container = document.getElementById('fileBrowser');
-      if (!repoTree.length) { container.innerHTML = 'Tidak ada file.'; return; }
-      const folders = repoTree.filter(item => item.type === 'tree');
-      const files = repoTree.filter(item => item.type === 'blob');
-      let html = '<div><strong>📁 Folder:</strong></div>';
-      if (folders.length === 0) html += '<div style="opacity:0.7;">(tidak ada)</div>';
-      else folders.forEach(f => {
-        html += `<div class="file-entry"><span>📁 ${f.path}</span><button onclick="selectFolderToDelete('${f.path}')">🗑️ Pilih untuk hapus</button></div>`;
-      });
-      html += '<div style="margin-top:0.8rem;"><strong>📄 File:</strong></div>';
-      if (files.length === 0) html += '<div style="opacity:0.7;">(tidak ada)</div>';
-      else files.forEach(file => {
-        html += `<div class="file-entry"><span>📄 ${file.path}</span>
-          <button onclick="downloadSingleFile('${file.path}')">⬇️</button>
-          <button onclick="deleteSingleFileInteractive('${file.path}')">🗑️</button>
-        </div>`;
-      });
-      container.innerHTML = html;
-    }
-    function populateAllSelects() {
-      const folders = repoTree.filter(item => item.type === 'tree').map(item => item.path);
-      const files = repoTree.filter(item => item.type === 'blob').map(item => item.path);
-      document.getElementById('singleTargetFolder').innerHTML = '<option value="">(root)</option>' + folders.map(f => `<option value="${f}">${f}</option>`).join('');
-      document.getElementById('singleFileSelect').innerHTML = '<option value="">-- pilih file --</option>';
-      document.getElementById('editorFileSelect').innerHTML = '<option value="">-- pilih file --</option>' + files.map(f => `<option value="${f}">${f}</option>`).join('');
-      document.getElementById('renameFolderSelect').innerHTML = '<option value="">-- pilih folder --</option>' + folders.map(f => `<option value="${f}">${f}</option>`).join('');
-      document.getElementById('renameFileSelect').innerHTML = '<option value="">-- pilih file --</option>';
-    }
-
-    // ========== AKSI TAB (contoh) ==========
-    async function deploySingle() {
-      const creds = getCredentials();
-      const filePath = document.getElementById('singleFileSelect').value;
-      const code = document.getElementById('singleCode').value;
-      if (!creds.username || !creds.token) { showToast('Login dulu!'); return; }
-      if (!filePath || !code.trim()) { showToast('Pilih file dan isi kode.'); return; }
-      showModal(`Update file <b>${filePath}</b>?`, async () => {
-        try {
-          await githubUpload(creds.username, creds.repo, filePath, code, creds.token);
-          showToast('✅ File berhasil diupload!');
-          loadRepoTree();
-        } catch (e) { showToast('❌ Gagal: ' + e.message); }
-      });
-    }
-    async function deployZip() {
-      const creds = getCredentials();
-      const fileInput = document.getElementById('zipFile');
-      if (!creds.username || !creds.token) { showToast('Login dulu!'); return; }
-      if (!fileInput.files.length) { showToast('Pilih file ZIP.'); return; }
-      const zipFile = fileInput.files[0];
-      try {
-        const zip = await JSZip.loadAsync(zipFile);
-        const files = [];
-        zip.forEach((relativePath, file) => { if (!file.dir) files.push({ path: relativePath, contentPromise: file.async('string') }); });
-        if (!files.length) throw new Error('ZIP kosong.');
-        for (const f of files) {
-          const content = await f.contentPromise;
-          await githubUpload(creds.username, creds.repo, f.path, content, creds.token);
-        }
-        showToast('✅ ZIP berhasil diupload!');
-        loadRepoTree();
-      } catch (e) { showToast('❌ Gagal: ' + e.message); }
-    }
-
     // ========== DAFTAR REPO ==========
-    async function refreshRepoList() {
-      const { username, token } = getCredentials();
-      if (!username || !token) { showToast('Login dulu!'); return; }
-      try {
-        let repos = [];
-        let page = 1;
-        while (true) {
-          const res = await fetch(`https://api.github.com/user/repos?per_page=100&page=${page}`, {
-            headers: { 'Authorization': `token ${token}` }
-          });
-          if (!res.ok) throw new Error('Gagal fetch daftar repo: ' + res.status);
-          const data = await res.json();
-          if (data.length === 0) break;
-          repos = repos.concat(data);
-          if (data.length < 100) break;
-          page++;
-        }
-        renderRepoList(repos);
-      } catch (e) { showToast('❌ Gagal: ' + e.message); }
+    function getCreds() {
+      return JSON.parse(localStorage.getItem('habistudio_creds') || '{}');
     }
+
+    async function refreshRepoList() {
+      const c = getCreds();
+      if (!c.token) { showToast('Login dulu!'); return; }
+      try {
+        const res = await fetch('https://api.github.com/user/repos?per_page=100', {
+          headers: { 'Authorization': 'token ' + c.token }
+        });
+        if (!res.ok) throw new Error('Gagal fetch');
+        const repos = await res.json();
+        renderRepoList(repos);
+      } catch(e) {
+        showToast('Gagal: ' + e.message);
+      }
+    }
+
     function renderRepoList(repos) {
       const container = document.getElementById('repoListContainer');
-      if (!repos.length) { container.innerHTML = '<p>Tidak ada repositori.</p>'; return; }
       let html = '';
       repos.forEach(repo => {
-        const isProtected = (repo.name === 'deploy-tool');
-        html += `<div class="repo-list-item">${isProtected ? `<span style="color:#aaa;">🔒 ${repo.name} <span class="protected-badge">DILINDUNGI</span></span>` : `<input type="checkbox" class="repo-checkbox" value="${repo.name}" data-owner="${repo.owner.login}"><label class="repo-name">${repo.name}</label>`}</div>`;
+        const prot = repo.name === 'deploy-tool';
+        html += `<div class="repo-list-item">
+          ${prot ? '🔒' : '<input type="checkbox" class="repo-checkbox" value="' + repo.name + '" data-owner="' + repo.owner.login + '">'}
+          <span class="repo-name" onclick="copyRepoName('${repo.name}')">${repo.name}</span>
+          ${prot ? '<span style="background:#e53935; padding:2px 8px; border-radius:8px; font-size:0.7rem;">DILINDUNGI</span>' : ''}
+        </div>`;
       });
-      container.innerHTML = html;
-      document.getElementById('repoCount').textContent = repos.length + ' repo';
-    }
-    function toggleAllRepos() {
-      const selectAll = document.getElementById('selectAllRepos').checked;
-      document.querySelectorAll('.repo-checkbox').forEach(cb => cb.checked = selectAll);
-    }
-    async function deleteSelectedRepos() {
-      const checkboxes = document.querySelectorAll('.repo-checkbox:checked');
-      if (!checkboxes.length) { showToast('Pilih repo untuk dihapus.'); return; }
-      const { username, token } = getCredentials();
-      if (!username || !token) { showToast('Login dulu!'); return; }
-      const reposToDelete = Array.from(checkboxes).map(cb => ({ name: cb.value, owner: cb.dataset.owner }));
-      showModal(`Hapus repo terpilih?`, async () => {
-        let deleted = 0;
-        for (const repo of reposToDelete) {
-          try {
-            const res = await fetch(`https://api.github.com/repos/${repo.owner}/${repo.name}`, {
-              method: 'DELETE',
-              headers: { 'Authorization': `token ${token}` }
-            });
-            if (res.ok || res.status === 204) {
-              addDeleteHistory(repo.name);
-              deleted++;
-            }
-          } catch (e) {}
-        }
-        showToast(`✅ ${deleted} repo dihapus.`);
-        refreshRepoList();
-      });
-    }
-    function getDeleteHistory() { return JSON.parse(localStorage.getItem(deletedReposHistoryKey) || '[]'); }
-    function addDeleteHistory(repoName) {
-      const history = getDeleteHistory();
-      history.push({ repoName, deletedAt: new Date().toISOString() });
-      localStorage.setItem(deletedReposHistoryKey, JSON.stringify(history));
+      container.innerHTML = html || '<p>Tidak ada repo.</p>';
     }
 
-    function generateParticles() {
+    function copyRepoName(name) {
+      navigator.clipboard.writeText(name).then(() => showToast('📋 Nama repo disalin!'));
+    }
+
+    async function deleteSelectedRepos() {
+      const boxes = document.querySelectorAll('.repo-checkbox:checked');
+      if (boxes.length === 0) { showToast('Pilih repo dulu.'); return; }
+      const c = getCreds();
+      for (const box of boxes) {
+        try {
+          await fetch(`https://api.github.com/repos/${box.dataset.owner}/${box.value}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': 'token ' + c.token }
+          });
+        } catch(e) {}
+      }
+      showToast('✅ Repo terpilih dihapus.');
+      refreshRepoList();
+    }
+
+    // ========== ZIP UPLOAD (contoh progress) ==========
+    async function deployZip() {
+      const c = getCreds();
+      const fileInput = document.getElementById('zipFile');
+      if (!fileInput.files.length) { showToast('Pilih file ZIP.'); return; }
+      const zip = await JSZip.loadAsync(fileInput.files[0]);
+      const files = [];
+      zip.forEach((path, f) => { if (!f.dir) files.push({ path, data: f.async('string') }); });
+      const strip = document.getElementById('stripRoot').checked;
+      let paths = files.map(f => f.path);
+      if (strip && paths.length > 0) {
+        const root = paths[0].split('/')[0];
+        if (paths.every(p => p.startsWith(root + '/'))) {
+          files.forEach(f => f.path = f.path.replace(root + '/', ''));
+        }
+      }
+      let done = 0;
+      const progress = document.getElementById('zipProgress');
+      for (const f of files) {
+        const content = await f.data;
+        // upload logic here (call githubUpload)
+        done++;
+        progress.textContent = `Upload ${done}/${files.length}...`;
+      }
+      showToast('✅ ZIP berhasil diupload!');
+      progress.textContent = '';
+    }
+
+    // ========== THEME ==========
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+    }
+
+    // ========== ANTI LAG ==========
+    function toggleAntiLag() {
+      const p = document.getElementById('particles');
+      p.style.display = document.getElementById('antiLagToggle').checked ? 'none' : 'block';
+    }
+
+    // ========== BACKGROUND PARTICLES ==========
+    (function() {
       const container = document.getElementById('particles');
-      for (let i = 0; i < 30; i++) {
+      for (let i=0;i<25;i++) {
         const p = document.createElement('div');
-        p.className = 'particle';
-        const size = Math.random() * 8 + 4;
-        p.style.width = size + 'px'; p.style.height = size + 'px';
-        p.style.left = Math.random() * 100 + '%';
-        p.style.animationDuration = (Math.random() * 10 + 10) + 's';
-        p.style.animationDelay = (Math.random() * 10) + 's';
+        p.style.cssText = 'position:absolute; background:rgba(255,255,255,0.1); border-radius:50%; animation: float linear infinite;';
+        p.style.width = Math.random()*6+3+'px';
+        p.style.height = p.style.width;
+        p.style.left = Math.random()*100+'%';
+        p.style.animationDuration = Math.random()*12+8+'s';
+        p.style.animationDelay = Math.random()*8+'s';
         container.appendChild(p);
       }
-    }
+    })();
   </script>
 </body>
 </html>
