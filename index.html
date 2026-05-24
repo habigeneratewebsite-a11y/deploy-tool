@@ -155,9 +155,9 @@
     .quick-links a { display:inline-flex; align-items:center; gap:0.3rem; background:var(--input-bg); padding:0.4rem 0.8rem; border-radius:8px; text-decoration:none; color:var(--text); border:1px solid var(--border); font-size:0.8rem; transition:background 0.2s; }
     .quick-links a:hover { background:rgba(108,63,212,0.2); }
     .quick-links svg { width:18px; height:18px; fill:currentColor; }
-    .account-detail { margin-bottom:0.3rem; font-size:0.85rem; }
-    .account-detail strong { display:inline-block; width:80px; }
-    .account-detail button { background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.8rem; margin-left:0.3rem; }
+    .account-detail { display:block; margin-bottom:0.2rem; word-break:break-all; }
+    .account-detail small { opacity:0.7; margin-left:0.3rem; }
+    .active-indicator { background:var(--accent); color:white; padding:0.15rem 0.4rem; border-radius:4px; font-size:0.7rem; margin-left:0.3rem; }
   </style>
 </head>
 <body class="dark-theme">
@@ -206,7 +206,7 @@
 
     <div style="display:flex; gap:0.3rem; margin-bottom:0.5rem;">
       <button onclick="openAccountManager()" class="inline-btn">👥 Akun</button>
-      <button onclick="saveAccount()" class="inline-btn">💾 Simpan</button>
+      <button onclick="saveCurrentProfileToAccounts()" class="inline-btn">💾 Simpan</button>
       <button onclick="loadRepoTree()" class="inline-btn">🔄 Muat Struktur</button>
     </div>
 
@@ -239,7 +239,7 @@
       <div id="zipStatus" style="margin-top:0.3rem; font-size:0.8rem;"></div>
     </div>
 
-    <!-- Tab Editor (Revisi total: Buat File Baru) -->
+    <!-- Tab Editor (Buat File Baru) -->
     <div id="tab-editor" class="tab-content">
       <label>📁 Bikin baru file</label>
       <input type="text" id="newFilePath" placeholder="nama-repo/app/tools/music-cover/page.tsx">
@@ -308,21 +308,20 @@
     <div id="globalStatus" style="margin-top:0.6rem; padding:0.5rem; border-radius:10px; font-size:0.8rem;"></div>
   </div>
 
-  <!-- Panduan Lengkap (diperbarui) -->
+  <!-- Panduan Lengkap -->
   <div class="container guide">
-    <details open><summary>📘 Panduan Lengkap HABI STUDIO CODING .ZIP</summary>
-      <p><b>📄 Single:</b> Cari file/folder, muat kode, edit, lalu upload. Cocok untuk update file yang sudah ada.</p>
-      <p><b>📦 ZIP:</b> Upload file ZIP, otomatis diekstrak ke repo. Centang "Hapus folder root" jika ZIP berisi 1 folder utama.</p>
-      <p><b>✏️ Buat Baru:</b> Buat file baru langsung dari tool. Masukkan path lengkap (contoh: <code>repo/app/api/route.js</code>), tulis kode, lalu simpan. Folder akan dibuat otomatis.</p>
-      <p><b>📂 Files:</b> Jelajah isi repo, download, hapus file/folder, hapus semua file, atau hapus repository.</p>
-      <p><b>✏️ Rename:</b> Cari file/folder, otomatis terisi, ubah nama, lalu rename.</p>
-      <p><b>➕ Buat Repo:</b> Buat repository baru dengan visibilitas dan README opsional.</p>
-      <p><b>📋 Daftar:</b> Lihat semua repository milik akun, hapus massal dengan checkbox. Repo `deploy-tool` dilindungi.</p>
-      <p><b>👥 Akun:</b> Simpan banyak akun GitHub. Setiap akun menampilkan nama profil, username, repo, token. Bisa copy detail, edit, hapus, dan pilih. Saat menambah atau mengedit akun, otomatis beralih ke akun tersebut. Kredensial tetap tersimpan meskipun browser direfresh.</p>
-      <p><b>🔑 Token:</b> Klik ikon kunci untuk panduan membuat token GitHub.</p>
-      <p><b>🌓 Tema:</b> Tombol pojok kanan atas untuk ganti tema gelap/terang.</p>
-      <p><b>🖼️ Logo:</b> Upload <code>logo.png</code> (200x55px) ke root repo untuk logo kustom. Ada efek glow setiap 10 detik.</p>
-      <p><b>⚡ Mode Anti‑Lag:</b> Nonaktifkan animasi latar agar lebih ringan.</p>
+    <details><summary>📘 Panduan Lengkap HABI STUDIO CODING .ZIP</summary>
+      <p><b>📄 Single:</b> Cari file/folder di input pencarian, klik hasil untuk memuat kode ke editor, edit jika perlu, lalu klik <b>Upload File</b> untuk menyimpan perubahan. Cocok untuk update cepat file yang sudah ada.</p>
+      <p><b>📦 ZIP:</b> Upload file ZIP berisi proyek, otomatis diekstrak dan diupload ke repositori dengan struktur yang sama. Centang <b>Hapus folder root</b> jika ZIP hanya berisi satu folder utama.</p>
+      <p><b>✏️ Buat Baru:</b> Buat file baru langsung dari tool tanpa perlu membuka GitHub. Masukkan path lengkap (contoh: <code>repo/app/page.tsx</code>), tulis kode di kolom konten, lalu klik <b>Simpan</b>. Folder akan otomatis terstruktur. Nama repo bisa ditulis di awal path atau tidak (akan menggunakan repo yang sedang aktif).</p>
+      <p><b>📂 Files:</b> Jelajah isi repositori, cari file/folder, download, hapus file, hapus folder, hapus semua file, atau hapus repository. Gunakan tombol <b>Muat Struktur</b> untuk memuat daftar file.</p>
+      <p><b>✏️ Rename:</b> Cari file atau folder, pilih dari hasil, nama baru otomatis terisi, edit jika perlu, lalu klik <b>Rename</b> untuk memindahkan/rename.</p>
+      <p><b>➕ Buat Repo:</b> Buat repositori GitHub baru langsung dari tool. Isi nama, pilih visibilitas, dan tambahkan README jika perlu.</p>
+      <p><b>📋 Daftar:</b> Lihat semua repositori milik akun GitHub-mu. Centang repo yang ingin dihapus (repo <b>deploy-tool</b> dilindungi dan tidak bisa dicentang). Klik <b>Hapus Terpilih</b> untuk menghapus. Riwayat penghapusan tercatat di bawah.</p>
+      <p><b>👥 Akun:</b> Kelola banyak akun GitHub. Setiap akun menampilkan nama profil, username, repo, dan token (sebagian). Gunakan tombol ✅ untuk memilih akun, ✏️ untuk mengedit, dan 🗑️ untuk menghapus. Klik <b>➕ Tambah Akun</b> untuk menambah akun baru (form modern, bukan prompt). Saat menambah atau mengedit akun, otomatis akan beralih ke akun tersebut. Detail akun bisa dicopy dengan klik 📋. Akun yang sedang aktif ditandai dengan badge ✅ di daftar. Kredensial tetap tersimpan meskipun browser direfresh.</p>
+      <p><b>🔑 Token:</b> Klik tombol 🔑 untuk panduan lengkap cara mendapatkan token GitHub dengan izin <code>repo</code> dan <code>delete_repo</code>.</p>
+      <p><b>🎨 Tema:</b> Klik 🌓 di pojok kanan atas untuk beralih antara tema gelap dan terang.</p>
+      <p><b>🖼️ Logo:</b> Upload file <code>logo.png</code> (ukuran 200x55px) ke root repositori untuk menampilkan logo kustom. Jika tidak ada, area logo akan kosong. Logo memiliki efek glow setiap 3 jam selama 10 detik.</p>
     </details>
   </div>
 
@@ -356,11 +355,11 @@
     </div>
   </div>
 
-  <!-- Modal Manajemen Akun (dirombak tampilannya) -->
+  <!-- Modal Manajemen Akun -->
   <div id="accountModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:500px;">
       <h3>👥 Manajemen Akun</h3>
-      <div id="accountList" style="max-height:300px; overflow-y:auto;"></div>
+      <div id="accountList" style="max-height:350px; overflow-y:auto;"></div>
       <button onclick="showAddAccountForm()" class="inline-btn" style="margin-top:0.4rem;">➕ Tambah Akun</button>
       <button onclick="closeAccountModal()" class="btn-cancel" style="width:100%; margin-top:0.4rem;">Tutup</button>
     </div>
@@ -971,39 +970,53 @@
       c.innerHTML = h.slice().reverse().map(i => `<div class="history-item"><span>${i.name}</span><span style="opacity:0.5">${new Date(i.time).toLocaleString('id-ID')}</span></div>`).join('');
     }
 
-    // ==================== MANAJEMEN AKUN (REVISI TAMPILAN + OTOMATIS Beralih) ====================
+    // ==================== MANAJEMEN AKUN (REVISI TOTAL) ====================
     function getProfiles() { return JSON.parse(localStorage.getItem(SK) || '[]'); }
     function saveProfiles(p) { localStorage.setItem(SK, JSON.stringify(p)); }
-    function saveAccount() {
+    
+    // Simpan profil saat ini ke daftar akun
+    function saveCurrentProfileToAccounts() {
       const { username, repo, token } = getCreds();
       if (!username || !repo || !token) return toast('Isi semua field', 'error');
       const profiles = getProfiles();
-      const name = prompt('Nama profil:', username);
-      if (!name) return;
-      profiles.push({ name, username, repo, token });
-      saveProfiles(profiles);
-      toast('Akun tersimpan!', 'success');
+      // Cek apakah sudah ada akun dengan token yang sama
+      const exists = profiles.findIndex(p => p.token === token);
+      if (exists >= 0) {
+        profiles[exists] = { name: username, username, repo, token };
+        saveProfiles(profiles);
+        toast('Akun diupdate!', 'success');
+      } else {
+        profiles.push({ name: username, username, repo, token });
+        saveProfiles(profiles);
+        toast('Akun tersimpan!', 'success');
+      }
     }
+    
     function openAccountManager() {
       const profiles = getProfiles();
+      const currentUser = getCreds();
       const list = document.getElementById('accountList');
-      if (!profiles.length) { list.innerHTML = '<p>Belum ada akun</p>'; }
+      if (!profiles.length) { list.innerHTML = '<p>Belum ada akun tersimpan.</p>'; }
       else {
-        list.innerHTML = profiles.map((p, i) => `
-          <div style="background:var(--input-bg); border-radius:8px; padding:0.5rem; margin-bottom:0.4rem;">
-            <div class="account-detail"><strong>Nama profil:</strong> ${p.name}</div>
-            <div class="account-detail"><strong>Username:</strong> ${p.username} <button onclick="copyText('${p.username}')">📋</button></div>
-            <div class="account-detail"><strong>Repo:</strong> ${p.repo} <button onclick="copyText('${p.repo}')">📋</button></div>
-            <div class="account-detail"><strong>Token:</strong> ${p.token.substring(0,8)}... <button onclick="copyText('${p.token}')">📋</button></div>
+        list.innerHTML = profiles.map((p, i) => {
+          const isActive = (p.token === currentUser.token);
+          return `
+          <div style="background:var(--input-bg); border-radius:8px; padding:0.5rem; margin-bottom:0.4rem; ${isActive ? 'border:1px solid var(--accent);' : ''}">
+            <div class="account-detail"><strong>Nama profil:</strong> ${p.name} ${isActive ? '<span class="active-indicator">✅ Aktif</span>' : ''}</div>
+            <div class="account-detail"><strong>Username:</strong> ${p.username} <button onclick="copyText('${p.username}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
+            <div class="account-detail"><strong>Repo:</strong> ${p.repo} <button onclick="copyText('${p.repo}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
+            <div class="account-detail"><strong>Token:</strong> ${p.token.substring(0,8)}... <button onclick="copyText('${p.token}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
             <div style="display:flex; gap:0.3rem; margin-top:0.4rem;">
               <button onclick="switchAccount(${i})" class="inline-btn">✅ Pilih</button>
               <button onclick="editAccount(${i})" class="inline-btn" style="background:#ff9800;">✏️ Edit</button>
               <button onclick="delAccount(${i})" class="inline-btn" style="background:var(--danger);">🗑️ Hapus</button>
             </div>
-          </div>`).join('');
+          </div>`;
+        }).join('');
       }
       document.getElementById('accountModal').style.display = 'flex';
     }
+    
     function copyText(text) {
       navigator.clipboard.writeText(text).then(() => toast('Disalin!', 'success'));
     }
@@ -1037,7 +1050,6 @@
         token: document.getElementById('editAccToken').value.trim()
       };
       saveProfiles(profiles);
-      // Otomatis beralih ke akun yang diedit
       switchAccount(i);
       document.getElementById('editAccountModal').style.display = 'none';
       closeAccountModal();
@@ -1050,7 +1062,7 @@
       openAccountManager(); toast('Akun dihapus', 'info');
     }
 
-    // Tambah akun via modal (bukan prompt)
+    // Tambah akun via modal
     function showAddAccountForm() {
       document.getElementById('newAccName').value = '';
       document.getElementById('newAccUsername').value = '';
@@ -1072,7 +1084,6 @@
       const profiles = getProfiles();
       profiles.push({ name, username, repo, token });
       saveProfiles(profiles);
-      // Otomatis beralih ke akun baru
       document.getElementById('username').value = username;
       document.getElementById('repo').value = repo;
       document.getElementById('token').value = token;
