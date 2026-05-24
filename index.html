@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -154,8 +155,9 @@
     .quick-links a { display:inline-flex; align-items:center; gap:0.3rem; background:var(--input-bg); padding:0.4rem 0.8rem; border-radius:8px; text-decoration:none; color:var(--text); border:1px solid var(--border); font-size:0.8rem; transition:background 0.2s; }
     .quick-links a:hover { background:rgba(108,63,212,0.2); }
     .quick-links svg { width:18px; height:18px; fill:currentColor; }
-    .account-detail { display:block; margin-bottom:0.2rem; }
-    .account-detail small { opacity:0.7; margin-left:0.3rem; }
+    .account-detail { margin-bottom:0.3rem; font-size:0.85rem; }
+    .account-detail strong { display:inline-block; width:80px; }
+    .account-detail button { background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.8rem; margin-left:0.3rem; }
   </style>
 </head>
 <body class="dark-theme">
@@ -210,7 +212,6 @@
 
     <!-- Tab Single -->
     <div id="tab-single" class="tab-content active">
-      <!-- konten sama seperti sebelumnya -->
       <div class="search-row">
         <input type="text" id="singleSearchInput" placeholder="Cari file atau folder... (ketik untuk mencari)" oninput="liveSearchSingle()">
         <button onclick="loadSingleFromSearch()" class="inline-btn">📂 Buka</button>
@@ -228,7 +229,6 @@
 
     <!-- Tab ZIP -->
     <div id="tab-zip" class="tab-content">
-      <!-- konten sama -->
       <label>Pilih file ZIP</label>
       <input type="file" id="zipFile" accept=".zip">
       <label style="display:flex; align-items:center; gap:0.4rem; margin-top:0.3rem;">
@@ -252,7 +252,6 @@
 
     <!-- Tab Files -->
     <div id="tab-files" class="tab-content">
-      <!-- konten sama -->
       <div class="search-row" style="margin-bottom:0.4rem;">
         <input type="text" id="filesSearch" placeholder="Cari file atau folder..." oninput="searchInFiles()">
       </div>
@@ -266,7 +265,6 @@
 
     <!-- Tab Rename -->
     <div id="tab-rename" class="tab-content">
-      <!-- konten sama -->
       <div class="search-row">
         <input type="text" id="renameSearchInput" placeholder="Cari file atau folder..." oninput="liveSearchRename()">
       </div>
@@ -278,7 +276,6 @@
 
     <!-- Tab Buat Repo -->
     <div id="tab-create-repo" class="tab-content">
-      <!-- konten sama -->
       <label>Nama repositori</label>
       <input type="text" id="newRepoName" placeholder="nama-repo-baru">
       <label>Visibilitas</label>
@@ -292,7 +289,6 @@
 
     <!-- Tab Daftar Repo -->
     <div id="tab-list-repo" class="tab-content">
-      <!-- konten sama -->
       <div style="display:flex; gap:0.4rem; margin-bottom:0.3rem;">
         <button onclick="refreshRepoList()" class="inline-btn">🔄 Refresh</button>
         <span style="font-size:0.8rem;" id="repoCount">0 repo</span>
@@ -312,17 +308,21 @@
     <div id="globalStatus" style="margin-top:0.6rem; padding:0.5rem; border-radius:10px; font-size:0.8rem;"></div>
   </div>
 
-  <!-- Panduan Lengkap -->
+  <!-- Panduan Lengkap (diperbarui) -->
   <div class="container guide">
-    <details><summary>📘 Panduan Lengkap HABI STUDIO CODING .ZIP</summary>
-      <p><b>Single:</b> Cari file/folder, muat, edit, upload.</p>
-      <p><b>ZIP:</b> Upload ZIP, otomatis diekstrak.</p>
-      <p><b>Buat Baru:</b> Buat file baru dengan path lengkap, otomatis struktur folder dibuat.</p>
-      <p><b>Files:</b> Jelajah, hapus file/folder/repo.</p>
-      <p><b>Rename:</b> Cari & ubah nama file/folder.</p>
-      <p><b>Buat Repo:</b> Buat repository baru.</p>
-      <p><b>Daftar:</b> Lihat & hapus massal repository.</p>
-      <p><b>Akun:</b> Simpan banyak akun, switch, edit, copy detail.</p>
+    <details open><summary>📘 Panduan Lengkap HABI STUDIO CODING .ZIP</summary>
+      <p><b>📄 Single:</b> Cari file/folder, muat kode, edit, lalu upload. Cocok untuk update file yang sudah ada.</p>
+      <p><b>📦 ZIP:</b> Upload file ZIP, otomatis diekstrak ke repo. Centang "Hapus folder root" jika ZIP berisi 1 folder utama.</p>
+      <p><b>✏️ Buat Baru:</b> Buat file baru langsung dari tool. Masukkan path lengkap (contoh: <code>repo/app/api/route.js</code>), tulis kode, lalu simpan. Folder akan dibuat otomatis.</p>
+      <p><b>📂 Files:</b> Jelajah isi repo, download, hapus file/folder, hapus semua file, atau hapus repository.</p>
+      <p><b>✏️ Rename:</b> Cari file/folder, otomatis terisi, ubah nama, lalu rename.</p>
+      <p><b>➕ Buat Repo:</b> Buat repository baru dengan visibilitas dan README opsional.</p>
+      <p><b>📋 Daftar:</b> Lihat semua repository milik akun, hapus massal dengan checkbox. Repo `deploy-tool` dilindungi.</p>
+      <p><b>👥 Akun:</b> Simpan banyak akun GitHub. Setiap akun menampilkan nama profil, username, repo, token. Bisa copy detail, edit, hapus, dan pilih. Saat menambah atau mengedit akun, otomatis beralih ke akun tersebut. Kredensial tetap tersimpan meskipun browser direfresh.</p>
+      <p><b>🔑 Token:</b> Klik ikon kunci untuk panduan membuat token GitHub.</p>
+      <p><b>🌓 Tema:</b> Tombol pojok kanan atas untuk ganti tema gelap/terang.</p>
+      <p><b>🖼️ Logo:</b> Upload <code>logo.png</code> (200x55px) ke root repo untuk logo kustom. Ada efek glow setiap 10 detik.</p>
+      <p><b>⚡ Mode Anti‑Lag:</b> Nonaktifkan animasi latar agar lebih ringan.</p>
     </details>
   </div>
 
@@ -356,7 +356,7 @@
     </div>
   </div>
 
-  <!-- Modal Manajemen Akun -->
+  <!-- Modal Manajemen Akun (dirombak tampilannya) -->
   <div id="accountModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:500px;">
       <h3>👥 Manajemen Akun</h3>
@@ -735,7 +735,6 @@
       const pathInput = document.getElementById('newFilePath').value.trim();
       const content = document.getElementById('newFileContent').value;
       if (!pathInput) return toast('Masukkan path file', 'error');
-      // Jika diawali nama repo, hapus nama repo dari depan
       let finalPath = pathInput;
       if (finalPath.startsWith(repo + '/')) {
         finalPath = finalPath.substring(repo.length + 1);
@@ -972,7 +971,7 @@
       c.innerHTML = h.slice().reverse().map(i => `<div class="history-item"><span>${i.name}</span><span style="opacity:0.5">${new Date(i.time).toLocaleString('id-ID')}</span></div>`).join('');
     }
 
-    // ==================== MANAJEMEN AKUN (REVISI) ====================
+    // ==================== MANAJEMEN AKUN (REVISI TAMPILAN + OTOMATIS Beralih) ====================
     function getProfiles() { return JSON.parse(localStorage.getItem(SK) || '[]'); }
     function saveProfiles(p) { localStorage.setItem(SK, JSON.stringify(p)); }
     function saveAccount() {
@@ -993,9 +992,9 @@
         list.innerHTML = profiles.map((p, i) => `
           <div style="background:var(--input-bg); border-radius:8px; padding:0.5rem; margin-bottom:0.4rem;">
             <div class="account-detail"><strong>Nama profil:</strong> ${p.name}</div>
-            <div class="account-detail"><strong>Username:</strong> ${p.username} <button onclick="copyText('${p.username}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
-            <div class="account-detail"><strong>Repo:</strong> ${p.repo} <button onclick="copyText('${p.repo}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
-            <div class="account-detail"><strong>Token:</strong> ${p.token.substring(0,8)}... <button onclick="copyText('${p.token}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
+            <div class="account-detail"><strong>Username:</strong> ${p.username} <button onclick="copyText('${p.username}')">📋</button></div>
+            <div class="account-detail"><strong>Repo:</strong> ${p.repo} <button onclick="copyText('${p.repo}')">📋</button></div>
+            <div class="account-detail"><strong>Token:</strong> ${p.token.substring(0,8)}... <button onclick="copyText('${p.token}')">📋</button></div>
             <div style="display:flex; gap:0.3rem; margin-top:0.4rem;">
               <button onclick="switchAccount(${i})" class="inline-btn">✅ Pilih</button>
               <button onclick="editAccount(${i})" class="inline-btn" style="background:#ff9800;">✏️ Edit</button>
@@ -1122,3 +1121,4 @@
   </script>
 </body>
 </html>
+```
