@@ -154,6 +154,8 @@
     .quick-links a { display:inline-flex; align-items:center; gap:0.3rem; background:var(--input-bg); padding:0.4rem 0.8rem; border-radius:8px; text-decoration:none; color:var(--text); border:1px solid var(--border); font-size:0.8rem; transition:background 0.2s; }
     .quick-links a:hover { background:rgba(108,63,212,0.2); }
     .quick-links svg { width:18px; height:18px; fill:currentColor; }
+    .account-detail { display:block; margin-bottom:0.2rem; }
+    .account-detail small { opacity:0.7; margin-left:0.3rem; }
   </style>
 </head>
 <body class="dark-theme">
@@ -170,10 +172,10 @@
     <div class="tab-buttons">
       <button class="tab-btn active" onclick="switchTab('single')">📄 Single</button>
       <button class="tab-btn" onclick="switchTab('zip')">📦 ZIP</button>
-      <button class="tab-btn" onclick="switchTab('editor')">✏️ Editor</button>
+      <button class="tab-btn" onclick="switchTab('editor')">✏️ Buat Baru</button>
       <button class="tab-btn" onclick="switchTab('files')">📂 Files</button>
       <button class="tab-btn" onclick="switchTab('rename')">✏️ Rename</button>
-      <button class="tab-btn" onclick="switchTab('create-repo')">➕ Buat</button>
+      <button class="tab-btn" onclick="switchTab('create-repo')">➕ Buat Repo</button>
       <button class="tab-btn" onclick="switchTab('list-repo')">📋 Daftar</button>
     </div>
 
@@ -184,6 +186,9 @@
       <input type="password" id="token" placeholder="Token" style="flex:1; min-width:100px; margin-top:0;" oninput="saveCreds()">
       <button onclick="showTokenHelp()" class="inline-btn" style="background:#24292e;" title="Cara dapat token">🔑</button>
     </div>
+
+    <!-- Info repository aktif -->
+    <div id="activeRepoInfo" style="font-size:0.8rem; margin-bottom:0.5rem; opacity:0.8;"></div>
 
     <!-- Quick Links (2 website) -->
     <div class="quick-links">
@@ -205,6 +210,7 @@
 
     <!-- Tab Single -->
     <div id="tab-single" class="tab-content active">
+      <!-- konten sama seperti sebelumnya -->
       <div class="search-row">
         <input type="text" id="singleSearchInput" placeholder="Cari file atau folder... (ketik untuk mencari)" oninput="liveSearchSingle()">
         <button onclick="loadSingleFromSearch()" class="inline-btn">📂 Buka</button>
@@ -222,6 +228,7 @@
 
     <!-- Tab ZIP -->
     <div id="tab-zip" class="tab-content">
+      <!-- konten sama -->
       <label>Pilih file ZIP</label>
       <input type="file" id="zipFile" accept=".zip">
       <label style="display:flex; align-items:center; gap:0.4rem; margin-top:0.3rem;">
@@ -232,24 +239,20 @@
       <div id="zipStatus" style="margin-top:0.3rem; font-size:0.8rem;"></div>
     </div>
 
-    <!-- Tab Editor -->
+    <!-- Tab Editor (Revisi total: Buat File Baru) -->
     <div id="tab-editor" class="tab-content">
-      <div class="search-row">
-        <input type="text" id="editorSearchInput" placeholder="Cari file untuk diedit..." oninput="liveSearchEditor()">
-        <button onclick="loadEditorFromSearch()" class="inline-btn">📂 Muat</button>
-      </div>
-      <div class="search-results" id="editorSearchResults"></div>
-      <label>Isi File</label>
-      <textarea id="editorCode" placeholder="// Pilih file dan klik Muat"></textarea>
-      <div style="display:flex; gap:0.3rem; margin-top:0.3rem;">
-        <button onclick="searchInEditorCode()" class="inline-btn">🔍 Cari Kode</button>
-        <button onclick="replaceInEditorCode()" class="inline-btn">🔄 Ganti</button>
-      </div>
-      <button class="primary" onclick="saveAndUploadEdit()">💾 Simpan & Upload</button>
+      <label>📁 Bikin baru file</label>
+      <input type="text" id="newFilePath" placeholder="nama-repo/app/tools/music-cover/page.tsx">
+      <small style="opacity:0.8;">Path lengkap, diawali nama repo. Folder otomatis dibuat.</small>
+      <label>📝 File konten</label>
+      <textarea id="newFileContent" placeholder="// tulis kode di sini..."></textarea>
+      <button class="primary" onclick="createNewFile()">💾 Simpan</button>
+      <div id="newFileStatus" style="margin-top:0.4rem; font-size:0.8rem;"></div>
     </div>
 
     <!-- Tab Files -->
     <div id="tab-files" class="tab-content">
+      <!-- konten sama -->
       <div class="search-row" style="margin-bottom:0.4rem;">
         <input type="text" id="filesSearch" placeholder="Cari file atau folder..." oninput="searchInFiles()">
       </div>
@@ -263,6 +266,7 @@
 
     <!-- Tab Rename -->
     <div id="tab-rename" class="tab-content">
+      <!-- konten sama -->
       <div class="search-row">
         <input type="text" id="renameSearchInput" placeholder="Cari file atau folder..." oninput="liveSearchRename()">
       </div>
@@ -274,6 +278,7 @@
 
     <!-- Tab Buat Repo -->
     <div id="tab-create-repo" class="tab-content">
+      <!-- konten sama -->
       <label>Nama repositori</label>
       <input type="text" id="newRepoName" placeholder="nama-repo-baru">
       <label>Visibilitas</label>
@@ -287,6 +292,7 @@
 
     <!-- Tab Daftar Repo -->
     <div id="tab-list-repo" class="tab-content">
+      <!-- konten sama -->
       <div style="display:flex; gap:0.4rem; margin-bottom:0.3rem;">
         <button onclick="refreshRepoList()" class="inline-btn">🔄 Refresh</button>
         <span style="font-size:0.8rem;" id="repoCount">0 repo</span>
@@ -309,17 +315,14 @@
   <!-- Panduan Lengkap -->
   <div class="container guide">
     <details><summary>📘 Panduan Lengkap HABI STUDIO CODING .ZIP</summary>
-      <p><b>Single:</b> Cari file/folder di input pencarian, klik hasil untuk memuat kode, edit, lalu Upload.</p>
-      <p><b>ZIP:</b> Upload file ZIP, otomatis diekstrak dan diupload ke repo.</p>
-      <p><b>Editor:</b> Cari file, muat, edit dengan fitur cari & ganti kode, lalu Simpan.</p>
-      <p><b>Files:</b> Jelajah, cari, download, hapus file/folder/repo.</p>
-      <p><b>Rename:</b> Cari file/folder, otomatis terisi, ubah nama, Rename.</p>
-      <p><b>Buat:</b> Buat repo baru langsung dari tool.</p>
-      <p><b>Daftar:</b> Lihat semua repo, hapus massal, riwayat.</p>
-      <p><b>Akun:</b> Simpan banyak akun, switch tanpa logout, edit akun. Klik 👥 Akun untuk mengelola.</p>
-      <p><b>Token:</b> Klik 🔑 untuk panduan dapat token GitHub.</p>
-      <p><b>Tema:</b> Klik 🌓 untuk ganti gelap/terang.</p>
-      <p><b>Logo:</b> Upload <code>logo.png</code> (200x55px) ke root repo untuk logo kustom. Jika tidak ada, area logo kosong.</p>
+      <p><b>Single:</b> Cari file/folder, muat, edit, upload.</p>
+      <p><b>ZIP:</b> Upload ZIP, otomatis diekstrak.</p>
+      <p><b>Buat Baru:</b> Buat file baru dengan path lengkap, otomatis struktur folder dibuat.</p>
+      <p><b>Files:</b> Jelajah, hapus file/folder/repo.</p>
+      <p><b>Rename:</b> Cari & ubah nama file/folder.</p>
+      <p><b>Buat Repo:</b> Buat repository baru.</p>
+      <p><b>Daftar:</b> Lihat & hapus massal repository.</p>
+      <p><b>Akun:</b> Simpan banyak akun, switch, edit, copy detail.</p>
     </details>
   </div>
 
@@ -355,9 +358,9 @@
 
   <!-- Modal Manajemen Akun -->
   <div id="accountModal" class="modal-overlay">
-    <div class="modal" style="text-align:left; max-width:450px;">
+    <div class="modal" style="text-align:left; max-width:500px;">
       <h3>👥 Manajemen Akun</h3>
-      <div id="accountList" style="max-height:250px; overflow-y:auto;"></div>
+      <div id="accountList" style="max-height:300px; overflow-y:auto;"></div>
       <button onclick="showAddAccountForm()" class="inline-btn" style="margin-top:0.4rem;">➕ Tambah Akun</button>
       <button onclick="closeAccountModal()" class="btn-cancel" style="width:100%; margin-top:0.4rem;">Tutup</button>
     </div>
@@ -372,7 +375,7 @@
       <input type="text" id="newAccRepo" placeholder="Repository">
       <input type="password" id="newAccToken" placeholder="Token">
       <div style="display:flex; gap:0.3rem; margin-top:0.8rem;">
-        <button onclick="submitNewAccountForm()" class="btn-confirm" style="flex:1;">Simpan</button>
+        <button onclick="submitNewAccountForm()" class="btn-confirm" style="flex:1;">Simpan & Beralih</button>
         <button onclick="closeAddAccountForm()" class="btn-cancel" style="flex:1;">Batal</button>
       </div>
     </div>
@@ -387,7 +390,7 @@
       <input type="text" id="editAccRepo" placeholder="Repository">
       <input type="password" id="editAccToken" placeholder="Token">
       <div style="display:flex; gap:0.3rem; margin-top:0.4rem;">
-        <button onclick="saveEditAccount()" class="btn-confirm" style="flex:1;">Simpan</button>
+        <button onclick="saveEditAccount()" class="btn-confirm" style="flex:1;">Simpan & Beralih</button>
         <button onclick="closeEditAccount()" class="btn-cancel" style="flex:1;">Batal</button>
       </div>
     </div>
@@ -414,15 +417,12 @@
     // ==================== INIT ====================
     window.onload = () => {
       loadTheme(); genParticles(); initAntiLag(); loadCredsFromStorage();
-      startFooterSparkle(); startLogoGlow();
+      startFooterSparkle(); startLogoGlow(); updateActiveRepoInfo();
     };
 
     function loadTheme() {
-      if (localStorage.getItem(TK) === 'light') {
-        document.body.classList.remove('dark-theme');
-      } else {
-        document.body.classList.add('dark-theme');
-      }
+      if (localStorage.getItem(TK) === 'light') document.body.classList.remove('dark-theme');
+      else document.body.classList.add('dark-theme');
     }
     function toggleTheme() {
       document.body.classList.toggle('dark-theme');
@@ -431,7 +431,8 @@
     }
     function initAntiLag() {
       const on = JSON.parse(localStorage.getItem(AK) || 'true');
-      document.getElementById('antiLagToggle').checked = on;
+      const toggle = document.getElementById('antiLagToggle');
+      if (toggle) toggle.checked = on;
       applyAntiLag(on);
     }
     function toggleAntiLag() {
@@ -446,19 +447,20 @@
     function startFooterSparkle() {
       setInterval(() => {
         const s = document.getElementById('footerSparkle');
+        if (!s) return;
         s.style.animation = 'none';
         s.offsetHeight;
         s.style.animation = 'sparkle 1.5s ease-in-out';
       }, 3 * 60 * 60 * 1000);
       setTimeout(() => {
         const s = document.getElementById('footerSparkle');
+        if (!s) return;
         s.style.animation = 'none';
         s.offsetHeight;
         s.style.animation = 'sparkle 1.5s ease-in-out';
       }, 20000);
     }
     function startLogoGlow() {
-      // Efek logo setiap 3 jam selama 10 detik
       const logo = document.getElementById('logoImg');
       if (!logo || logo.style.display === 'none') return;
       const triggerGlow = () => {
@@ -466,7 +468,6 @@
         setTimeout(() => logo.classList.remove('glow-effect'), 10000);
       };
       setInterval(triggerGlow, 3 * 60 * 60 * 1000);
-      // pertama kali setelah 10 detik
       setTimeout(triggerGlow, 10000);
     }
 
@@ -478,12 +479,14 @@
         token: document.getElementById('token').value.trim()
       };
       localStorage.setItem(UK, JSON.stringify(u));
+      updateActiveRepoInfo();
     }
     function loadCredsFromStorage() {
       const u = JSON.parse(localStorage.getItem(UK) || '{}');
       if (u.username) document.getElementById('username').value = u.username;
       if (u.repo) document.getElementById('repo').value = u.repo;
       if (u.token) document.getElementById('token').value = u.token;
+      updateActiveRepoInfo();
     }
     function getCreds() {
       return {
@@ -491,6 +494,12 @@
         repo: document.getElementById('repo').value.trim(),
         token: document.getElementById('token').value.trim()
       };
+    }
+    function updateActiveRepoInfo() {
+      const repo = document.getElementById('repo').value.trim();
+      const div = document.getElementById('activeRepoInfo');
+      if (repo) div.textContent = `📁 Saat ini di repository: ${repo}`;
+      else div.textContent = '';
     }
     function showTokenHelp() {
       document.getElementById('tokenHelpModal').style.display = 'flex';
@@ -530,6 +539,7 @@
       const t = document.getElementById('tab-' + tab);
       if (t) { t.classList.add('active'); t.style.display = 'block'; }
       if (tab === 'list-repo') refreshRepoList();
+      if (tab === 'editor') updateActiveRepoInfo();
     }
 
     // ==================== GITHUB API ====================
@@ -582,6 +592,7 @@
         setStatus('✅ Struktur repo berhasil dimuat!', 'success');
         toast('Struktur dimuat', 'success');
         renderFileBrowser(); populateSelects();
+        updateActiveRepoInfo();
       } catch (e) {
         setStatus('❌ Gagal memuat struktur: ' + e.message, 'error');
         toast('Gagal: ' + e.message, 'error');
@@ -717,61 +728,34 @@
       setTimeout(() => { bar.style.display = 'none'; stat.textContent = ''; }, 5000);
     }
 
-    // ==================== EDITOR TAB ====================
-    function liveSearchEditor() {
-      const q = document.getElementById('editorSearchInput').value.toLowerCase();
-      const res = document.getElementById('editorSearchResults');
-      if (!q) { res.style.display = 'none'; return; }
-      const all = repoTree.filter(i => i.type === 'blob');
-      const matches = all.filter(i => i.path.toLowerCase().includes(q)).slice(0, 20);
-      if (!matches.length) { res.innerHTML = '<div>Tidak ditemukan</div>'; res.style.display = 'block'; return; }
-      res.innerHTML = matches.map(i => `<div onclick="selectEditorResult('${i.path}')">📄 ${i.path}</div>`).join('');
-      res.style.display = 'block';
-    }
-    function selectEditorResult(path) {
-      document.getElementById('editorSearchInput').value = path;
-      document.getElementById('editorSearchResults').style.display = 'none';
-      loadEditorFromSearch();
-    }
-    async function loadEditorFromSearch() {
-      const path = document.getElementById('editorSearchInput').value.trim();
-      if (!path) return toast('Masukkan path file', 'error');
+    // ==================== EDITOR TAB (BUAT FILE BARU) ====================
+    async function createNewFile() {
       const { username, repo, token } = getCreds();
-      try {
-        const d = await ghGet(username, repo, path, token);
-        if (d.content) {
-          document.getElementById('editorCode').value = atob(d.content);
-          toast('File dimuat: ' + path, 'success');
-        }
-      } catch (e) { toast('Gagal: ' + e.message, 'error'); }
-    }
-    function searchInEditorCode() {
-      currentSearchTarget = 'editorCode';
-      document.getElementById('codeSearchModal').style.display = 'flex';
-      document.getElementById('codeSearchInput').value = '';
-      document.getElementById('codeSearchResult').textContent = '';
-    }
-    function replaceInEditorCode() {
-      const q = document.getElementById('codeSearchInput')?.value || '';
-      const replacement = prompt('Ganti dengan:', '');
-      if (replacement === null) return;
-      const editor = document.getElementById('editorCode');
-      editor.value = editor.value.split(q).join(replacement);
-      toast('Diganti', 'info');
-    }
-    async function saveAndUploadEdit() {
-      const path = document.getElementById('editorSearchInput').value.trim();
-      const code = document.getElementById('editorCode').value;
-      const { username, repo, token } = getCreds();
-      if (!path) return toast('Pilih file dengan pencarian', 'error');
-      if (!code.trim()) return toast('Kosong', 'error');
-      confirm(`Update ${path}?`, async () => {
+      if (!username || !repo || !token) return toast('Isi kredensial dulu', 'error');
+      const pathInput = document.getElementById('newFilePath').value.trim();
+      const content = document.getElementById('newFileContent').value;
+      if (!pathInput) return toast('Masukkan path file', 'error');
+      // Jika diawali nama repo, hapus nama repo dari depan
+      let finalPath = pathInput;
+      if (finalPath.startsWith(repo + '/')) {
+        finalPath = finalPath.substring(repo.length + 1);
+      } else if (finalPath.startsWith('/')) {
+        finalPath = finalPath.substring(1);
+      }
+      if (!finalPath) return toast('Path file tidak valid', 'error');
+      confirm(`Buat file ${finalPath}?`, async () => {
         try {
-          setStatus('Upload...', '');
-          await ghUpload(username, repo, path, code, token);
-          setStatus('✅ Sukses', 'success'); toast('Upload berhasil!', 'success');
+          setStatus('Membuat file...', '');
+          await ghUpload(username, repo, finalPath, content, token);
+          setStatus('✅ File berhasil dibuat!', 'success');
+          toast('File dibuat: ' + finalPath, 'success');
+          document.getElementById('newFilePath').value = '';
+          document.getElementById('newFileContent').value = '';
           loadRepoTree();
-        } catch (e) { setStatus('❌ Gagal: ' + e.message, 'error'); }
+        } catch (e) {
+          setStatus('❌ Gagal: ' + e.message, 'error');
+          toast('Gagal', 'error');
+        }
       });
     }
 
@@ -988,7 +972,7 @@
       c.innerHTML = h.slice().reverse().map(i => `<div class="history-item"><span>${i.name}</span><span style="opacity:0.5">${new Date(i.time).toLocaleString('id-ID')}</span></div>`).join('');
     }
 
-    // ==================== MANAJEMEN AKUN (MODAL BARU) ====================
+    // ==================== MANAJEMEN AKUN (REVISI) ====================
     function getProfiles() { return JSON.parse(localStorage.getItem(SK) || '[]'); }
     function saveProfiles(p) { localStorage.setItem(SK, JSON.stringify(p)); }
     function saveAccount() {
@@ -1007,16 +991,22 @@
       if (!profiles.length) { list.innerHTML = '<p>Belum ada akun</p>'; }
       else {
         list.innerHTML = profiles.map((p, i) => `
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:0.3rem;background:var(--input-bg);border-radius:6px;margin-bottom:0.2rem;">
-            <div><strong>${p.name}</strong> (${p.username}/${p.repo})</div>
-            <div>
-              <button onclick="switchAccount(${i})" class="inline-btn">✅</button>
-              <button onclick="editAccount(${i})" class="inline-btn" style="background:#ff9800;">✏️</button>
-              <button onclick="delAccount(${i})" class="inline-btn" style="background:var(--danger);">🗑️</button>
+          <div style="background:var(--input-bg); border-radius:8px; padding:0.5rem; margin-bottom:0.4rem;">
+            <div class="account-detail"><strong>Nama profil:</strong> ${p.name}</div>
+            <div class="account-detail"><strong>Username:</strong> ${p.username} <button onclick="copyText('${p.username}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
+            <div class="account-detail"><strong>Repo:</strong> ${p.repo} <button onclick="copyText('${p.repo}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
+            <div class="account-detail"><strong>Token:</strong> ${p.token.substring(0,8)}... <button onclick="copyText('${p.token}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
+            <div style="display:flex; gap:0.3rem; margin-top:0.4rem;">
+              <button onclick="switchAccount(${i})" class="inline-btn">✅ Pilih</button>
+              <button onclick="editAccount(${i})" class="inline-btn" style="background:#ff9800;">✏️ Edit</button>
+              <button onclick="delAccount(${i})" class="inline-btn" style="background:var(--danger);">🗑️ Hapus</button>
             </div>
           </div>`).join('');
       }
       document.getElementById('accountModal').style.display = 'flex';
+    }
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(() => toast('Disalin!', 'success'));
     }
     function closeAccountModal() { document.getElementById('accountModal').style.display = 'none'; }
     function switchAccount(i) {
@@ -1048,9 +1038,11 @@
         token: document.getElementById('editAccToken').value.trim()
       };
       saveProfiles(profiles);
+      // Otomatis beralih ke akun yang diedit
+      switchAccount(i);
       document.getElementById('editAccountModal').style.display = 'none';
-      openAccountManager();
-      toast('Akun diupdate!', 'success');
+      closeAccountModal();
+      toast('Akun diupdate & beralih!', 'success');
     }
     function closeEditAccount() { document.getElementById('editAccountModal').style.display = 'none'; }
     function delAccount(i) {
@@ -1059,7 +1051,7 @@
       openAccountManager(); toast('Akun dihapus', 'info');
     }
 
-    // Fungsi baru untuk menampilkan modal tambah akun (bukan prompt)
+    // Tambah akun via modal (bukan prompt)
     function showAddAccountForm() {
       document.getElementById('newAccName').value = '';
       document.getElementById('newAccUsername').value = '';
@@ -1081,12 +1073,18 @@
       const profiles = getProfiles();
       profiles.push({ name, username, repo, token });
       saveProfiles(profiles);
+      // Otomatis beralih ke akun baru
+      document.getElementById('username').value = username;
+      document.getElementById('repo').value = repo;
+      document.getElementById('token').value = token;
+      saveCreds();
       closeAddAccountForm();
-      openAccountManager(); // refresh daftar
-      toast('Akun baru ditambahkan!', 'success');
+      closeAccountModal();
+      toast('Akun baru ditambahkan & beralih!', 'success');
+      loadRepoTree();
     }
 
-    // ==================== PENCARIAN KODE (MODAL MODERN) ====================
+    // ==================== PENCARIAN KODE ====================
     function closeCodeSearch() {
       document.getElementById('codeSearchModal').style.display = 'none';
     }
@@ -1094,6 +1092,7 @@
       const q = document.getElementById('codeSearchInput').value;
       if (!q) return toast('Masukkan kata kunci', 'error');
       const targetEl = currentSearchTarget === 'singleCode' ? document.getElementById('singleCode') : document.getElementById('editorCode');
+      if (!targetEl) return;
       const text = targetEl.value;
       const idx = text.indexOf(q);
       if (idx === -1) {
