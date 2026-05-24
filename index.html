@@ -40,8 +40,14 @@
       box-shadow:var(--shadow); border:1px solid var(--border);
       position:relative; z-index:1;
     }
-    .logo-area { text-align:center; margin-bottom:0.5rem; }
-    .logo-img { max-width:200px; max-height:55px; display:none; } /* hanya tampil jika ada */
+    .logo-area { text-align:center; margin-bottom:0.5rem; position:relative; }
+    .logo-img { max-width:200px; max-height:55px; display:none; transition: transform 0.3s; }
+    .logo-img.glow-effect { animation: logoGlowAnim 10s ease-in-out; }
+    @keyframes logoGlowAnim {
+      0% { filter: drop-shadow(0 0 2px gold); transform: scale(1); }
+      50% { filter: drop-shadow(0 0 15px gold); transform: scale(1.03); }
+      100% { filter: drop-shadow(0 0 2px gold); transform: scale(1); }
+    }
     .tab-buttons { display:flex; gap:0.35rem; margin:0.8rem 0; flex-wrap:wrap; }
     .tab-btn {
       flex:1; min-width:50px; padding:0.6rem 0.3rem; border:none;
@@ -352,8 +358,23 @@
     <div class="modal" style="text-align:left; max-width:450px;">
       <h3>👥 Manajemen Akun</h3>
       <div id="accountList" style="max-height:250px; overflow-y:auto;"></div>
-      <button onclick="addNewAccount()" class="inline-btn" style="margin-top:0.4rem;">➕ Tambah Akun</button>
+      <button onclick="showAddAccountForm()" class="inline-btn" style="margin-top:0.4rem;">➕ Tambah Akun</button>
       <button onclick="closeAccountModal()" class="btn-cancel" style="width:100%; margin-top:0.4rem;">Tutup</button>
+    </div>
+  </div>
+
+  <!-- Modal Tambah Akun (form baru) -->
+  <div id="addAccountFormModal" class="modal-overlay">
+    <div class="modal" style="text-align:left;">
+      <h3>➕ Tambah Akun Baru</h3>
+      <input type="text" id="newAccName" placeholder="Nama profil">
+      <input type="text" id="newAccUsername" placeholder="Username GitHub">
+      <input type="text" id="newAccRepo" placeholder="Repository">
+      <input type="password" id="newAccToken" placeholder="Token">
+      <div style="display:flex; gap:0.3rem; margin-top:0.8rem;">
+        <button onclick="submitNewAccountForm()" class="btn-confirm" style="flex:1;">Simpan</button>
+        <button onclick="closeAddAccountForm()" class="btn-cancel" style="flex:1;">Batal</button>
+      </div>
     </div>
   </div>
 
@@ -393,7 +414,7 @@
     // ==================== INIT ====================
     window.onload = () => {
       loadTheme(); genParticles(); initAntiLag(); loadCredsFromStorage();
-      startFooterSparkle();
+      startFooterSparkle(); startLogoGlow();
     };
 
     function loadTheme() {
@@ -435,6 +456,18 @@
         s.offsetHeight;
         s.style.animation = 'sparkle 1.5s ease-in-out';
       }, 20000);
+    }
+    function startLogoGlow() {
+      // Efek logo setiap 3 jam selama 10 detik
+      const logo = document.getElementById('logoImg');
+      if (!logo || logo.style.display === 'none') return;
+      const triggerGlow = () => {
+        logo.classList.add('glow-effect');
+        setTimeout(() => logo.classList.remove('glow-effect'), 10000);
+      };
+      setInterval(triggerGlow, 3 * 60 * 60 * 1000);
+      // pertama kali setelah 10 detik
+      setTimeout(triggerGlow, 10000);
     }
 
     // ==================== CREDENTIALS ====================
@@ -595,9 +628,7 @@
       c.innerHTML = html;
     }
 
-    function populateSelects() {
-      // tidak perlu lagi
-    }
+    function populateSelects() {}
 
     // ==================== SINGLE TAB ====================
     function liveSearchSingle() {
@@ -957,7 +988,7 @@
       c.innerHTML = h.slice().reverse().map(i => `<div class="history-item"><span>${i.name}</span><span style="opacity:0.5">${new Date(i.time).toLocaleString('id-ID')}</span></div>`).join('');
     }
 
-    // ==================== MANAJEMEN AKUN ====================
+    // ==================== MANAJEMEN AKUN (MODAL BARU) ====================
     function getProfiles() { return JSON.parse(localStorage.getItem(SK) || '[]'); }
     function saveProfiles(p) { localStorage.setItem(SK, JSON.stringify(p)); }
     function saveAccount() {
@@ -1027,20 +1058,32 @@
       p.splice(i, 1); saveProfiles(p);
       openAccountManager(); toast('Akun dihapus', 'info');
     }
-    function addNewAccount() {
-      const name = prompt('Nama profil:');
-      if (!name) return;
-      const username = prompt('Username GitHub:');
-      if (!username) return;
-      const repo = prompt('Repository:');
-      if (!repo) return;
-      const token = prompt('Token:');
-      if (!token) return;
+
+    // Fungsi baru untuk menampilkan modal tambah akun (bukan prompt)
+    function showAddAccountForm() {
+      document.getElementById('newAccName').value = '';
+      document.getElementById('newAccUsername').value = '';
+      document.getElementById('newAccRepo').value = '';
+      document.getElementById('newAccToken').value = '';
+      document.getElementById('addAccountFormModal').style.display = 'flex';
+    }
+    function closeAddAccountForm() {
+      document.getElementById('addAccountFormModal').style.display = 'none';
+    }
+    function submitNewAccountForm() {
+      const name = document.getElementById('newAccName').value.trim();
+      const username = document.getElementById('newAccUsername').value.trim();
+      const repo = document.getElementById('newAccRepo').value.trim();
+      const token = document.getElementById('newAccToken').value.trim();
+      if (!name || !username || !repo || !token) {
+        return toast('Isi semua field', 'error');
+      }
       const profiles = getProfiles();
       profiles.push({ name, username, repo, token });
       saveProfiles(profiles);
-      openAccountManager();
-      toast('Akun ditambahkan!', 'success');
+      closeAddAccountForm();
+      openAccountManager(); // refresh daftar
+      toast('Akun baru ditambahkan!', 'success');
     }
 
     // ==================== PENCARIAN KODE (MODAL MODERN) ====================
