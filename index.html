@@ -41,8 +41,7 @@
       position:relative; z-index:1;
     }
     .logo-area { text-align:center; margin-bottom:0.5rem; }
-    .logo-svg { width:200px; height:55px; }
-    .logo-img { max-width:200px; max-height:55px; cursor:pointer; }
+    .logo-img { max-width:200px; max-height:55px; display:none; } /* hanya tampil jika ada */
     .tab-buttons { display:flex; gap:0.35rem; margin:0.8rem 0; flex-wrap:wrap; }
     .tab-btn {
       flex:1; min-width:50px; padding:0.6rem 0.3rem; border:none;
@@ -145,6 +144,10 @@
     .search-results { max-height:200px; overflow-y:auto; background:var(--input-bg); border:1px solid var(--border); border-radius:8px; margin-top:0.2rem; display:none; }
     .search-results div { padding:0.4rem 0.6rem; cursor:pointer; border-bottom:1px solid rgba(128,128,128,0.08); font-size:0.82rem; }
     .search-results div:hover { background:rgba(108,63,212,0.15); }
+    .quick-links { display:flex; gap:0.5rem; margin:0.5rem 0; align-items:center; }
+    .quick-links a { display:inline-flex; align-items:center; gap:0.3rem; background:var(--input-bg); padding:0.4rem 0.8rem; border-radius:8px; text-decoration:none; color:var(--text); border:1px solid var(--border); font-size:0.8rem; transition:background 0.2s; }
+    .quick-links a:hover { background:rgba(108,63,212,0.2); }
+    .quick-links svg { width:18px; height:18px; fill:currentColor; }
   </style>
 </head>
 <body class="dark-theme">
@@ -152,16 +155,9 @@
   <div class="theme-toggle" onclick="toggleTheme()" title="Ganti tema">🌓</div>
 
   <div class="container">
-    <!-- Logo -->
+    <!-- Logo (hanya muncul jika logo.png ada) -->
     <div class="logo-area">
-      <img src="logo.png" alt="HABI STUDIO CODING" class="logo-img" id="logoImg" onerror="this.style.display='none';document.getElementById('logoSvg').style.display='block';" style="display:none;">
-      <svg class="logo-svg" id="logoSvg" viewBox="0 0 240 55" xmlns="http://www.w3.org/2000/svg" style="display:block;">
-        <defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff4e50"/><stop offset="50%" stop-color="#f9d423"/><stop offset="100%" stop-color="#7c4dff"/></linearGradient></defs>
-        <rect x="5" y="8" width="42" height="38" rx="6" fill="#e53935" stroke="white" stroke-width="2"/>
-        <text x="26" y="33" text-anchor="middle" font-size="16" font-weight="900" fill="white">HS</text>
-        <text x="55" y="35" font-size="18" font-weight="800" fill="url(#lg)" letter-spacing="1">HABI STUDIO CODING</text>
-      </svg>
-      <div style="font-size:0.7rem; opacity:0.7; margin-top:0.2rem;">Upload logo.png ke root repo untuk logo kustom (200x55px)</div>
+      <img src="logo.png" alt="Logo HABI STUDIO CODING" class="logo-img" id="logoImg" onload="this.style.display='block'" onerror="this.style.display='none'">
     </div>
 
     <!-- Tab Navigasi -->
@@ -182,13 +178,26 @@
       <input type="password" id="token" placeholder="Token" style="flex:1; min-width:100px; margin-top:0;" oninput="saveCreds()">
       <button onclick="showTokenHelp()" class="inline-btn" style="background:#24292e;" title="Cara dapat token">🔑</button>
     </div>
+
+    <!-- Quick Links (2 website) -->
+    <div class="quick-links">
+      <a href="https://ai-hub--habigenerateweb.replit.app/" target="_blank" title="Convert Chat AI → ZIP Project">
+        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/><path d="M7 9h10v2H7zm0 4h7v2H7z"/></svg>
+        Chat → ZIP
+      </a>
+      <a href="https://github.com/habigeneratewebsite-a11y/deploy-tool/tree/main" target="_blank" title="Channel GitHub">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
+      </a>
+    </div>
+
     <div style="display:flex; gap:0.3rem; margin-bottom:0.5rem;">
       <button onclick="openAccountManager()" class="inline-btn">👥 Akun</button>
       <button onclick="saveAccount()" class="inline-btn">💾 Simpan</button>
       <button onclick="loadRepoTree()" class="inline-btn">🔄 Muat Struktur</button>
     </div>
 
-    <!-- Tab Single (Revisi: pencarian + langsung ke editor) -->
+    <!-- Tab Single -->
     <div id="tab-single" class="tab-content active">
       <div class="search-row">
         <input type="text" id="singleSearchInput" placeholder="Cari file atau folder... (ketik untuk mencari)" oninput="liveSearchSingle()">
@@ -217,7 +226,7 @@
       <div id="zipStatus" style="margin-top:0.3rem; font-size:0.8rem;"></div>
     </div>
 
-    <!-- Tab Editor (Revisi: pencarian file + cari dalam kode) -->
+    <!-- Tab Editor -->
     <div id="tab-editor" class="tab-content">
       <div class="search-row">
         <input type="text" id="editorSearchInput" placeholder="Cari file untuk diedit..." oninput="liveSearchEditor()">
@@ -246,7 +255,7 @@
       <div class="progress-bar" id="filesProgress" style="display:none;"><div class="fill"></div></div>
     </div>
 
-    <!-- Tab Rename (Revisi: pencarian) -->
+    <!-- Tab Rename -->
     <div id="tab-rename" class="tab-content">
       <div class="search-row">
         <input type="text" id="renameSearchInput" placeholder="Cari file atau folder..." oninput="liveSearchRename()">
@@ -270,7 +279,7 @@
       <div id="createRepoResult" style="margin-top:0.4rem;"></div>
     </div>
 
-    <!-- Tab Daftar Repo (TIDAK DIUBAH) -->
+    <!-- Tab Daftar Repo -->
     <div id="tab-list-repo" class="tab-content">
       <div style="display:flex; gap:0.4rem; margin-bottom:0.3rem;">
         <button onclick="refreshRepoList()" class="inline-btn">🔄 Refresh</button>
@@ -301,10 +310,10 @@
       <p><b>Rename:</b> Cari file/folder, otomatis terisi, ubah nama, Rename.</p>
       <p><b>Buat:</b> Buat repo baru langsung dari tool.</p>
       <p><b>Daftar:</b> Lihat semua repo, hapus massal, riwayat.</p>
-      <p><b>Akun:</b> Simpan banyak akun, switch tanpa logout, edit akun.</p>
+      <p><b>Akun:</b> Simpan banyak akun, switch tanpa logout, edit akun. Klik 👥 Akun untuk mengelola.</p>
       <p><b>Token:</b> Klik 🔑 untuk panduan dapat token GitHub.</p>
       <p><b>Tema:</b> Klik 🌓 untuk ganti gelap/terang.</p>
-      <p><b>Logo:</b> Upload <code>logo.png</code> (200x55px) ke root repo untuk logo kustom.</p>
+      <p><b>Logo:</b> Upload <code>logo.png</code> (200x55px) ke root repo untuk logo kustom. Jika tidak ada, area logo kosong.</p>
     </details>
   </div>
 
@@ -419,8 +428,7 @@
         s.style.animation = 'none';
         s.offsetHeight;
         s.style.animation = 'sparkle 1.5s ease-in-out';
-      }, 3 * 60 * 60 * 1000); // setiap 3 jam
-      // Trigger pertama setelah 20 detik
+      }, 3 * 60 * 60 * 1000);
       setTimeout(() => {
         const s = document.getElementById('footerSparkle');
         s.style.animation = 'none';
@@ -588,15 +596,10 @@
     }
 
     function populateSelects() {
-      const sorted = sortTree([...repoTree]);
-      const folders = sorted.filter(i => i.type === 'tree').map(i => i.path);
-      const files = sorted.filter(i => i.type === 'blob').map(i => i.path);
-      document.getElementById('singleCode').value = '';
-      document.getElementById('editorCode').value = '';
-      document.getElementById('renameNewPath').value = '';
+      // tidak perlu lagi
     }
 
-    // ==================== SINGLE TAB (Revisi) ====================
+    // ==================== SINGLE TAB ====================
     function liveSearchSingle() {
       const q = document.getElementById('singleSearchInput').value.toLowerCase();
       const res = document.getElementById('singleSearchResults');
@@ -624,7 +627,7 @@
         }
       } catch (e) { toast('Gagal: ' + e.message, 'error'); }
     }
-    function refreshSingleTab() { populateSelects(); document.getElementById('singleSearchInput').value = ''; toast('Tab direfresh', 'info'); }
+    function refreshSingleTab() { document.getElementById('singleSearchInput').value = ''; document.getElementById('singleCode').value = ''; toast('Tab direfresh', 'info'); }
     function clearSingleCode() { document.getElementById('singleCode').value = ''; toast('Kode dihapus', 'info'); }
     function searchInSingleCode() {
       currentSearchTarget = 'singleCode';
@@ -683,7 +686,7 @@
       setTimeout(() => { bar.style.display = 'none'; stat.textContent = ''; }, 5000);
     }
 
-    // ==================== EDITOR TAB (Revisi) ====================
+    // ==================== EDITOR TAB ====================
     function liveSearchEditor() {
       const q = document.getElementById('editorSearchInput').value.toLowerCase();
       const res = document.getElementById('editorSearchResults');
@@ -826,7 +829,7 @@
       });
     }
 
-    // ==================== RENAME TAB (Revisi) ====================
+    // ==================== RENAME TAB ====================
     function liveSearchRename() {
       const q = document.getElementById('renameSearchInput').value.toLowerCase();
       const res = document.getElementById('renameSearchResults');
@@ -887,7 +890,7 @@
       } catch (e) { toast('Gagal: ' + e.message, 'error'); }
     }
 
-    // ==================== DAFTAR REPO (TIDAK DIUBAH) ====================
+    // ==================== DAFTAR REPO ====================
     async function refreshRepoList() {
       const { username, token } = getCreds();
       if (!username || !token) return toast('Isi kredensial', 'error');
