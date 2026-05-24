@@ -7,16 +7,18 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     :root {
+      --bg: #f5f5f5; --bg2: #e0e0e0; --bg3: #ffffff;
+      --card-bg: rgba(255,255,255,0.95); --text: #1a1a1a;
+      --accent: #6c3fd4; --accent2: #3b6eff; --danger: #e53935;
+      --border: rgba(0,0,0,0.15); --input-bg: rgba(0,0,0,0.05);
+      --header-color: #1a1a1a;
+    }
+    .dark-theme {
       --bg: #0f0c29; --bg2: #302b63; --bg3: #24243e;
       --card-bg: rgba(20,20,40,0.85); --text: #e0e0e0;
       --accent: #7c4dff; --accent2: #448aff; --danger: #e53935;
       --border: rgba(255,255,255,0.15); --input-bg: rgba(0,0,0,0.4);
-    }
-    .light-theme {
-      --bg: #f5f5f5; --bg2: #e0e0e0; --bg3: #ffffff;
-      --card-bg: rgba(255,255,255,0.9); --text: #222;
-      --accent: #6c3fd4; --accent2: #3b6eff;
-      --border: rgba(0,0,0,0.15); --input-bg: rgba(0,0,0,0.05);
+      --header-color: #ffffff;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -29,34 +31,34 @@
     }
     @keyframes gradientMove { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
     .particles { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; overflow:hidden; }
-    .particle { position:absolute; background:rgba(128,128,255,0.12); border-radius:50%; animation:float linear infinite; }
+    .particle { position:absolute; background:rgba(128,128,255,0.15); border-radius:50%; animation:float linear infinite; }
     @keyframes float { 0%{transform:translateY(100vh);opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{transform:translateY(-10vh);opacity:0} }
     .container {
-      width:100%; max-width:550px; background:var(--card-bg); backdrop-filter:blur(20px);
+      width:100%; max-width:580px; background:var(--card-bg); backdrop-filter:blur(20px);
       border-radius:24px; padding:1.5rem; margin:1rem 0;
-      box-shadow:0 20px 40px rgba(0,0,0,0.5); border:1px solid var(--border);
+      box-shadow:0 20px 40px rgba(0,0,0,0.15); border:1px solid var(--border);
       position:relative; z-index:1;
     }
-    .logo-area { text-align:center; margin-bottom:0.5rem; }
-    .logo-svg { width:180px; height:60px; animation: logoPulse 2s infinite; }
+    .logo-area { text-align: center; margin-bottom: 0.5rem; }
+    .logo-svg { width: 220px; height: 70px; animation: logoPulse 2s infinite; }
     @keyframes logoPulse { 0%{transform:scale(1)} 50%{transform:scale(1.03)} 100%{transform:scale(1)} }
     .tab-buttons { display:flex; gap:0.4rem; margin:1rem 0; flex-wrap:wrap; }
     .tab-btn {
       flex:1; min-width:55px; padding:0.7rem 0.3rem; border:none;
-      background:rgba(255,255,255,0.1); color:#ddd; border-radius:12px;
+      background:rgba(128,128,255,0.15); color:var(--text); border-radius:12px;
       font-weight:bold; cursor:pointer; font-size:0.75rem;
     }
     .tab-btn.active { background:linear-gradient(135deg,#7c4dff,#536dfe); color:white; }
     .tab-content { display:none; }
     .tab-content.active { display:block; }
     label { display:block; margin-top:0.8rem; font-weight:bold; color:var(--accent); font-size:0.9rem; }
-    input, textarea {
+    input, textarea, select {
       width:100%; padding:0.7rem; margin-top:0.2rem; border-radius:12px;
       border:1px solid var(--border); background:var(--input-bg); color:var(--text);
       font-size:0.95rem;
     }
-    input:focus, textarea:focus { border-color:#7c4dff; outline:none; }
-    textarea { font-family:'Courier New',monospace; resize:vertical; min-height:100px; }
+    input:focus, textarea:focus, select:focus { border-color:#7c4dff; outline:none; }
+    textarea { font-family:'Courier New',monospace; resize:vertical; min-height:120px; }
     button.primary {
       width:100%; padding:0.8rem; background:linear-gradient(135deg,#7c4dff,#448aff);
       border:none; color:white; font-weight:bold; font-size:0.95rem;
@@ -65,7 +67,7 @@
     .danger-btn { background:#e53935 !important; }
     .inline-btn {
       padding:0.4rem 0.8rem; background:#536dfe; color:white;
-      border:none; border-radius:8px; cursor:pointer; font-size:0.8rem;
+      border:none; border-radius:8px; cursor:pointer; font-size:0.8rem; margin:0.2rem;
     }
     .modal-overlay {
       position:fixed; top:0; left:0; width:100%; height:100%;
@@ -75,583 +77,11 @@
     .modal {
       background:var(--card-bg); padding:1.5rem; border-radius:20px;
       max-width:400px; width:90%; border:1px solid var(--border);
-      text-align:center;
+      text-align:center; color:var(--text);
     }
     .modal h3 { color:#c084fc; margin-bottom:0.8rem; }
     .modal button { margin:0.3rem; padding:0.7rem 1.5rem; border-radius:12px; border:none; font-weight:bold; cursor:pointer; }
-    .btn-cancel { background:rgba(255,255,255,0.1); color:white; }
-    .btn-confirm { background:#7c4dff; color:white; }
-    .toast {
-      position:fixed; bottom:2rem; left:50%; transform:translateX(-50%);
-      padding:0.8rem 1.5rem; border-radius:30px; background:#333; color:white;
-      z-index:2000; display:none; font-size:0.9rem; animation:toastIn 0.3s;
-    }
-    .toast.success { background:#2e7d32; }
-    .toast.error { background:#c62828; }
-    .toast.info { background:#1565c0; }
-    @keyframes toastIn { from{bottom:0;opacity:0} to{bottom:2rem;opacity:1} }
-    .progress-bar { width:100%; background:rgba(255,255,255,0.1); border-radius:10px; height:8px; margin-top:0.5rem; overflow:hidden; }
-    .progress-bar .fill { height:100%; background:#7c4dff; border-radius:10px; width:0%; transition:width 0.2s; }
-    .file-browser { background:rgba(0,0,0,0.3); border-radius:12px; padding:0.8rem; max-height:300px; overflow-y:auto; margin:0.5rem 0; }
-    .file-entry { display:flex; justify-content:space-between; align-items:center; padding:0.3rem 0; border-bottom:1px solid rgba(255,255,255,0.06); font-size:0.85rem; }
-    .file-entry button { padding:0.2rem 0.5rem; font-size:0.75rem; margin-left:0.2rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:white; border-radius:6px; cursor:pointer; }
-    .repo-list-item { display:flex; align-items:center; gap:0.3rem; padding:0.3rem 0.1rem; border-bottom:1px solid rgba(255,255,255,0.04); }
-    .repo-list-item input[type="checkbox"] { width:auto; margin:0; }
-    .repo-list-item .repo-name { flex:1; font-size:0.85rem; }
-    .protected-badge { background:#e53935; padding:0.1rem 0.3rem; border-radius:6px; font-size:0.65rem; margin-left:0.2rem; }
-    .history-item { padding:0.3rem 0; border-bottom:1px solid rgba(255,255,255,0.03); font-size:0.8rem; display:flex; justify-content:space-between; }
-    .search-row { display:flex; gap:0.3rem; align-items:center; }
-    .search-row input { flex:1; }
-    .color-dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:4px; }
-    .switch { position:relative; display:inline-block; width:40px; height:22px; }
-    .switch input { opacity:0; width:0; height:0; }
-    .slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#ccc; transition:.3s; border-radius:22px; }
-    .slider:before { position:absolute; content:""; height:16px; width:16px; left:3px; bottom:3px; background-color:white; transition:.3s; border-radius:50%; }
-    input:checked+.slider { background-color:#7c4dff; }
-    input:checked+.slider:before { transform:translateX(18px); }
-    footer { text-align:center; margin-top:1.5rem; padding:1rem; color:#8888aa; font-size:0.85rem; border-top:1px solid var(--border); width:100%; }
-    .guide details { background:rgba(0,0,0,0.3); padding:0.6rem; border-radius:10px; margin-bottom:0.5rem; font-size:0.85rem; }
-    .guide summary { font-weight:bold; color:#b388ff; cursor:pointer; }
-    .login-btn {
-      display:inline-flex; align-items:center; gap:0.4rem;
-      background:#24292e; color:white; border:none; padding:0.6rem 1.2rem;
-      border-radius:12px; font-size:0.9rem; font-weight:bold; cursor:pointer;
-    }
-    .user-info {
-      display:flex; align-items:center; gap:0.4rem; background:rgba(255,255,255,0.05);
-      padding:0.4rem 0.8rem; border-radius:12px; margin-bottom:0.5rem;
-    }
-    .user-info .avatar { width:28px; height:28px; border-radius:50%; background:#7c4dff; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:0.8rem; }
-    .shortcut-links { display:flex; gap:0.4rem; margin:0.5rem 0; }
-    .shortcut-link {
-      flex:1; display:flex; align-items:center; justify-content:center; gap:0.3rem;
-      background:rgba(255,255,255,0.05); padding:0.4rem 0.6rem; border-radius:10px;
-      text-decoration:none; color:var(--text); border:1px solid var(--border); font-size:0.8rem;
-    }
-    .theme-toggle {
-      position:fixed; top:1rem; right:1rem; z-index:500; background:var(--card-bg);
-      border:1px solid var(--border); border-radius:50%; width:36px; height:36px;
-      display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.1rem;
-    }
-    /* Search results dropdown */
-    .search-results {
-      position:absolute; background:var(--card-bg); border:1px solid var(--border);
-      border-radius:8px; max-height:200px; overflow-y:auto; z-index:50;
-      width:100%; display:none;
-    }
-    .search-results div {
-      padding:0.5rem; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);
-      font-size:0.85rem; color:var(--text);
-    }
-    .search-results div:hover { background:rgba(124,77,255,0.2); }
-  </style>
-</head>
-<body>
-  <div class="particles" id="particles"></div>
-  <div class="theme-toggle" onclick="toggleTheme()">🌓</div>
-
-  <div class="container">
-    <!-- Logo SVG -->
-    <div class="logo-area">
-      <svg class="logo-svg" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#ff4e50;stop-opacity:1"/>
-            <stop offset="50%" style="stop-color:#f9d423;stop-opacity:1"/>
-            <stop offset="100%" style="stop-color:#7c4dff;stop-opacity:1"/>
-          </linearGradient>
-        </defs>
-        <rect x="5" y="10" width="50" height="40" rx="8" fill="#e53935" stroke="white" stroke-width="2"/>
-        <rect x="10" y="15" width="40" height="30" rx="5" fill="white"/>
-        <text x="30" y="36" text-anchor="middle" font-size="18" font-weight="900" fill="#e53935">HS</text>
-        <text x="65" y="40" font-size="20" font-weight="900" fill="url(#logoGrad)" letter-spacing="1">HABI STUDIO CODING</text>
-      </svg>
-    </div>
-
-    <!-- Login Area -->
-    <div style="text-align:center; margin:0.5rem 0;" id="loginArea">
-      <button class="login-btn" onclick="openLoginModal()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
-        Login GitHub
-      </button>
-      <div class="user-info" id="userInfo" style="display:none;">
-        <div class="avatar" id="userAvatar">U</div>
-        <span id="userDisplayName"></span>
-        <button class="inline-btn" onclick="openAccountManager()">👥</button>
-        <button class="inline-btn" onclick="logoutUser()" style="background:#e53935;">Logout</button>
-      </div>
-    </div>
-
-    <!-- Shortcuts -->
-    <div class="shortcut-links">
-      <a href="https://github.com/habigeneratewebsite-a11y/deploy-tool/tree/main" target="_blank" class="shortcut-link">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
-        GitHub Channel
-      </a>
-      <a href="https://code-zipper-tool--linamayasari816.replit.app/chat-to-zip/" target="_blank" class="shortcut-link">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-        Chat to ZIP
-      </a>
-    </div>
-
-    <!-- Tabs -->
-    <div class="tab-buttons" id="tabNav" style="display:none;">
-      <button class="tab-btn active" onclick="switchTab('single')">Single</button>
-      <button class="tab-btn" onclick="switchTab('zip')">ZIP</button>
-      <button class="tab-btn" onclick="switchTab('editor')">Editor</button>
-      <button class="tab-btn" onclick="switchTab('files')">Files</button>
-      <button class="tab-btn" onclick="switchTab('rename')">Rename</button>
-      <button class="tab-btn" onclick="switchTab('create-repo')">+Repo</button>
-      <button class="tab-btn" onclick="switchTab('list-repo')">Daftar</button>
-    </div>
-
-    <!-- Tab Single - REVISI TOTAL -->
-    <div id="tab-single" class="tab-content active">
-      <div class="search-row">
-        <input type="text" id="singleSearchInput" placeholder="Cari file atau folder... (ketik minimal 2 karakter)" autocomplete="off">
-        <button onclick="performSingleSearch()" class="inline-btn">Cari</button>
-      </div>
-      <div class="search-results" id="singleSearchResults"></div>
-      <label>Tempel Kode</label>
-      <textarea id="singleCode" placeholder="// Kode akan muncul di sini setelah memilih file..."></textarea>
-      <div style="display:flex; gap:0.3rem; margin-top:0.3rem;">
-        <button onclick="refreshSingleTab()" class="inline-btn">Refresh</button>
-        <button onclick="clearSingleCode()" class="inline-btn" style="background:#e53935;">Hapus Kode</button>
-        <button onclick="searchInSingleCode()" class="inline-btn">Cari dalam Kode</button>
-      </div>
-      <button class="primary" onclick="deploySingle()">Upload File</button>
-      <div style="margin-top:0.3rem; font-size:0.8rem;" id="singleStatus"></div>
-    </div>
-
-    <!-- Tab ZIP (tidak diubah) -->
-    <div id="tab-zip" class="tab-content">
-      <!-- ... konten sama seperti sebelumnya ... -->
-    </div>
-
-    <!-- Tab Editor - REVISI -->
-    <div id="tab-editor" class="tab-content">
-      <div class="search-row">
-        <input type="text" id="editorSearchInput" placeholder="Cari file atau folder..." autocomplete="off">
-        <button onclick="performEditorSearch()" class="inline-btn">Cari</button>
-      </div>
-      <div class="search-results" id="editorSearchResults"></div>
-      <label>Isi File</label>
-      <textarea id="editorCode" placeholder="// Pilih file untuk diedit..."></textarea>
-      <div style="display:flex; gap:0.3rem; margin-top:0.3rem;">
-        <button onclick="searchInEditorCode()" class="inline-btn">Cari dalam Kode</button>
-      </div>
-      <button class="primary" onclick="saveAndUploadEdit()">Simpan & Upload</button>
-      <div style="margin-top:0.3rem; font-size:0.8rem;" id="editorStatus"></div>
-    </div>
-
-    <!-- Tab Files (REVISI performa hapus & notifikasi) -->
-    <div id="tab-files" class="tab-content">
-      <!-- ... nanti dilengkapi ... -->
-    </div>
-
-    <!-- Tab Rename - REVISI -->
-    <div id="tab-rename" class="tab-content">
-      <div class="search-row">
-        <input type="text" id="renameSearchInput" placeholder="Cari folder atau file..." autocomplete="off">
-        <button onclick="performRenameSearch()" class="inline-btn">Cari</button>
-      </div>
-      <div class="search-results" id="renameSearchResults"></div>
-      <label>Nama Baru</label>
-      <input type="text" id="renameNewPath" placeholder="path baru">
-      <button class="primary" onclick="executeRename()">Rename</button>
-      <div style="margin-top:0.3rem; font-size:0.8rem;" id="renameStatus"></div>
-    </div>
-
-    <!-- Tab Buat Repo (tetap) -->
-    <!-- ... -->
-
-    <!-- Tab Daftar Repo (tetap) -->
-    <!-- ... -->
-
-    <div id="globalStatus" style="margin-top:0.8rem; padding:0.5rem; border-radius:12px; font-size:0.85rem;"></div>
-  </div>
-
-  <!-- Panduan -->
-  <!-- ... -->
-
-  <!-- Modal Login -->
-  <!-- ... -->
-
-  <!-- Modal Manajemen Akun (REVISI: edit profil) -->
-  <div id="accountModal" class="modal-overlay">
-    <div class="modal" style="text-align:left;">
-      <h3>Manajemen Akun</h3>
-      <div id="accountList" style="max-height:250px; overflow-y:auto;"></div>
-      <button onclick="closeAccountModal()" class="btn-cancel" style="width:100%; margin-top:0.5rem;">Tutup</button>
-    </div>
-  </div>
-
-  <!-- Modal Edit Akun -->
-  <div id="editAccountModal" class="modal-overlay">
-    <div class="modal" style="text-align:left;">
-      <h3>Edit Profil</h3>
-      <label>Username</label>
-      <input type="text" id="editUsername">
-      <label>Repository</label>
-      <input type="text" id="editRepo">
-      <label>Token</label>
-      <input type="password" id="editToken">
-      <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1rem;">
-        <button onclick="closeEditAccountModal()" class="btn-cancel">Batal</button>
-        <button onclick="saveEditAccount()" class="btn-confirm">Simpan</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast -->
-  <div id="toast" class="toast"></div>
-
-  <!-- Modal Konfirmasi -->
-  <!-- ... -->
-
-  <!-- Anti-Lag + Footer -->
-  <!-- ... -->
-
-  <script>
-    // ... semua fungsi sebelumnya (loadTheme, toggleTheme, dll) ...
-    // STATE
-    const SK = 'hs_profiles', UK = 'hs_user', TK = 'hs_theme', HK = 'hs_history', AK = 'hs_antilag';
-    let repoTree = [], selDelFolder = '';
-    // Variabel untuk menyimpan file yang dipilih di editor/rename
-    let selectedSingleFile = '';
-    let selectedEditorFile = '';
-    let selectedRenamePath = '';
-
-    window.onload = () => {
-      loadTheme(); genParticles(); initAntiLag(); checkLogin();
-    };
-
-    // ... (fungsi theme, antiLag, login, dll) ...
-
-    // ==================== REVISI SINGLE TAB ====================
-    function performSingleSearch() {
-      const q = document.getElementById('singleSearchInput').value.trim();
-      if (q.length < 2) return toast('Ketik minimal 2 karakter', 'error');
-      const results = repoTree.filter(item => item.path.toLowerCase().includes(q.toLowerCase()));
-      renderSearchResults('singleSearchResults', results, 'single');
-    }
-
-    function renderSearchResults(containerId, results, tab) {
-      const container = document.getElementById(containerId);
-      if (!results.length) {
-        container.innerHTML = '<div style="padding:0.5rem; opacity:0.7;">Tidak ditemukan</div>';
-        container.style.display = 'block';
-        return;
-      }
-      let html = '';
-      results.forEach(item => {
-        const icon = item.type === 'tree' ? '📁' : '📄';
-        html += `<div onclick="selectSearchResult('${tab}', '${item.path}', '${item.type}')">${icon} ${item.path}</div>`;
-      });
-      container.innerHTML = html;
-      container.style.display = 'block';
-    }
-
-    function selectSearchResult(tab, path, type) {
-      if (tab === 'single') {
-        selectedSingleFile = path;
-        document.getElementById('singleSearchInput').value = path;
-        document.getElementById('singleSearchResults').style.display = 'none';
-        if (type === 'blob') {
-          loadSingleFileContentByPath(path);
-        } else {
-          document.getElementById('singleCode').value = '';
-          toast('Pilih file, bukan folder', 'info');
-        }
-      } else if (tab === 'editor') {
-        selectedEditorFile = path;
-        document.getElementById('editorSearchInput').value = path;
-        document.getElementById('editorSearchResults').style.display = 'none';
-        if (type === 'blob') {
-          loadEditorFileContentByPath(path);
-        } else {
-          document.getElementById('editorCode').value = '';
-          toast('Pilih file, bukan folder', 'info');
-        }
-      } else if (tab === 'rename') {
-        selectedRenamePath = path;
-        document.getElementById('renameSearchInput').value = path;
-        document.getElementById('renameSearchResults').style.display = 'none';
-        document.getElementById('renameNewPath').value = path;
-      }
-    }
-
-    async function loadSingleFileContentByPath(path) {
-      const { username, repo, token } = getCreds();
-      try {
-        const d = await ghGet(username, repo, path, token);
-        if (d.content) {
-          document.getElementById('singleCode').value = atob(d.content);
-          toast('File dimuat', 'success');
-        }
-      } catch (e) {
-        toast('Gagal memuat file: ' + e.message, 'error');
-      }
-    }
-
-    function deploySingle() {
-      if (!selectedSingleFile) return toast('Pilih file terlebih dahulu melalui pencarian', 'error');
-      const code = document.getElementById('singleCode').value;
-      if (!code.trim()) return toast('Kode kosong', 'error');
-      confirm(`Update ${selectedSingleFile}?`, async () => {
-        const { username, repo, token } = getCreds();
-        try {
-          setStatus('Mengupload...', '');
-          await ghUpload(username, repo, selectedSingleFile, code, token);
-          setStatus('Sukses', 'success');
-          toast('Upload berhasil!', 'success');
-          // refresh tree
-          loadRepoTree();
-        } catch (e) {
-          setStatus('Gagal: ' + e.message, 'error');
-          toast('Gagal', 'error');
-        }
-      });
-    }
-
-    function searchInSingleCode() {
-      const code = document.getElementById('singleCode').value;
-      const search = prompt('Cari dalam kode:');
-      if (!search) return;
-      const idx = code.indexOf(search);
-      if (idx === -1) return toast('Tidak ditemukan', 'error');
-      document.getElementById('singleCode').setSelectionRange(idx, idx + search.length);
-      document.getElementById('singleCode').focus();
-    }
-
-    // ==================== REVISI EDITOR TAB ====================
-    function performEditorSearch() {
-      const q = document.getElementById('editorSearchInput').value.trim();
-      if (q.length < 2) return toast('Ketik minimal 2 karakter', 'error');
-      const results = repoTree.filter(item => item.path.toLowerCase().includes(q.toLowerCase()));
-      renderSearchResults('editorSearchResults', results, 'editor');
-    }
-
-    async function loadEditorFileContentByPath(path) {
-      const { username, repo, token } = getCreds();
-      try {
-        const d = await ghGet(username, repo, path, token);
-        if (d.content) {
-          document.getElementById('editorCode').value = atob(d.content);
-          toast('File dimuat untuk diedit', 'success');
-        }
-      } catch (e) {
-        toast('Gagal: ' + e.message, 'error');
-      }
-    }
-
-    function saveAndUploadEdit() {
-      if (!selectedEditorFile) return toast('Pilih file terlebih dahulu melalui pencarian', 'error');
-      const code = document.getElementById('editorCode').value;
-      if (!code.trim()) return toast('Kode kosong', 'error');
-      confirm(`Update ${selectedEditorFile}?`, async () => {
-        const { username, repo, token } = getCreds();
-        try {
-          setStatus('Upload...', '');
-          await ghUpload(username, repo, selectedEditorFile, code, token);
-          setStatus('Sukses', 'success');
-          toast('Upload berhasil!', 'success');
-          loadRepoTree();
-        } catch (e) {
-          setStatus('Gagal: ' + e.message, 'error');
-        }
-      });
-    }
-
-    function searchInEditorCode() {
-      const code = document.getElementById('editorCode').value;
-      const search = prompt('Cari dalam kode editor:');
-      if (!search) return;
-      const idx = code.indexOf(search);
-      if (idx === -1) return toast('Tidak ditemukan', 'error');
-      document.getElementById('editorCode').setSelectionRange(idx, idx + search.length);
-      document.getElementById('editorCode').focus();
-    }
-
-    // ==================== REVISI RENAME TAB ====================
-    function performRenameSearch() {
-      const q = document.getElementById('renameSearchInput').value.trim();
-      if (q.length < 2) return toast('Ketik minimal 2 karakter', 'error');
-      const results = repoTree.filter(item => item.path.toLowerCase().includes(q.toLowerCase()));
-      renderSearchResults('renameSearchResults', results, 'rename');
-    }
-
-    function executeRename() {
-      const oldPath = selectedRenamePath;
-      const newPath = document.getElementById('renameNewPath').value.trim();
-      if (!oldPath) return toast('Pilih file/folder terlebih dahulu', 'error');
-      if (!newPath || oldPath === newPath) return toast('Path baru tidak valid', 'error');
-      confirm(`Rename ${oldPath} ke ${newPath}?`, async () => {
-        const { username, repo, token } = getCreds();
-        try {
-          // ... sama seperti sebelumnya, gunakan oldPath dan newPath
-          // panggil ghUpload untuk semua file jika folder
-          toast('Rename sukses', 'success');
-          loadRepoTree();
-        } catch (e) {
-          toast('Gagal: ' + e.message, 'error');
-        }
-      });
-    }
-
-    // ==================== FILES TAB REVISI (PERFORMA & NOTIFIKASI) ====================
-    // Menggunakan toast untuk setiap progress, operasi hapus lebih cepat dengan paralel terbatas
-    async function deleteAllFiles() {
-      const { username, repo, token } = getCreds();
-      confirm(`Hapus SEMUA file di ${username}/${repo}?`, async () => {
-        const progress = document.getElementById('manageStatus');
-        try {
-          const tree = await fetchTree(username, repo, token);
-          const files = tree.filter(i => i.type === 'blob');
-          const total = files.length;
-          let done = 0;
-          // Proses dalam batch parallel (5 sekaligus)
-          const batchSize = 5;
-          for (let i = 0; i < files.length; i += batchSize) {
-            const batch = files.slice(i, i + batchSize);
-            await Promise.all(batch.map(async (f) => {
-              try {
-                await ghDelete(username, repo, f.path, f.sha, token);
-                done++;
-                progress.textContent = `Progress: ${done}/${total}`;
-              } catch (_) {}
-            }));
-          }
-          toast(`${done} file dihapus`, 'success');
-          loadRepoTree();
-        } catch (e) {
-          toast('Gagal: ' + e.message, 'error');
-        }
-      });
-    }
-
-    // ... (similar untuk deleteFolderInteractive, deleteRepoInteractive) ...
-
-    // ==================== MANAJEMEN AKUN REVISI ====================
-    function openEditAccountModal(index) {
-      const profiles = getProfiles();
-      const p = profiles[index];
-      document.getElementById('editUsername').value = p.username;
-      document.getElementById('editRepo').value = p.repo;
-      document.getElementById('editToken').value = p.token;
-      document.getElementById('editAccountModal').dataset.editIndex = index;
-      document.getElementById('editAccountModal').style.display = 'flex';
-    }
-    function closeEditAccountModal() {
-      document.getElementById('editAccountModal').style.display = 'none';
-    }
-    function saveEditAccount() {
-      const index = document.getElementById('editAccountModal').dataset.editIndex;
-      const profiles = getProfiles();
-      if (index === undefined) return;
-      profiles[index].username = document.getElementById('editUsername').value.trim();
-      profiles[index].repo = document.getElementById('editRepo').value.trim();
-      profiles[index].token = document.getElementById('editToken').value.trim();
-      saveProfiles(profiles);
-      closeEditAccountModal();
-      openAccountManager(); // refresh list
-      toast('Profil diperbarui', 'success');
-    }
-
-    // Di renderAccountList, tambahkan tombol "Edit" yang memanggil openEditAccountModal(i)
-    function renderAccountList() {
-      // ... tambahkan tombol Edit ...
-    }
-
-    // ==================== FUNGSI PENTING LAINNYA ====================
-    // ... (semua fungsi lainnya tetap, termasuk loadRepoTree, populateSelects, dll.)
-    // Pastikan fungsi-fungsi dasar seperti toBase64, ghReq, fetchTree, dll. tetap ada.
-
-  </script>
-</body>
-</html>
-```html
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HABI STUDIO CODING .ZIP</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <style>
-    :root {
-      --bg: #0f0c29; --bg2: #302b63; --bg3: #24243e;
-      --card-bg: rgba(20,20,40,0.85); --text: #e0e0e0;
-      --accent: #7c4dff; --accent2: #448aff; --danger: #e53935;
-      --border: rgba(255,255,255,0.15); --input-bg: rgba(0,0,0,0.4);
-    }
-    .light-theme {
-      --bg: #f5f5f5; --bg2: #e0e0e0; --bg3: #ffffff;
-      --card-bg: rgba(255,255,255,0.9); --text: #222;
-      --accent: #6c3fd4; --accent2: #3b6eff;
-      --border: rgba(0,0,0,0.15); --input-bg: rgba(0,0,0,0.05);
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: linear-gradient(135deg, var(--bg), var(--bg2), var(--bg3));
-      background-size: 400% 400%; animation: gradientMove 15s ease infinite;
-      color: var(--text); min-height: 100vh; padding: 1rem;
-      display: flex; flex-direction: column; align-items: center;
-      position: relative; overflow-x: hidden;
-    }
-    @keyframes gradientMove { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-    .particles { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; overflow:hidden; }
-    .particle { position:absolute; background:rgba(128,128,255,0.12); border-radius:50%; animation:float linear infinite; }
-    @keyframes float { 0%{transform:translateY(100vh);opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{transform:translateY(-10vh);opacity:0} }
-    .container {
-      width:100%; max-width:550px; background:var(--card-bg); backdrop-filter:blur(20px);
-      border-radius:24px; padding:1.5rem; margin:1rem 0;
-      box-shadow:0 20px 40px rgba(0,0,0,0.5); border:1px solid var(--border);
-      position:relative; z-index:1;
-    }
-    .logo-svg { width:180px; height:60px; animation: logoPulse 2s infinite; display:block; margin:0 auto; }
-    @keyframes logoPulse { 0%{transform:scale(1)} 50%{transform:scale(1.03)} 100%{transform:scale(1)} }
-    .tab-buttons { display:flex; gap:0.4rem; margin:1rem 0; flex-wrap:wrap; }
-    .tab-btn {
-      flex:1; min-width:55px; padding:0.7rem 0.3rem; border:none;
-      background:rgba(255,255,255,0.1); color:#ddd; border-radius:12px;
-      font-weight:bold; cursor:pointer; font-size:0.75rem;
-    }
-    .tab-btn.active { background:linear-gradient(135deg,#7c4dff,#536dfe); color:white; }
-    .tab-content { display:none; }
-    .tab-content.active { display:block; }
-    label { display:block; margin-top:0.8rem; font-weight:bold; color:var(--accent); font-size:0.9rem; }
-    input, textarea {
-      width:100%; padding:0.7rem; margin-top:0.2rem; border-radius:12px;
-      border:1px solid var(--border); background:var(--input-bg); color:var(--text);
-      font-size:0.95rem;
-    }
-    input:focus, textarea:focus { border-color:#7c4dff; outline:none; }
-    textarea { font-family:'Courier New',monospace; resize:vertical; min-height:100px; }
-    button.primary {
-      width:100%; padding:0.8rem; background:linear-gradient(135deg,#7c4dff,#448aff);
-      border:none; color:white; font-weight:bold; font-size:0.95rem;
-      border-radius:16px; margin-top:0.8rem; cursor:pointer;
-    }
-    .danger-btn { background:#e53935 !important; }
-    .inline-btn {
-      padding:0.4rem 0.8rem; background:#536dfe; color:white;
-      border:none; border-radius:8px; cursor:pointer; font-size:0.8rem;
-    }
-    .modal-overlay {
-      position:fixed; top:0; left:0; width:100%; height:100%;
-      background:rgba(0,0,0,0.7); display:none; justify-content:center;
-      align-items:center; z-index:1000;
-    }
-    .modal {
-      background:var(--card-bg); padding:1.5rem; border-radius:20px;
-      max-width:400px; width:90%; border:1px solid var(--border);
-      text-align:center;
-    }
-    .modal h3 { color:#c084fc; margin-bottom:0.8rem; }
-    .modal button { margin:0.3rem; padding:0.7rem 1.5rem; border-radius:12px; border:none; font-weight:bold; cursor:pointer; }
-    .btn-cancel { background:rgba(255,255,255,0.1); color:white; }
+    .btn-cancel { background:rgba(128,128,128,0.2); color:var(--text); }
     .btn-confirm { background:#7c4dff; color:white; }
     .toast {
       position:fixed; bottom:2rem; left:50%; transform:translateX(-50%);
@@ -668,14 +98,14 @@
       width:100%; display:none; margin-top:0.2rem;
     }
     .search-results div {
-      padding:0.5rem; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);
+      padding:0.5rem; cursor:pointer; border-bottom:1px solid rgba(128,128,128,0.1);
       font-size:0.85rem; color:var(--text);
     }
     .search-results div:hover { background:rgba(124,77,255,0.2); }
-    .file-browser { background:rgba(0,0,0,0.3); border-radius:12px; padding:0.8rem; max-height:300px; overflow-y:auto; margin:0.5rem 0; font-size:0.85rem; }
-    .repo-list-item { display:flex; align-items:center; gap:0.3rem; padding:0.3rem 0.1rem; border-bottom:1px solid rgba(255,255,255,0.04); }
-    .protected-badge { background:#e53935; padding:0.1rem 0.3rem; border-radius:6px; font-size:0.65rem; margin-left:0.2rem; }
-    footer { text-align:center; margin-top:1.5rem; padding:1rem; color:#8888aa; font-size:0.85rem; border-top:1px solid var(--border); width:100%; }
+    .file-browser { background:rgba(128,128,128,0.1); border-radius:12px; padding:0.8rem; max-height:300px; overflow-y:auto; margin:0.5rem 0; font-size:0.85rem; }
+    .repo-list-item { display:flex; align-items:center; gap:0.3rem; padding:0.3rem 0.1rem; border-bottom:1px solid rgba(128,128,128,0.1); }
+    .protected-badge { background:#e53935; padding:0.1rem 0.3rem; border-radius:6px; font-size:0.65rem; margin-left:0.2rem; color:white; }
+    footer { text-align:center; margin-top:1.5rem; padding:1rem; color:var(--text); font-size:0.85rem; border-top:1px solid var(--border); width:100%; opacity:0.7; }
     .switch { position:relative; display:inline-block; width:40px; height:22px; }
     .switch input { opacity:0; width:0; height:0; }
     .slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#ccc; transition:.3s; border-radius:22px; }
@@ -687,6 +117,7 @@
       border:1px solid var(--border); border-radius:50%; width:36px; height:36px;
       display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.1rem;
     }
+    .login-btn { background:#24292e; color:white; border:none; padding:0.6rem 1.2rem; border-radius:12px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; }
   </style>
 </head>
 <body>
@@ -694,11 +125,29 @@
   <div class="theme-toggle" onclick="toggleTheme()">🌓</div>
 
   <div class="container">
-    <svg class="logo-svg" viewBox="0 0 200 60"><defs><linearGradient id="g"><stop offset="0%" stop-color="#ff4e50"/><stop offset="50%" stop-color="#f9d423"/><stop offset="100%" stop-color="#7c4dff"/></linearGradient></defs><rect x="5" y="10" width="50" height="40" rx="8" fill="#e53935" stroke="white" stroke-width="2"/><rect x="10" y="15" width="40" height="30" rx="5" fill="white"/><text x="30" y="36" text-anchor="middle" font-size="18" font-weight="900" fill="#e53935">HS</text><text x="65" y="40" font-size="20" font-weight="900" fill="url(#g)" letter-spacing="1">HABI STUDIO CODING</text></svg>
+    <div class="logo-area">
+      <svg class="logo-svg" viewBox="0 0 240 70" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ff4e50"/>
+            <stop offset="50%" stop-color="#f9d423"/>
+            <stop offset="100%" stop-color="#7c4dff"/>
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <rect x="10" y="15" width="50" height="40" rx="8" fill="#e53935" stroke="white" stroke-width="2" filter="url(#glow)"/>
+        <rect x="15" y="20" width="40" height="30" rx="5" fill="white"/>
+        <text x="35" y="41" text-anchor="middle" font-size="20" font-weight="900" fill="#e53935">HS</text>
+        <text x="75" y="45" font-size="22" font-weight="900" fill="url(#lg)" filter="url(#glow)" letter-spacing="1">HABI STUDIO CODING</text>
+      </svg>
+    </div>
 
     <div id="loginArea" style="text-align:center;margin:0.5rem 0;">
-      <button class="login-btn" onclick="openLoginModal()" style="background:#24292e;color:white;border:none;padding:0.6rem 1.2rem;border-radius:12px;font-weight:bold;cursor:pointer;">🔑 Login GitHub</button>
-      <div id="userInfo" style="display:none;align-items:center;gap:0.4rem;background:rgba(255,255,255,0.05);padding:0.4rem 0.8rem;border-radius:12px;">
+      <button class="login-btn" onclick="openLoginModal()">🔑 Login GitHub</button>
+      <div id="userInfo" style="display:none;align-items:center;gap:0.4rem;background:rgba(128,128,255,0.1);padding:0.4rem 0.8rem;border-radius:12px;">
         <span id="userDisplayName"></span>
         <button onclick="openAccountManager()" class="inline-btn">👥</button>
         <button onclick="logoutUser()" class="inline-btn" style="background:#e53935;">Logout</button>
@@ -730,6 +179,7 @@
         <button onclick="searchInSingleCode()" class="inline-btn">Cari Kode</button>
       </div>
       <button class="primary" onclick="deploySingle()">Upload File</button>
+      <div id="singleStatus" style="margin-top:0.3rem;font-size:0.8rem;"></div>
     </div>
 
     <!-- Tab ZIP -->
@@ -738,7 +188,7 @@
       <input type="file" id="zipFile" accept=".zip">
       <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem;"><input type="checkbox" id="stripRoot" checked> Hapus folder root</label>
       <button class="primary" onclick="deployZip()">Upload ZIP & Deploy</button>
-      <div id="zipProgress" style="display:none;width:100%;background:rgba(255,255,255,0.1);border-radius:10px;height:8px;margin-top:0.5rem;"><div id="zipFill" style="height:100%;background:#7c4dff;border-radius:10px;width:0%;transition:width 0.2s;"></div></div>
+      <div id="zipProgress" style="display:none;width:100%;background:rgba(128,128,128,0.2);border-radius:10px;height:8px;margin-top:0.5rem;"><div id="zipFill" style="height:100%;background:#7c4dff;border-radius:10px;width:0%;transition:width 0.2s;"></div></div>
     </div>
 
     <!-- Tab Editor -->
@@ -754,6 +204,7 @@
         <button onclick="searchInEditorCode()" class="inline-btn">Cari Kode</button>
       </div>
       <button class="primary" onclick="saveAndUploadEdit()">Simpan & Upload</button>
+      <div id="editorStatus" style="margin-top:0.3rem;font-size:0.8rem;"></div>
     </div>
 
     <!-- Tab Files -->
@@ -793,11 +244,14 @@
     <div id="tab-list-repo" class="tab-content">
       <div style="display:flex;gap:0.5rem;margin-bottom:0.3rem;"><button onclick="refreshRepoList()" class="inline-btn">Refresh</button><span id="repoCount">0 repo</span></div>
       <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem;"><input type="checkbox" id="selectAllRepos" onchange="toggleAllRepos()"><span>Pilih Semua</span></div>
-      <div id="repoListContainer" style="max-height:300px;overflow-y:auto;background:rgba(0,0,0,0.2);border-radius:8px;padding:0.3rem;"></div>
+      <div id="repoListContainer" style="max-height:300px;overflow-y:auto;background:rgba(128,128,128,0.1);border-radius:8px;padding:0.3rem;"></div>
       <button class="primary danger-btn" onclick="deleteSelectedRepos()">Hapus Terpilih</button>
-      <div style="margin-top:0.8rem;"><strong>Riwayat Penghapusan</strong><div id="deleteHistoryContainer" style="max-height:120px;overflow-y:auto;background:rgba(0,0,0,0.2);padding:0.5rem;border-radius:8px;font-size:0.8rem;">Belum ada.</div></div>
+      <div style="margin-top:0.8rem;"><strong>Riwayat Penghapusan</strong><div id="deleteHistoryContainer" style="max-height:120px;overflow-y:auto;background:rgba(128,128,128,0.1);padding:0.5rem;border-radius:8px;font-size:0.8rem;">Belum ada.</div></div>
     </div>
   </div>
+
+  <div style="text-align:center;margin-top:0.5rem;"><span>Mode Anti-Lag</span><label class="switch"><input type="checkbox" id="antiLagToggle" checked onchange="toggleAntiLag()"><span class="slider"></span></label></div>
+  <footer>Powered by <strong>HABI STUDIO AI</strong> — Melampaui Batas Kreativitas</footer>
 
   <!-- Modal Login -->
   <div id="loginModal" class="modal-overlay"><div class="modal" style="text-align:left;">
@@ -822,10 +276,8 @@
   <div id="toast" class="toast"></div>
   <div id="confirmModal" class="modal-overlay"><div class="modal"><h3>HABI STUDIO NOTE</h3><p id="confirmMessage"></p><button class="btn-confirm" id="confirmOk">Ya</button><button class="btn-cancel" id="confirmCancel">Batal</button></div></div>
 
-  <div style="text-align:center;margin-top:0.5rem;"><span>Mode Anti-Lag</span><label class="switch"><input type="checkbox" id="antiLagToggle" checked onchange="toggleAntiLag()"><span class="slider"></span></label></div>
-  <footer>Powered by <strong>HABI STUDIO AI</strong> — Melampaui Batas Kreativitas</footer>
-
   <script>
+    // STATE
     const SK='hs_profiles',UK='hs_user',HK='hs_history',AK='hs_antilag',TK='hs_theme';
     let repoTree=[],selDelFolder='',selSingle='',selEditor='',selRename='';
 
@@ -842,12 +294,15 @@
     async function ghGet(o,r,p,t){return(await ghReq(`https://api.github.com/repos/${o}/${r}/contents/${p}`,{headers:{'Authorization':`token ${t}`}})).json();}
     async function ghDelete(o,r,p,s,t){await ghReq(`https://api.github.com/repos/${o}/${r}/contents/${p}`,{method:'DELETE',headers:{'Authorization':`token ${t}`,'Content-Type':'application/json'},body:JSON.stringify({message:`Delete ${p}`,sha:s,branch:'main'})});}
 
-    function loadTheme(){if(localStorage.getItem(TK)==='light')document.body.classList.add('light-theme');}
-    function toggleTheme(){document.body.classList.toggle('light-theme');localStorage.setItem(TK,document.body.classList.contains('light-theme')?'light':'dark');toast('Tema diubah','info');}
+    // THEME
+    function loadTheme(){if(localStorage.getItem(TK)==='dark')document.body.classList.add('dark-theme');}
+    function toggleTheme(){document.body.classList.toggle('dark-theme');localStorage.setItem(TK,document.body.classList.contains('dark-theme')?'dark':'light');toast('Tema diubah','info');}
+    // ANTI-LAG
     function initAntiLag(){let on=JSON.parse(localStorage.getItem(AK)||'true');$id('antiLagToggle').checked=on;applyAntiLag(on);}
     function toggleAntiLag(){let on=$id('antiLagToggle').checked;localStorage.setItem(AK,JSON.stringify(on));applyAntiLag(on);}
     function applyAntiLag(on){let p=$id('particles');if(p)p.style.display=on?'none':'block';}
 
+    // LOGIN
     function checkLogin(){let u=JSON.parse(localStorage.getItem(UK)||'null');if(u)showLoggedIn(u);else showLoggedOut();}
     function showLoggedIn(u){$id('loginArea').querySelector('.login-btn').style.display='none';$id('userInfo').style.display='flex';$id('userDisplayName').textContent=u.username;$id('tabNav').style.display='flex';switchTab('single');loadRepoTree();}
     function showLoggedOut(){$id('loginArea').querySelector('.login-btn').style.display='inline-flex';$id('userInfo').style.display='none';$id('tabNav').style.display='none';document.querySelectorAll('.tab-content').forEach(c=>c.style.display='none');}
@@ -867,6 +322,7 @@
     }
     function logoutUser(){confirm('Logout?',()=>{localStorage.removeItem(UK);showLoggedOut();toast('Logout','info');});}
 
+    // TABS
     function switchTab(t){
       ['single','zip','editor','files','rename','create-repo','list-repo'].forEach((n,i)=>{
         document.querySelectorAll('.tab-btn')[i].classList.toggle('active',n===t);
@@ -875,9 +331,10 @@
       if(t==='list-repo')refreshRepoList();
     }
 
+    // REPO TREE
     async function loadRepoTree(){
       let c=getCreds();if(!c.username)return;
-      try{repoTree=await fetchTree(c.username,c.repo,c.token);renderFileBrowser();populateSelects();toast('Struktur dimuat','success');}catch(e){toast('Gagal: '+e.message,'error');}
+      try{repoTree=await fetchTree(c.username,c.repo,c.token);renderFileBrowser();toast('Struktur dimuat','success');}catch(e){toast('Gagal: '+e.message,'error');}
     }
     function renderFileBrowser(){
       let c=$id('fileBrowser');if(!repoTree.length){c.innerHTML='Kosong.';return;}
@@ -888,9 +345,8 @@
       files.forEach(f=>h+=`<div>📄 ${f.path} <button onclick="downloadFile('${f.path}')">Unduh</button><button onclick="deleteFile('${f.path}')">Hapus</button></div>`);
       c.innerHTML=h;
     }
-    function populateSelects(){}
 
-    // SINGLE
+    // SINGLE TAB
     function searchInSingle(){
       let q=$id('singleSearch').value.trim();if(q.length<2)return toast('Min 2 karakter','error');
       let results=repoTree.filter(i=>i.path.toLowerCase().includes(q.toLowerCase()));
@@ -911,7 +367,7 @@
     function refreshSingleTab(){loadRepoTree();toast('Direfresh','info');}
     function clearSingleCode(){$id('singleCode').value='';toast('Kode dihapus','info');}
 
-    // EDITOR
+    // EDITOR TAB
     function searchInEditor(){
       let q=$id('editorSearch').value.trim();if(q.length<2)return toast('Min 2 karakter','error');
       let results=repoTree.filter(i=>i.path.toLowerCase().includes(q.toLowerCase()));
@@ -930,7 +386,7 @@
     }
     function searchInEditorCode(){let q=prompt('Cari dalam kode editor:');if(!q)return;let t=$id('editorCode');let i=t.value.indexOf(q);if(i===-1)return toast('Tidak ditemukan','error');t.setSelectionRange(i,i+q.length);t.focus();}
 
-    // RENAME
+    // RENAME TAB
     function searchInRename(){
       let q=$id('renameSearch').value.trim();if(q.length<2)return toast('Min 2 karakter','error');
       let results=repoTree.filter(i=>i.path.toLowerCase().includes(q.toLowerCase()));
@@ -952,7 +408,7 @@
       });
     }
 
-    // FILES
+    // FILES TAB
     async function downloadFile(p){let c=getCreds();try{let d=await ghGet(c.username,c.repo,p,c.token);let b=new Blob([atob(d.content)],{type:'text/plain'});let a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=p.split('/').pop();a.click();}catch(e){toast('Gagal','error');}}
     async function deleteFile(p){let c=getCreds();confirm(`Hapus ${p}?`,async()=>{try{let d=await ghGet(c.username,c.repo,p,c.token);await ghDelete(c.username,c.repo,p,d.sha,c.token);toast('Dihapus','success');loadRepoTree();}catch(e){toast('Gagal: '+e.message,'error');}});}
     async function deleteFolderInteractive(){if(!selDelFolder)return toast('Pilih folder dulu','error');confirm(`Hapus folder ${selDelFolder}?`,async()=>{let c=getCreds();try{let tree=await fetchTree(c.username,c.repo,c.token);let files=tree.filter(i=>i.type==='blob'&&i.path.startsWith(selDelFolder+'/'));for(let f of files)try{await ghDelete(c.username,c.repo,f.path,f.sha,c.token);}catch(_){}toast('Folder dihapus','success');loadRepoTree();}catch(e){toast('Gagal: '+e.message,'error');}});}
@@ -977,7 +433,7 @@
     // AKUN MANAGER
     function getProfiles(){return JSON.parse(localStorage.getItem(SK)||'[]');}
     function saveProfiles(p){localStorage.setItem(SK,JSON.stringify(p));}
-    function openAccountManager(){let p=getProfiles(),c=$id('accountList');c.innerHTML=p.length?p.map((x,i)=>`<div style="display:flex;justify-content:space-between;padding:0.3rem;background:rgba(255,255,255,0.05);border-radius:8px;margin-bottom:0.2rem;"><div><strong>${x.name}</strong><br><small>${x.username}/${x.repo}</small></div><div><button onclick="switchAccount(${i})" class="inline-btn">Pilih</button><button onclick="editAccount(${i})" class="inline-btn">Edit</button><button onclick="delAccount(${i})" class="inline-btn" style="background:#e53935;">Hapus</button></div></div>`).join(''):'<p>Belum ada akun</p>';$id('accountModal').style.display='flex';}
+    function openAccountManager(){let p=getProfiles(),c=$id('accountList');c.innerHTML=p.length?p.map((x,i)=>`<div style="display:flex;justify-content:space-between;padding:0.3rem;background:rgba(128,128,255,0.1);border-radius:8px;margin-bottom:0.2rem;"><div><strong>${x.name}</strong><br><small>${x.username}/${x.repo}</small></div><div><button onclick="switchAccount(${i})" class="inline-btn">Pilih</button><button onclick="editAccount(${i})" class="inline-btn">Edit</button><button onclick="delAccount(${i})" class="inline-btn" style="background:#e53935;">Hapus</button></div></div>`).join(''):'<p>Belum ada akun</p>';$id('accountModal').style.display='flex';}
     function closeAccountModal(){$id('accountModal').style.display='none';}
     function switchAccount(i){let p=getProfiles()[i];localStorage.setItem(UK,JSON.stringify({username:p.username,repo:p.repo,token:p.token}));closeAccountModal();showLoggedIn({username:p.username});toast('Akun beralih','success');}
     function delAccount(i){let p=getProfiles();p.splice(i,1);saveProfiles(p);openAccountManager();toast('Akun dihapus','info');}
@@ -990,4 +446,3 @@
   </script>
 </body>
 </html>
-```
