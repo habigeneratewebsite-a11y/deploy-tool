@@ -43,13 +43,11 @@
     .logo-area { text-align:center; margin-bottom:0.5rem; position:relative; }
     .logo-img {
       max-width:200px; max-height:55px; display:none;
-      filter: drop-shadow(0 0 6px var(--accent));
-      animation: logoShadowPulse 60s infinite;
+      filter: drop-shadow(0 2px 8px var(--accent));
+      transition: filter 0.3s;
     }
-    @keyframes logoShadowPulse {
-      0%, 100% { filter: drop-shadow(0 0 6px var(--accent)); }
-      33% { filter: drop-shadow(0 0 18px #ff4e50); }
-      66% { filter: drop-shadow(0 0 18px #f9d423); }
+    .logo-img.glow-logo {
+      filter: drop-shadow(0 0 14px var(--accent));
     }
     .tab-buttons { display:flex; gap:0.35rem; margin:0.8rem 0; flex-wrap:wrap; }
     .tab-btn {
@@ -162,9 +160,9 @@
   <div class="theme-toggle" onclick="toggleTheme()" title="Ganti tema">🌓</div>
 
   <div class="container">
-    <!-- Logo -->
+    <!-- Logo (hanya muncul jika logo.png ada) -->
     <div class="logo-area">
-      <img src="logo.png" alt="Logo HABI STUDIO CODING" class="logo-img" id="logoImg" onload="this.style.display='block'" onerror="this.style.display='none'">
+      <img src="logo.png" alt="Logo HABI STUDIO CODING" class="logo-img" id="logoImg" onload="this.style.display='block'; startLogoGlow();" onerror="this.style.display='none'">
     </div>
 
     <!-- Tab Navigasi -->
@@ -176,6 +174,7 @@
       <button class="tab-btn" onclick="switchTab('rename')">✏️ Rename</button>
       <button class="tab-btn" onclick="switchTab('create-repo')">➕ Buat Repo</button>
       <button class="tab-btn" onclick="switchTab('list-repo')">📋 Daftar</button>
+      <button class="tab-btn" onclick="switchTab('chat')">💬 Chat to ZIP</button>
     </div>
 
     <!-- Credentials -->
@@ -189,7 +188,7 @@
     <!-- Info repository aktif -->
     <div id="activeRepoInfo" style="font-size:0.8rem; margin-bottom:0.5rem; opacity:0.8;"></div>
 
-    <!-- Quick Links -->
+    <!-- Quick Links (2 website) -->
     <div class="quick-links">
       <a href="https://ai-hub--habigenerateweb.replit.app/" target="_blank" title="Convert Chat AI → ZIP Project">
         <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/><path d="M7 9h10v2H7zm0 4h7v2H7z"/></svg>
@@ -205,20 +204,6 @@
       <button onclick="openAccountManager()" class="inline-btn">👥 Akun</button>
       <button onclick="saveCurrentProfileToAccounts()" class="inline-btn">💾 Simpan</button>
       <button onclick="loadRepoTree()" class="inline-btn">🔄 Muat Struktur</button>
-    </div>
-
-    <!-- Tab Chat to ZIP (Baru) -->
-    <div id="tab-chat" class="tab-content">
-      <label>💬 Tempel kode dari Chat AI</label>
-      <textarea id="chatCodeInput" placeholder="Tempel kode dari chat AI di sini...&#10;Gunakan 📁 di depan nama file/folder untuk menandai struktur.&#10;Contoh:&#10;📁 src/index.html&#10;<html>...</html>&#10;📁 src/style.css&#10;body { ... }" style="min-height:200px;" oninput="updateCodeStats('chatCodeInput','chatCodeStats')"></textarea>
-      <div class="char-count" id="chatCodeStats">0 karakter | 0 baris</div>
-      <div style="display:flex; gap:0.3rem; margin-top:0.3rem;">
-        <input type="text" id="chatLinkInput" placeholder="Atau tempel link chat AI..." style="flex:1;">
-        <button onclick="fetchChatLink()" class="inline-btn">🌐 Ambil</button>
-      </div>
-      <button class="primary" onclick="generateChatZip()">📦 Generate ZIP dari Chat</button>
-      <div class="progress-bar" id="chatProgress" style="display:none;"><div class="fill"></div></div>
-      <div id="chatStatus" style="margin-top:0.4rem; font-size:0.8rem;"></div>
     </div>
 
     <!-- Tab Single -->
@@ -320,32 +305,47 @@
       </div>
     </div>
 
+    <!-- Tab Chat to ZIP (Baru) -->
+    <div id="tab-chat" class="tab-content">
+      <label>💬 Tempel kode dari Chat AI</label>
+      <textarea id="chatCode" placeholder="Tempel kode dari chat AI di sini...&#10;Gunakan penanda 📁 di awal setiap file.&#10;Contoh:&#10;📁 frontend/pages/about.js&#10;...kode...&#10;📁 style.css&#10;...kode..." style="min-height:200px;"></textarea>
+      <div class="char-count" id="chatCodeStats">0 karakter | 0 baris</div>
+      <div style="display:flex; gap:0.3rem; margin-top:0.3rem;">
+        <input type="text" id="chatLink" placeholder="Atau masukkan link chat AI...">
+        <button onclick="fetchChatFromLink()" class="inline-btn">🌐 Ambil</button>
+      </div>
+      <button class="primary" onclick="processChatToZip()">📦 Proses & Download ZIP</button>
+      <div class="progress-bar" id="chatProgress" style="display:none;"><div class="fill"></div></div>
+      <div id="chatStatus" style="margin-top:0.4rem; font-size:0.8rem;"></div>
+    </div>
+
     <div id="globalStatus" style="margin-top:0.6rem; padding:0.5rem; border-radius:10px; font-size:0.8rem;"></div>
   </div>
 
   <!-- Panduan Lengkap -->
   <div class="container guide">
     <details><summary>📘 Panduan Lengkap HABI STUDIO CODING .ZIP</summary>
-      <p><b>💬 Chat AI → ZIP (Baru!):</b> Tempel kode dari chat AI yang mengandung penanda 📁. Setiap baris yang diawali 📁 akan menjadi nama file/folder, kode di bawahnya menjadi isi file. Klik <b>Generate ZIP</b> untuk membuat file ZIP siap download. Bisa juga tempel link chat AI untuk diambil otomatis. Mendukung hingga 300.000+ karakter.</p>
-      <p><b>📄 Single:</b> Cari file/folder, muat, edit, upload. Statistik karakter & baris ditampilkan.</p>
-      <p><b>📦 ZIP:</b> Upload file ZIP, otomatis diekstrak dan diupload.</p>
-      <p><b>✏️ Buat Baru:</b> Buat file baru dengan path lengkap.</p>
-      <p><b>📂 Files:</b> Jelajah, download, hapus, download seluruh repo sebagai ZIP.</p>
-      <p><b>✏️ Rename:</b> Cari & rename file/folder.</p>
-      <p><b>➕ Buat Repo:</b> Buat repository baru.</p>
-      <p><b>📋 Daftar:</b> Lihat semua repo, hapus massal.</p>
-      <p><b>👥 Akun:</b> Kelola multi-akun GitHub.</p>
-      <p><b>🎨 Tema:</b> Klik 🌓 untuk ganti tema.</p>
-      <p><b>🖼️ Logo:</b> Upload logo.png (200x55px) untuk logo kustom dengan animasi shadow warna-warni setiap 1 menit.</p>
+      <p><b>📄 Single:</b> Cari file/folder di input pencarian, klik hasil untuk memuat kode ke editor, edit jika perlu, lalu klik <b>Upload File</b> untuk menyimpan perubahan. Cocok untuk update cepat file yang sudah ada. Jumlah karakter dan baris kode ditampilkan di bawah editor.</p>
+      <p><b>📦 ZIP:</b> Upload file ZIP berisi proyek, otomatis diekstrak dan diupload ke repositori dengan struktur yang sama. Centang <b>Hapus folder root</b> jika ZIP hanya berisi satu folder utama.</p>
+      <p><b>✏️ Buat Baru:</b> Buat file baru langsung dari tool tanpa perlu membuka GitHub. Masukkan path lengkap (contoh: <code>repo/app/page.tsx</code>), tulis kode di kolom konten, lalu klik <b>Simpan</b>. Folder akan otomatis terstruktur. Nama repo bisa ditulis di awal path atau tidak (akan menggunakan repo yang sedang aktif).</p>
+      <p><b>📂 Files:</b> Jelajah isi repositori, cari file/folder, download, hapus file, hapus folder, hapus semua file, atau hapus repository. Gunakan tombol <b>Muat Struktur</b> untuk memuat daftar file. <b>Baru!</b> Klik <b>📥 Download Repository ZIP</b> untuk mengunduh seluruh isi repositori sebagai file ZIP dengan progress bar. Nama file dipertahankan asli (termasuk yang diawali titik seperti .gitignore).</p>
+      <p><b>✏️ Rename:</b> Cari file atau folder, pilih dari hasil, nama baru otomatis terisi, edit jika perlu, lalu klik <b>Rename</b> untuk memindahkan/rename.</p>
+      <p><b>➕ Buat Repo:</b> Buat repositori GitHub baru langsung dari tool. Isi nama, pilih visibilitas, dan tambahkan README jika perlu.</p>
+      <p><b>📋 Daftar:</b> Lihat semua repositori milik akun GitHub-mu. Centang repo yang ingin dihapus (repo <b>deploy-tool</b> dilindungi dan tidak bisa dicentang). Klik <b>Hapus Terpilih</b> untuk menghapus. Riwayat penghapusan tercatat di bawah.</p>
+      <p><b>💬 Chat to ZIP:</b> Tempelkan teks dari chat AI yang menggunakan penanda 📁 untuk setiap file. Tool akan memproses dan membuat file ZIP yang siap diunduh. Bisa juga memasukkan link chat AI untuk diambil teksnya. Sangat berguna untuk mengubah percakapan AI langsung menjadi struktur proyek.</p>
+      <p><b>👥 Akun:</b> Kelola banyak akun GitHub. Setiap akun menampilkan nama profil, username, repo, dan token (sebagian). Gunakan tombol ✅ untuk memilih akun, ✏️ untuk mengedit, dan 🗑️ untuk menghapus. Klik <b>➕ Tambah Akun</b> untuk menambah akun baru (form modern, bukan prompt). Saat menambah atau mengedit akun, otomatis akan beralih ke akun tersebut. Detail akun bisa dicopy dengan klik 📋. Akun yang sedang aktif ditandai dengan badge ✅ di daftar. Kredensial tetap tersimpan meskipun browser direfresh.</p>
+      <p><b>🔑 Token:</b> Klik tombol 🔑 untuk panduan lengkap cara mendapatkan token GitHub dengan izin <code>repo</code> dan <code>delete_repo</code>.</p>
+      <p><b>🎨 Tema:</b> Klik 🌓 di pojok kanan atas untuk beralih antara tema gelap dan terang.</p>
+      <p><b>🖼️ Logo:</b> Upload file <code>logo.png</code> (ukuran 200x55px) ke root repositori untuk menampilkan logo kustom. Jika tidak ada, area logo akan kosong. Logo memiliki efek shadow dinamis yang aktif 20 detik setiap 1 menit.</p>
     </details>
   </div>
 
-  <!-- Footer tanpa efek bintik putih -->
+  <!-- Footer tanpa bintik putih -->
   <footer>
     Powered by <strong>HABI STUDIO AI</strong> — Melampaui Batas Kreativitas
   </footer>
 
-  <!-- Modals -->
+  <!-- Modal Token Help -->
   <div id="tokenHelpModal" class="modal-overlay">
     <div class="modal" style="text-align:left;">
       <h3>🔑 Cara Mendapatkan Token GitHub</h3>
@@ -356,6 +356,7 @@
     </div>
   </div>
 
+  <!-- Modal Pencarian Kode -->
   <div id="codeSearchModal" class="modal-overlay">
     <div class="modal" style="text-align:left;">
       <h3>🔍 Cari Kode</h3>
@@ -368,6 +369,7 @@
     </div>
   </div>
 
+  <!-- Modal Manajemen Akun -->
   <div id="accountModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:500px;">
       <h3>👥 Manajemen Akun</h3>
@@ -377,6 +379,7 @@
     </div>
   </div>
 
+  <!-- Modal Tambah Akun (form baru) -->
   <div id="addAccountFormModal" class="modal-overlay">
     <div class="modal" style="text-align:left;">
       <h3>➕ Tambah Akun Baru</h3>
@@ -391,6 +394,7 @@
     </div>
   </div>
 
+  <!-- Modal Edit Akun -->
   <div id="editAccountModal" class="modal-overlay">
     <div class="modal" style="text-align:left;">
       <h3>✏️ Edit Akun</h3>
@@ -405,6 +409,7 @@
     </div>
   </div>
 
+  <!-- Modal Konfirmasi -->
   <div id="confirmModal" class="modal-overlay">
     <div class="modal">
       <h3>📝 HABI STUDIO NOTE</h3>
@@ -414,6 +419,7 @@
     </div>
   </div>
 
+  <!-- Toast -->
   <div id="toast" class="toast"></div>
 
   <script>
@@ -452,6 +458,20 @@
       if (p) p.style.display = on ? 'none' : 'block';
     }
 
+    // ==================== LOGO GLOW (20 detik setiap 1 menit) ====================
+    function startLogoGlow() {
+      const logo = document.getElementById('logoImg');
+      if (!logo || logo.style.display === 'none') return;
+      const triggerGlow = () => {
+        logo.classList.add('glow-logo');
+        setTimeout(() => logo.classList.remove('glow-logo'), 20000);
+      };
+      triggerGlow(); // pertama kali setelah halaman dimuat
+      setInterval(() => {
+        triggerGlow();
+      }, 60000); // setiap 1 menit
+    }
+
     // ==================== CREDENTIALS ====================
     function saveCreds() {
       const u = {
@@ -482,8 +502,12 @@
       if (repo) div.textContent = `📁 Saat ini di repository: ${repo}`;
       else div.textContent = '';
     }
-    function showTokenHelp() { document.getElementById('tokenHelpModal').style.display = 'flex'; }
-    function closeTokenHelp() { document.getElementById('tokenHelpModal').style.display = 'none'; }
+    function showTokenHelp() {
+      document.getElementById('tokenHelpModal').style.display = 'flex';
+    }
+    function closeTokenHelp() {
+      document.getElementById('tokenHelpModal').style.display = 'none';
+    }
 
     // ==================== TOAST & MODAL ====================
     function toast(msg, type) {
@@ -499,15 +523,6 @@
       document.getElementById('confirmOk').onclick = () => { m.style.display = 'none'; if (cb) cb(); };
       document.getElementById('confirmCancel').onclick = () => { m.style.display = 'none'; };
     }
-    function showModal(msg, okText, cb) {
-      const m = document.getElementById('confirmModal');
-      document.getElementById('confirmMessage').innerHTML = msg;
-      document.getElementById('confirmOk').textContent = okText || 'OK';
-      document.getElementById('confirmCancel').style.display = 'inline-block';
-      m.style.display = 'flex';
-      document.getElementById('confirmOk').onclick = () => { m.style.display = 'none'; if (cb) cb(); };
-      document.getElementById('confirmCancel').onclick = () => { m.style.display = 'none'; };
-    }
     function setStatus(msg, type) {
       const d = document.getElementById('globalStatus');
       if (!msg) { d.textContent = ''; d.style.background = 'transparent'; return; }
@@ -519,7 +534,7 @@
 
     // ==================== TABS ====================
     function switchTab(tab) {
-      const tabs = ['chat','single','zip','editor','files','rename','create-repo','list-repo'];
+      const tabs = ['single','zip','editor','files','rename','create-repo','list-repo','chat'];
       document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', tabs[i] === tab));
       document.querySelectorAll('.tab-content').forEach(c => { c.classList.remove('active'); c.style.display = 'none'; });
       const t = document.getElementById('tab-' + tab);
@@ -636,103 +651,6 @@
       const chars = text.length;
       const lines = text === '' ? 0 : text.split('\n').length;
       stats.textContent = `${chars} karakter | ${lines} baris`;
-    }
-
-    // ==================== CHAT AI → ZIP (FITUR BARU) ====================
-    function parseChatCode(code) {
-      const files = [];
-      const lines = code.split('\n');
-      let currentFile = null;
-      let currentContent = [];
-      
-      for (const line of lines) {
-        const trimmed = line.trim();
-        // Deteksi penanda 📁 di awal (bisa dengan atau tanpa spasi)
-        if (trimmed.startsWith('📁')) {
-          // Simpan file sebelumnya jika ada
-          if (currentFile) {
-            files.push({ path: currentFile, content: currentContent.join('\n') });
-          }
-          // Ambil nama file setelah 📁
-          currentFile = trimmed.substring(1).trim(); // hapus emoji 📁
-          // Bersihkan karakter yang tidak valid
-          currentFile = currentFile.replace(/[<>:"|?*]/g, '').trim();
-          if (!currentFile) currentFile = 'untitled.txt';
-          currentContent = [];
-        } else if (currentFile) {
-          currentContent.push(line);
-        }
-      }
-      // Simpan file terakhir
-      if (currentFile) {
-        files.push({ path: currentFile, content: currentContent.join('\n') });
-      }
-      
-      // Jika tidak ada penanda 📁, seluruh kode menjadi 1 file
-      if (files.length === 0 && code.trim()) {
-        files.push({ path: 'code.txt', content: code });
-      }
-      
-      return files;
-    }
-
-    async function generateChatZip() {
-      const code = document.getElementById('chatCodeInput').value;
-      if (!code.trim()) return toast('Tempel kode dari chat AI terlebih dahulu', 'error');
-      
-      const bar = document.getElementById('chatProgress');
-      const fill = bar.querySelector('.fill');
-      const statusDiv = document.getElementById('chatStatus');
-      bar.style.display = 'block'; fill.style.width = '0%';
-      
-      try {
-        const files = parseChatCode(code);
-        if (files.length === 0) return toast('Tidak ada file yang terdeteksi', 'error');
-        
-        statusDiv.textContent = `Ditemukan ${files.length} file. Membuat ZIP...`;
-        const zip = new JSZip();
-        
-        let done = 0;
-        for (const f of files) {
-          // Hapus slash di depan jika ada
-          let cleanPath = f.path.replace(/^\/+/, '');
-          if (!cleanPath) cleanPath = 'untitled.txt';
-          zip.file(cleanPath, f.content);
-          done++;
-          fill.style.width = (done / files.length * 100) + '%';
-          statusDiv.textContent = `Menambahkan ${cleanPath} (${done}/${files.length})`;
-        }
-        
-        const blob = await zip.generateAsync({ type: 'blob' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'chat-ai-project.zip';
-        a.click();
-        URL.revokeObjectURL(url);
-        
-        showModal(`✅ ZIP berhasil dibuat!<br>${files.length} file diproses.`, 'OK');
-        statusDiv.textContent = '';
-      } catch (e) {
-        showModal('❌ Gagal: ' + e.message, 'OK');
-        statusDiv.textContent = 'Error: ' + e.message;
-      }
-      setTimeout(() => { bar.style.display = 'none'; }, 2000);
-    }
-
-    async function fetchChatLink() {
-      const link = document.getElementById('chatLinkInput').value.trim();
-      if (!link) return toast('Masukkan link chat AI', 'error');
-      try {
-        const res = await fetch(link);
-        if (!res.ok) throw new Error('Gagal fetch');
-        const text = await res.text();
-        document.getElementById('chatCodeInput').value = text;
-        updateCodeStats('chatCodeInput','chatCodeStats');
-        toast('Konten berhasil diambil!', 'success');
-      } catch (e) {
-        toast('Gagal mengambil link: ' + e.message, 'error');
-      }
     }
 
     // ==================== SINGLE TAB ====================
@@ -939,7 +857,7 @@
       });
     }
 
-    // ==================== DOWNLOAD REPOSITORY ZIP ====================
+    // ==================== DOWNLOAD REPOSITORY ZIP (DENGAN PROGRESS & MODAL) ====================
     async function downloadRepoZip() {
       const { username, repo, token } = getCreds();
       if (!repoTree.length) return toast('Muat struktur repo terlebih dahulu', 'error');
@@ -955,7 +873,7 @@
           try {
             const d = await ghGet(username, repo, f.path, token);
             if (d.content) {
-              // Gunakan nama file asli (f.path) agar .gitignore tetap .gitignore
+              // Pastikan nama file diawetkan, termasuk titik di depan
               zip.file(f.path, atob(d.content), { binary: false });
             }
           } catch (_) {}
@@ -970,9 +888,16 @@
         a.download = `${repo}.zip`;
         a.click();
         URL.revokeObjectURL(url);
-        showModal('✅ Repository berhasil didownload sebagai ZIP!', 'OK');
+        // Notifikasi pop up modern
+        document.getElementById('confirmMessage').innerHTML = '✅ Repository berhasil didownload sebagai ZIP!';
+        document.getElementById('confirmOk').onclick = () => { document.getElementById('confirmModal').style.display = 'none'; };
+        document.getElementById('confirmCancel').style.display = 'none';
+        document.getElementById('confirmModal').style.display = 'flex';
       } catch (e) {
-        showModal('❌ Gagal membuat ZIP: ' + e.message, 'OK');
+        document.getElementById('confirmMessage').innerHTML = '❌ Gagal membuat ZIP: ' + e.message;
+        document.getElementById('confirmOk').onclick = () => { document.getElementById('confirmModal').style.display = 'none'; };
+        document.getElementById('confirmCancel').style.display = 'none';
+        document.getElementById('confirmModal').style.display = 'flex';
       }
       setTimeout(() => {
         bar.style.display = 'none';
@@ -1228,6 +1153,90 @@
       toast('Akun baru ditambahkan & beralih!', 'success');
       loadRepoTree();
     }
+
+    // ==================== CHAT TO ZIP ====================
+    function parseChatCode(text) {
+      const files = [];
+      const lines = text.split('\n');
+      let currentFile = null;
+      let currentContent = [];
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.trim().startsWith('📁')) {
+          // Simpan file sebelumnya
+          if (currentFile) {
+            files.push({ path: currentFile, content: currentContent.join('\n') });
+          }
+          // Ambil path setelah penanda
+          const path = line.trim().substring(1).trim(); // hilangkan simbol 📁 dan spasi
+          currentFile = path || 'untitled.txt';
+          currentContent = [];
+        } else if (currentFile) {
+          currentContent.push(line);
+        }
+      }
+      // File terakhir
+      if (currentFile) {
+        files.push({ path: currentFile, content: currentContent.join('\n') });
+      }
+      return files;
+    }
+
+    async function processChatToZip() {
+      const code = document.getElementById('chatCode').value;
+      if (!code.trim()) return toast('Masukkan kode dari chat AI', 'error');
+      const files = parseChatCode(code);
+      if (files.length === 0) return toast('Tidak ada file ditemukan. Gunakan penanda 📁 di awal setiap file.', 'error');
+      const bar = document.getElementById('chatProgress'), fill = bar.querySelector('.fill');
+      const status = document.getElementById('chatStatus');
+      bar.style.display = 'block'; fill.style.width = '0%';
+      status.textContent = `Memproses ${files.length} file...`;
+      try {
+        const zip = new JSZip();
+        for (let i = 0; i < files.length; i++) {
+          const f = files[i];
+          zip.file(f.path, f.content);
+          fill.style.width = ((i + 1) / files.length * 100) + '%';
+          status.textContent = `Menambahkan ${f.path} (${i+1}/${files.length})`;
+        }
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'chat-code.zip';
+        a.click();
+        URL.revokeObjectURL(url);
+        status.textContent = `✅ ${files.length} file berhasil dibungkus ZIP!`;
+        toast('ZIP berhasil dibuat!', 'success');
+      } catch (e) {
+        status.textContent = '❌ Gagal: ' + e.message;
+        toast('Gagal membuat ZIP', 'error');
+      }
+      setTimeout(() => {
+        bar.style.display = 'none';
+        status.textContent = '';
+      }, 5000);
+    }
+
+    async function fetchChatFromLink() {
+      const link = document.getElementById('chatLink').value.trim();
+      if (!link) return toast('Masukkan link', 'error');
+      try {
+        const res = await fetch(link);
+        if (!res.ok) throw new Error('Gagal fetch');
+        const text = await res.text();
+        document.getElementById('chatCode').value = text;
+        updateCodeStats('chatCode','chatCodeStats');
+        toast('Teks berhasil diambil', 'success');
+      } catch (e) {
+        toast('Gagal mengambil link', 'error');
+      }
+    }
+
+    // Tambahkan event listener untuk textarea chat
+    document.getElementById('chatCode').addEventListener('input', function() {
+      updateCodeStats('chatCode','chatCodeStats');
+    });
 
     // ==================== PENCARIAN KODE ====================
     function closeCodeSearch() {
