@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -42,12 +41,10 @@
       position:relative; z-index:1;
     }
     .logo-area { text-align:center; margin-bottom:0.5rem; position:relative; }
-    .logo-img { max-width:200px; max-height:55px; display:none; transition: transform 0.3s; }
-    .logo-img.glow-effect { animation: logoGlowAnim 10s ease-in-out; }
-    @keyframes logoGlowAnim {
-      0% { filter: drop-shadow(0 0 2px gold); transform: scale(1); }
-      50% { filter: drop-shadow(0 0 15px gold); transform: scale(1.03); }
-      100% { filter: drop-shadow(0 0 2px gold); transform: scale(1); }
+    .logo-img {
+      max-width:200px; max-height:55px; display:none;
+      filter: drop-shadow(0 2px 8px var(--accent));
+      transition: filter 0.3s;
     }
     .tab-buttons { display:flex; gap:0.35rem; margin:0.8rem 0; flex-wrap:wrap; }
     .tab-btn {
@@ -260,6 +257,7 @@
       <button class="primary" onclick="deleteAllFiles()">🧹 Hapus Semua File</button>
       <button class="primary danger-btn" onclick="deleteFolderInteractive()">📁 Hapus Folder</button>
       <button class="primary danger-btn" onclick="deleteRepoInteractive()">💣 Hapus Repository</button>
+      <button class="primary" onclick="downloadRepoZip()" style="background:linear-gradient(135deg,#2e7d32,#43a047); margin-top:0.5rem;">📥 Download Repository ZIP</button>
       <div class="progress-bar" id="filesProgress" style="display:none;"><div class="fill"></div></div>
     </div>
 
@@ -314,14 +312,14 @@
       <p><b>📄 Single:</b> Cari file/folder di input pencarian, klik hasil untuk memuat kode ke editor, edit jika perlu, lalu klik <b>Upload File</b> untuk menyimpan perubahan. Cocok untuk update cepat file yang sudah ada.</p>
       <p><b>📦 ZIP:</b> Upload file ZIP berisi proyek, otomatis diekstrak dan diupload ke repositori dengan struktur yang sama. Centang <b>Hapus folder root</b> jika ZIP hanya berisi satu folder utama.</p>
       <p><b>✏️ Buat Baru:</b> Buat file baru langsung dari tool tanpa perlu membuka GitHub. Masukkan path lengkap (contoh: <code>repo/app/page.tsx</code>), tulis kode di kolom konten, lalu klik <b>Simpan</b>. Folder akan otomatis terstruktur. Nama repo bisa ditulis di awal path atau tidak (akan menggunakan repo yang sedang aktif).</p>
-      <p><b>📂 Files:</b> Jelajah isi repositori, cari file/folder, download, hapus file, hapus folder, hapus semua file, atau hapus repository. Gunakan tombol <b>Muat Struktur</b> untuk memuat daftar file.</p>
+      <p><b>📂 Files:</b> Jelajah isi repositori, cari file/folder, download, hapus file, hapus folder, hapus semua file, atau hapus repository. Gunakan tombol <b>Muat Struktur</b> untuk memuat daftar file. <b>Baru!</b> Klik <b>📥 Download Repository ZIP</b> untuk mengunduh seluruh isi repositori sebagai file ZIP.</p>
       <p><b>✏️ Rename:</b> Cari file atau folder, pilih dari hasil, nama baru otomatis terisi, edit jika perlu, lalu klik <b>Rename</b> untuk memindahkan/rename.</p>
       <p><b>➕ Buat Repo:</b> Buat repositori GitHub baru langsung dari tool. Isi nama, pilih visibilitas, dan tambahkan README jika perlu.</p>
       <p><b>📋 Daftar:</b> Lihat semua repositori milik akun GitHub-mu. Centang repo yang ingin dihapus (repo <b>deploy-tool</b> dilindungi dan tidak bisa dicentang). Klik <b>Hapus Terpilih</b> untuk menghapus. Riwayat penghapusan tercatat di bawah.</p>
       <p><b>👥 Akun:</b> Kelola banyak akun GitHub. Setiap akun menampilkan nama profil, username, repo, dan token (sebagian). Gunakan tombol ✅ untuk memilih akun, ✏️ untuk mengedit, dan 🗑️ untuk menghapus. Klik <b>➕ Tambah Akun</b> untuk menambah akun baru (form modern, bukan prompt). Saat menambah atau mengedit akun, otomatis akan beralih ke akun tersebut. Detail akun bisa dicopy dengan klik 📋. Akun yang sedang aktif ditandai dengan badge ✅ di daftar. Kredensial tetap tersimpan meskipun browser direfresh.</p>
       <p><b>🔑 Token:</b> Klik tombol 🔑 untuk panduan lengkap cara mendapatkan token GitHub dengan izin <code>repo</code> dan <code>delete_repo</code>.</p>
       <p><b>🎨 Tema:</b> Klik 🌓 di pojok kanan atas untuk beralih antara tema gelap dan terang.</p>
-      <p><b>🖼️ Logo:</b> Upload file <code>logo.png</code> (ukuran 200x55px) ke root repositori untuk menampilkan logo kustom. Jika tidak ada, area logo akan kosong. Logo memiliki efek glow setiap 3 jam selama 10 detik.</p>
+      <p><b>🖼️ Logo:</b> Upload file <code>logo.png</code> (ukuran 200x55px) ke root repositori untuk menampilkan logo kustom. Jika tidak ada, area logo akan kosong. Logo memiliki efek shadow yang menyesuaikan tema.</p>
     </details>
   </div>
 
@@ -416,7 +414,7 @@
     // ==================== INIT ====================
     window.onload = () => {
       loadTheme(); genParticles(); initAntiLag(); loadCredsFromStorage();
-      startFooterSparkle(); startLogoGlow(); updateActiveRepoInfo();
+      startFooterSparkle(); updateActiveRepoInfo();
     };
 
     function loadTheme() {
@@ -458,16 +456,6 @@
         s.offsetHeight;
         s.style.animation = 'sparkle 1.5s ease-in-out';
       }, 20000);
-    }
-    function startLogoGlow() {
-      const logo = document.getElementById('logoImg');
-      if (!logo || logo.style.display === 'none') return;
-      const triggerGlow = () => {
-        logo.classList.add('glow-effect');
-        setTimeout(() => logo.classList.remove('glow-effect'), 10000);
-      };
-      setInterval(triggerGlow, 3 * 60 * 60 * 1000);
-      setTimeout(triggerGlow, 10000);
     }
 
     // ==================== CREDENTIALS ====================
@@ -842,6 +830,37 @@
       });
     }
 
+    // ==================== DOWNLOAD REPOSITORY ZIP ====================
+    async function downloadRepoZip() {
+      const { username, repo, token } = getCreds();
+      if (!repoTree.length) return toast('Muat struktur repo terlebih dahulu', 'error');
+      try {
+        setStatus('Menyiapkan ZIP...', '');
+        const zip = new JSZip();
+        const files = repoTree.filter(i => i.type === 'blob');
+        for (const f of files) {
+          try {
+            const d = await ghGet(username, repo, f.path, token);
+            if (d.content) {
+              zip.file(f.path, atob(d.content), { binary: false });
+            }
+          } catch (_) {}
+        }
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${repo}.zip`;
+        a.click();
+        URL.revokeObjectURL(url);
+        setStatus('✅ ZIP berhasil didownload!', 'success');
+        toast('Repository terdownload sebagai ZIP', 'success');
+      } catch (e) {
+        setStatus('❌ Gagal membuat ZIP: ' + e.message, 'error');
+        toast('Gagal', 'error');
+      }
+    }
+
     // ==================== RENAME TAB ====================
     function liveSearchRename() {
       const q = document.getElementById('renameSearchInput').value.toLowerCase();
@@ -970,16 +989,14 @@
       c.innerHTML = h.slice().reverse().map(i => `<div class="history-item"><span>${i.name}</span><span style="opacity:0.5">${new Date(i.time).toLocaleString('id-ID')}</span></div>`).join('');
     }
 
-    // ==================== MANAJEMEN AKUN (REVISI TOTAL) ====================
+    // ==================== MANAJEMEN AKUN ====================
     function getProfiles() { return JSON.parse(localStorage.getItem(SK) || '[]'); }
     function saveProfiles(p) { localStorage.setItem(SK, JSON.stringify(p)); }
     
-    // Simpan profil saat ini ke daftar akun
     function saveCurrentProfileToAccounts() {
       const { username, repo, token } = getCreds();
       if (!username || !repo || !token) return toast('Isi semua field', 'error');
       const profiles = getProfiles();
-      // Cek apakah sudah ada akun dengan token yang sama
       const exists = profiles.findIndex(p => p.token === token);
       if (exists >= 0) {
         profiles[exists] = { name: username, username, repo, token };
@@ -1062,7 +1079,6 @@
       openAccountManager(); toast('Akun dihapus', 'info');
     }
 
-    // Tambah akun via modal
     function showAddAccountForm() {
       document.getElementById('newAccName').value = '';
       document.getElementById('newAccUsername').value = '';
@@ -1132,4 +1148,3 @@
   </script>
 </body>
 </html>
-```
