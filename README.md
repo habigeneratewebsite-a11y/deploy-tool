@@ -163,5 +163,8 @@ Proyek ini bebas digunakan dan dimodifikasi dengan tetap mencantumkan kredit ke 
 **Powered by HABI STUDIO AI — Melampaui Batas Kreativitas**
 
 🌐 **Website online**: [https://habigeneratewebsite-a11y.github.io/deploy-tool/](https://habigeneratewebsite-a11y.github.io/deploy-tool/)  
-💬 **Riwayat pengembangan**: Tool ini dibuat dan disempurnakan melalui chat AI. : https://chat.deepseek.com/a/chat/s/af7943c8-9481-4b7b-9141-026950462aaa
+
+💬 **Riwayat pengembangan**: https://chat.deepseek.com/a/chat/s/af7943c8-9481-4b7b-9141-026950462aaa
+
+Tool ini dibuat dan disempurnakan melalui chat AI.
 📅 **Update terakhir**: Mei 2025
