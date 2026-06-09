@@ -188,7 +188,7 @@
     <!-- Info repository aktif -->
     <div id="activeRepoInfo" style="font-size:0.8rem; margin-bottom:0.5rem; opacity:0.8;"></div>
 
-    <!-- Quick Links (2 website) -->
+    <!-- Quick Links -->
     <div class="quick-links">
       <a href="https://ai-hub--habigenerateweb.replit.app/" target="_blank" title="Convert Chat AI → ZIP Project">
         <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/><path d="M7 9h10v2H7zm0 4h7v2H7z"/></svg>
@@ -218,8 +218,8 @@
       <div class="char-count" id="singleCodeStats">0 karakter | 0 baris</div>
       <div style="display:flex; gap:0.3rem; margin-top:0.3rem;">
         <button onclick="refreshSingleTab()" class="inline-btn">🔄 Refresh</button>
-        <button onclick="clearSingleCode()" class="inline-btn" style="background:var(--danger);">🗑️ Hapus Kode</button>
-        <button onclick="searchInSingleCode()" class="inline-btn">🔍 Cari Kode</button>
+        <button onclick="clearSingleCode()" class="inline-btn" style="background:var(--danger);">🗑️ Hapus</button>
+        <button onclick="openAIRevisi()" class="inline-btn" style="background:linear-gradient(135deg, #ff9800, #f44336); box-shadow:0 2px 8px rgba(255,152,0,0.3);">⚡ Revisi AI</button>
       </div>
       <button class="primary" onclick="deploySingle()">🚀 Upload File</button>
     </div>
@@ -305,7 +305,7 @@
       </div>
     </div>
 
-    <!-- Tab Chat to ZIP (Baru) -->
+    <!-- Tab Chat to ZIP -->
     <div id="tab-chat" class="tab-content">
       <label>💬 Tempel kode dari Chat AI</label>
       <textarea id="chatCode" placeholder="Tempel kode dari chat AI di sini...&#10;Gunakan penanda 📁 di awal setiap file.&#10;Contoh:&#10;📁 frontend/pages/about.js&#10;...kode...&#10;📁 style.css&#10;...kode..." style="min-height:200px;"></textarea>
@@ -325,7 +325,7 @@
   <!-- Panduan Lengkap -->
   <div class="container guide">
     <details><summary>📘 Panduan Lengkap HABI STUDIO CODING .ZIP</summary>
-      <p><b>📄 Single:</b> Cari file/folder di input pencarian, klik hasil untuk memuat kode ke editor, edit jika perlu, lalu klik <b>Upload File</b> untuk menyimpan perubahan. Cocok untuk update cepat file yang sudah ada. Jumlah karakter dan baris kode ditampilkan di bawah editor.</p>
+      <p><b>📄 Single:</b> Cari file/folder di input pencarian, klik hasil untuk memuat kode ke editor, edit jika perlu, lalu klik <b>Upload File</b>. Gunakan fitur <b>⚡ Revisi AI</b> untuk mengganti potongan kode dengan cerdas dan aman.</p>
       <p><b>📦 ZIP:</b> Upload file ZIP berisi proyek, otomatis diekstrak dan diupload ke repositori dengan struktur yang sama. Centang <b>Hapus folder root</b> jika ZIP hanya berisi satu folder utama.</p>
       <p><b>✏️ Buat Baru:</b> Buat file baru langsung dari tool tanpa perlu membuka GitHub. Masukkan path lengkap (contoh: <code>repo/app/page.tsx</code>), tulis kode di kolom konten, lalu klik <b>Simpan</b>. Folder akan otomatis terstruktur. Nama repo bisa ditulis di awal path atau tidak (akan menggunakan repo yang sedang aktif).</p>
       <p><b>📂 Files:</b> Jelajah isi repositori, cari file/folder, download, hapus file, hapus folder, hapus semua file, atau hapus repository. Gunakan tombol <b>Muat Struktur</b> untuk memuat daftar file. <b>Baru!</b> Klik <b>📥 Download Repository ZIP</b> untuk mengunduh seluruh isi repositori sebagai file ZIP dengan progress bar. Nama file dipertahankan asli (termasuk yang diawali titik seperti .gitignore).</p>
@@ -340,7 +340,7 @@
     </details>
   </div>
 
-  <!-- Footer tanpa bintik putih -->
+  <!-- Footer -->
   <footer>
     Powered by <strong>HABI STUDIO AI</strong> — Melampaui Batas Kreativitas
   </footer>
@@ -356,16 +356,25 @@
     </div>
   </div>
 
-  <!-- Modal Pencarian Kode -->
-  <div id="codeSearchModal" class="modal-overlay">
-    <div class="modal" style="text-align:left;">
-      <h3>🔍 Cari Kode</h3>
-      <input type="text" id="codeSearchInput" placeholder="Ketik kata kunci...">
-      <div style="display:flex; gap:0.3rem; margin-top:0.4rem;">
-        <button onclick="doSearchInCode()" class="btn-confirm" style="flex:1;">Cari</button>
-        <button onclick="closeCodeSearch()" class="btn-cancel" style="flex:1;">Tutup</button>
+  <!-- Modal Revisi AI (Pengganti Cari Kode) -->
+  <div id="aiRevisiModal" class="modal-overlay">
+    <div class="modal" style="text-align:left; max-width:600px; width:95%;">
+      <h3>⚡ Auto Replace (Revisi AI)</h3>
+      <p style="font-size:0.75rem; margin-bottom:0.8rem; opacity:0.9; line-height:1.4;">
+        <b>Cara Aman:</b> 1) Blok sebagian kode di editor utama lalu copy & paste ke "Kode Lama". 2) Paste kode balasan AI ke "Kode Baru". 3) Klik Ganti Kode.
+      </p>
+      <label>Kode Lama (Yang mau dihapus)</label>
+      <textarea id="aiOldCode" placeholder="Paste persis potongan kode asli dari editor di sini..." style="min-height:90px; margin-bottom:0.5rem;"></textarea>
+      <label>Kode Baru (Dari Chat AI)</label>
+      <textarea id="aiNewCode" placeholder="Paste kode revisi dari AI di sini..." style="min-height:120px; margin-bottom:0.5rem;"></textarea>
+      
+      <div id="aiRevisiStatus" style="font-size:0.8rem; margin-bottom:0.5rem; font-weight:600; padding:0.3rem;"></div>
+      
+      <div style="display:flex; gap:0.4rem; margin-top:0.5rem;">
+        <button onclick="executeAIRevisi()" class="btn-confirm" style="flex:2; background:linear-gradient(135deg, #ff9800, #f44336); color:white; box-shadow:0 4px 12px rgba(255,152,0,0.3);">⚡ Ganti Kode</button>
+        <button onclick="undoAIRevisi()" id="btnUndoRevisi" class="btn-cancel" style="flex:1; display:none; background:#4caf50; color:white;">⏪ Undo</button>
+        <button onclick="closeAIRevisi()" class="btn-cancel" style="flex:1;">Tutup</button>
       </div>
-      <div id="codeSearchResult" style="margin-top:0.4rem; font-size:0.8rem;"></div>
     </div>
   </div>
 
@@ -426,6 +435,7 @@
     // ==================== STATE ====================
     const SK = 'hs_profiles', UK = 'hs_user', TK = 'hs_theme', HK = 'hs_history', AK = 'hs_antilag';
     let repoTree = [], selDelFolder = '', currentSearchTarget = null;
+    let singleCodeBackup = ''; // Untuk fitur Undo Revisi AI
 
     // ==================== INIT ====================
     window.onload = () => {
@@ -458,7 +468,7 @@
       if (p) p.style.display = on ? 'none' : 'block';
     }
 
-    // ==================== LOGO GLOW (20 detik setiap 1 menit) ====================
+    // ==================== LOGO GLOW ====================
     function startLogoGlow() {
       const logo = document.getElementById('logoImg');
       if (!logo || logo.style.display === 'none') return;
@@ -466,10 +476,8 @@
         logo.classList.add('glow-logo');
         setTimeout(() => logo.classList.remove('glow-logo'), 20000);
       };
-      triggerGlow(); // pertama kali setelah halaman dimuat
-      setInterval(() => {
-        triggerGlow();
-      }, 60000); // setiap 1 menit
+      triggerGlow();
+      setInterval(() => triggerGlow(), 60000);
     }
 
     // ==================== CREDENTIALS ====================
@@ -502,12 +510,8 @@
       if (repo) div.textContent = `📁 Saat ini di repository: ${repo}`;
       else div.textContent = '';
     }
-    function showTokenHelp() {
-      document.getElementById('tokenHelpModal').style.display = 'flex';
-    }
-    function closeTokenHelp() {
-      document.getElementById('tokenHelpModal').style.display = 'none';
-    }
+    function showTokenHelp() { document.getElementById('tokenHelpModal').style.display = 'flex'; }
+    function closeTokenHelp() { document.getElementById('tokenHelpModal').style.display = 'none'; }
 
     // ==================== TOAST & MODAL ====================
     function toast(msg, type) {
@@ -592,7 +596,7 @@
         repoTree = await fetchTree(username, repo, token);
         setStatus('✅ Struktur repo berhasil dimuat!', 'success');
         toast('Struktur dimuat', 'success');
-        renderFileBrowser(); populateSelects();
+        renderFileBrowser();
         updateActiveRepoInfo();
       } catch (e) {
         setStatus('❌ Gagal memuat struktur: ' + e.message, 'error');
@@ -640,8 +644,6 @@
       c.innerHTML = html;
     }
 
-    function populateSelects() {}
-
     // ==================== CODE STATS HELPER ====================
     function updateCodeStats(textareaId, statsId) {
       const textarea = document.getElementById(textareaId);
@@ -684,12 +686,7 @@
     }
     function refreshSingleTab() { document.getElementById('singleSearchInput').value = ''; document.getElementById('singleCode').value = ''; updateCodeStats('singleCode','singleCodeStats'); toast('Tab direfresh', 'info'); }
     function clearSingleCode() { document.getElementById('singleCode').value = ''; updateCodeStats('singleCode','singleCodeStats'); toast('Kode dihapus', 'info'); }
-    function searchInSingleCode() {
-      currentSearchTarget = 'singleCode';
-      document.getElementById('codeSearchModal').style.display = 'flex';
-      document.getElementById('codeSearchInput').value = '';
-      document.getElementById('codeSearchResult').textContent = '';
-    }
+    
     async function deploySingle() {
       const path = document.getElementById('singleSearchInput').value.trim();
       const code = document.getElementById('singleCode').value;
@@ -705,6 +702,85 @@
           loadRepoTree();
         } catch (e) { setStatus('❌ Gagal: ' + e.message, 'error'); toast('Gagal', 'error'); }
       });
+    }
+
+    // ==================== ⚡ REVISI AI (PENGGANTI CARI KODE) ====================
+    function openAIRevisi() {
+      document.getElementById('aiOldCode').value = '';
+      document.getElementById('aiNewCode').value = '';
+      document.getElementById('aiRevisiStatus').textContent = '';
+      document.getElementById('aiRevisiStatus').style.background = 'transparent';
+      document.getElementById('btnUndoRevisi').style.display = 'none';
+      document.getElementById('aiRevisiModal').style.display = 'flex';
+    }
+
+    function closeAIRevisi() {
+      document.getElementById('aiRevisiModal').style.display = 'none';
+    }
+
+    function executeAIRevisi() {
+      const oldCode = document.getElementById('aiOldCode').value;
+      const newCode = document.getElementById('aiNewCode').value;
+      const editor = document.getElementById('singleCode');
+      const statusBox = document.getElementById('aiRevisiStatus');
+
+      if (!oldCode.trim()) {
+        statusBox.innerHTML = '❌ Masukkan potongan kode lama yang ingin diganti!';
+        statusBox.style.color = 'var(--danger)';
+        statusBox.style.background = 'rgba(229,57,53,0.1)';
+        return;
+      }
+      if (!editor.value.trim()) {
+        statusBox.innerHTML = '❌ Editor utama masih kosong! Muat file terlebih dahulu.';
+        statusBox.style.color = 'var(--danger)';
+        return;
+      }
+
+      // Normalisasi line endings agar lebih kebal terhadap error copy-paste dari browser/OS berbeda
+      // Mengubah semua jenis enter (\r\n atau \r) menjadi standar \n
+      const normalize = (str) => str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      
+      const editorText = normalize(editor.value);
+      const searchTarget = normalize(oldCode);
+
+      if (editorText.includes(searchTarget)) {
+        // Simpan backup sebelum mengubah untuk fitur Undo
+        singleCodeBackup = editor.value;
+
+        // Lakukan replace (hanya mengganti kemunculan pertama persis seperti target)
+        const newText = editorText.replace(searchTarget, normalize(newCode));
+        editor.value = newText;
+        updateCodeStats('singleCode', 'singleCodeStats');
+
+        statusBox.innerHTML = '✅ Berhasil! Kode lama telah ditimpa dengan mulus.';
+        statusBox.style.color = '#4caf50';
+        statusBox.style.background = 'rgba(76,175,80,0.1)';
+
+        // Tampilkan tombol undo
+        document.getElementById('btnUndoRevisi').style.display = 'inline-block';
+        toast('Revisi AI diterapkan!', 'success');
+      } else {
+        // Jika tidak ditemukan secara presisi
+        statusBox.innerHTML = '❌ Kode lama tidak ditemukan! Pastikan Anda memblok dan meng-copy <b>langsung dari editor Single</b>, jangan dari chat AI (agar spasinya persis sama).';
+        statusBox.style.color = 'var(--danger)';
+        statusBox.style.background = 'rgba(229,57,53,0.1)';
+      }
+    }
+
+    function undoAIRevisi() {
+      if (singleCodeBackup) {
+        document.getElementById('singleCode').value = singleCodeBackup;
+        updateCodeStats('singleCode', 'singleCodeStats');
+        singleCodeBackup = ''; // Reset backup
+        
+        const statusBox = document.getElementById('aiRevisiStatus');
+        statusBox.innerHTML = '⏪ Dikembalikan ke versi sebelum revisi.';
+        statusBox.style.color = 'var(--accent)';
+        statusBox.style.background = 'rgba(108,63,212,0.1)';
+        
+        document.getElementById('btnUndoRevisi').style.display = 'none';
+        toast('Revisi dibatalkan', 'info');
+      }
     }
 
     // ==================== ZIP TAB ====================
@@ -857,7 +933,6 @@
       });
     }
 
-    // ==================== DOWNLOAD REPOSITORY ZIP (DENGAN PROGRESS & MODAL) ====================
     async function downloadRepoZip() {
       const { username, repo, token } = getCreds();
       if (!repoTree.length) return toast('Muat struktur repo terlebih dahulu', 'error');
@@ -873,7 +948,6 @@
           try {
             const d = await ghGet(username, repo, f.path, token);
             if (d.content) {
-              // Pastikan nama file diawetkan, termasuk titik di depan
               zip.file(f.path, atob(d.content), { binary: false });
             }
           } catch (_) {}
@@ -888,7 +962,6 @@
         a.download = `${repo}.zip`;
         a.click();
         URL.revokeObjectURL(url);
-        // Notifikasi pop up modern
         document.getElementById('confirmMessage').innerHTML = '✅ Repository berhasil didownload sebagai ZIP!';
         document.getElementById('confirmOk').onclick = () => { document.getElementById('confirmModal').style.display = 'none'; };
         document.getElementById('confirmCancel').style.display = 'none';
@@ -899,10 +972,7 @@
         document.getElementById('confirmCancel').style.display = 'none';
         document.getElementById('confirmModal').style.display = 'flex';
       }
-      setTimeout(() => {
-        bar.style.display = 'none';
-        statusDiv.textContent = '';
-      }, 3000);
+      setTimeout(() => { bar.style.display = 'none'; statusDiv.textContent = ''; }, 3000);
     }
 
     // ==================== RENAME TAB ====================
@@ -1163,19 +1233,16 @@
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         if (line.trim().startsWith('📁')) {
-          // Simpan file sebelumnya
           if (currentFile) {
             files.push({ path: currentFile, content: currentContent.join('\n') });
           }
-          // Ambil path setelah penanda
-          const path = line.trim().substring(1).trim(); // hilangkan simbol 📁 dan spasi
+          const path = line.trim().substring(1).trim();
           currentFile = path || 'untitled.txt';
           currentContent = [];
         } else if (currentFile) {
           currentContent.push(line);
         }
       }
-      // File terakhir
       if (currentFile) {
         files.push({ path: currentFile, content: currentContent.join('\n') });
       }
@@ -1233,32 +1300,9 @@
       }
     }
 
-    // Tambahkan event listener untuk textarea chat
     document.getElementById('chatCode').addEventListener('input', function() {
       updateCodeStats('chatCode','chatCodeStats');
     });
-
-    // ==================== PENCARIAN KODE ====================
-    function closeCodeSearch() {
-      document.getElementById('codeSearchModal').style.display = 'none';
-    }
-    function doSearchInCode() {
-      const q = document.getElementById('codeSearchInput').value;
-      if (!q) return toast('Masukkan kata kunci', 'error');
-      const targetEl = currentSearchTarget === 'singleCode' ? document.getElementById('singleCode') : document.getElementById('editorCode');
-      if (!targetEl) return;
-      const text = targetEl.value;
-      const idx = text.indexOf(q);
-      if (idx === -1) {
-        document.getElementById('codeSearchResult').textContent = '❌ Tidak ditemukan';
-        return;
-      }
-      targetEl.focus();
-      targetEl.setSelectionRange(idx, idx + q.length);
-      const line = text.substr(0, idx).split('\n').length;
-      targetEl.scrollTop = (line - 5) * 20;
-      document.getElementById('codeSearchResult').textContent = `✅ Ditemukan di baris ${line}`;
-    }
 
     // ==================== BACKGROUND ====================
     function genParticles() {
