@@ -89,7 +89,7 @@
     }
     .modal {
       background:var(--card-bg); padding:1.5rem; border-radius:16px;
-      max-width:420px; width:92%; border:1px solid var(--border);
+      max-width:450px; width:92%; border:1px solid var(--border);
       box-shadow:0 16px 48px rgba(0,0,0,0.3);
     }
     .modal h3 { color:var(--accent); margin-bottom:0.8rem; font-size:1.1rem; }
@@ -366,18 +366,22 @@
     </div>
   </div>
 
-  <!-- Modal Revisi AI -->
+  <!-- Modal Revisi AI (Diperbarui dengan Generator Prompt Otomatis) -->
   <div id="aiRevisiModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:600px; width:95%; max-height:95vh; overflow-y:auto;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
-      <p style="font-size:0.75rem; margin-bottom:0.4rem; opacity:0.9; line-height:1.4;">
-        <b>Cara Cepat:</b> Klik tombol di bawah ini untuk menyalin super prompt, agar balasan AI berformat Code Block rapi dan terpisah dari tulisannya.
-      </p>
-      <button onclick="copyAIPrompt()" class="inline-btn" style="background:linear-gradient(135deg, #2196f3, #00bcd4); width:100%; margin-bottom:0.8rem; font-size:0.85rem; padding:0.6rem;">📋 Salin Prompt Rahasia untuk AI</button>
+      
+      <!-- GENERATOR PROMPT DINAMIS -->
+      <div style="background:var(--input-bg); padding:0.8rem; border-radius:10px; border:1px solid var(--accent); margin-bottom:1rem;">
+        <label style="margin-top:0; color:var(--text); font-size:0.8rem; font-weight:normal;">1️⃣ Tuliskan keluhan atau hal yang ingin direvisi (Opsional):</label>
+        <input type="text" id="userRevisiInstruction" placeholder="Contoh: Tolong ubah warna tombol merah menjadi biru..." style="margin-top:0.3rem; margin-bottom:0.5rem;">
+        <button onclick="copyAIPrompt()" class="inline-btn" style="background:linear-gradient(135deg, #2196f3, #00bcd4); width:100%; font-size:0.85rem; padding:0.6rem;">📋 Buat & Salin Prompt Master ke AI</button>
+        <p style="font-size:0.7rem; margin-top:0.4rem; opacity:0.8;">Tombol ini akan meracik pesan Anda dengan instruksi tegas agar AI tidak menulis ulang seluruh file dan tidak menggunakan dummy code.</p>
+      </div>
       
       <!-- Area Kode Lama -->
-      <label>Kode Lama (Yang mau dihapus)</label>
-      <textarea id="aiOldCode" placeholder="Paste persis potongan kode asli dari editor di sini..." style="min-height:90px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiOldCode','aiOldStats')"></textarea>
+      <label>2️⃣ Kode Lama (Yang mau dihapus)</label>
+      <textarea id="aiOldCode" placeholder="Paste potongan kode asli dari editor utama di sini..." style="min-height:90px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiOldCode','aiOldStats')"></textarea>
       <div class="stats-row">
         <div class="char-count" id="aiOldStats" style="margin-top:0;">0 karakter | 0 baris</div>
         <button onclick="clearArea('aiOldCode','aiOldStats')" class="inline-btn" style="padding:0.2rem 0.5rem; font-size:0.7rem; background:rgba(229,57,53,0.8);">🗑️ Hapus Teks</button>
@@ -385,7 +389,7 @@
       <button onclick="checkOldCodeExists()" class="inline-btn" style="background:rgba(128,128,128,0.2); color:var(--text); width:100%; margin-bottom:0.5rem; font-size:0.8rem; border:1px solid var(--border);">🔍 Cek Keberadaan Kode Lama</button>
       
       <!-- Area Kode Baru -->
-      <label>Kode Baru (Dari Chat AI)</label>
+      <label>3️⃣ Kode Baru (Dari balasan Chat AI)</label>
       <textarea id="aiNewCode" placeholder="Paste kode revisi utuh dari AI di sini..." style="min-height:120px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiNewCode','aiNewStats')"></textarea>
       <div class="stats-row">
         <div class="char-count" id="aiNewStats" style="margin-top:0;">0 karakter | 0 baris</div>
@@ -744,20 +748,34 @@
       });
     }
 
-    // ==================== ⚡ REVISI AI (SUPER PROMPT & UNDO DI LUAR) ====================
+    // ==================== ⚡ REVISI AI (GENERATOR PROMPT OTOMATIS) ====================
     function copyAIPrompt() {
-      // Prompt diubah agar label KODE LAMA ada di luar Code Block.
-      const promptText = "Tolong perbaiki kode saya. SYARAT WAJIB (Jangan dilanggar): 1) DILARANG KERAS menggunakan data dummy, simulasi, placeholder, atau menyingkat kode. Berikan kode yang 100% utuh, Real Production Ready, dan berfungsi penuh. 2) Pastikan KODE BARU benar-benar berisi perubahan dari kode lama (jangan memberikan kode yang sama persis). 3) Gunakan Markdown Code Block (```) HANYA untuk isi kodenya saja, JANGAN masukkan tulisan label ke dalam kotak kode! \n\nBerikan format balasan PERSIS seperti ini:\n\nKODE LAMA:\n```\n(paste KODE LAMA persis 100% dengan spasi aslinya di sini)\n```\n\nKODE BARU:\n```\n(paste KODE BARU yang sudah direvisi utuh di sini)\n```";
+      const instruction = document.getElementById('userRevisiInstruction').value.trim();
       
-      navigator.clipboard.writeText(promptText).then(() => {
-        toast('Super Prompt Disalin! Paste ke AI', 'success');
+      let basePrompt = "Bertindaklah sebagai Senior Programmer. Saya punya kode dan saya butuh Anda merevisinya.\n\n";
+
+      if(instruction) {
+         basePrompt += `INSTRUKSI REVISI SAYA:\n"${instruction}"\n\n`;
+      } else {
+         basePrompt += `Pahami kode yang akan saya kirimkan setelah ini, dan tunggu instruksi revisi dari saya.\n\n`;
+      }
+
+      basePrompt += `SYARAT WAJIB SAAT MEMBALAS (JANGAN DILANGGAR):\n`;
+      basePrompt += `1. HANYA berikan blok kode yang direvisi saja! DILARANG KERAS menulis ulang seluruh isi file!\n`;
+      basePrompt += `2. DILARANG menggunakan data dummy, simulasi, atau menyingkat kode (...).\n`;
+      basePrompt += `3. Gunakan Markdown Code Block (\`\`\`) HANYA untuk kodenya, JANGAN masukkan tulisan label (seperti 'KODE LAMA:' atau 'KODE BARU:') ke dalam kotak kode!\n\n`;
+      basePrompt += `Berikan format balasan PERSIS seperti ini (Tulisan KODE diletakkan di luar block code):\n\n`;
+      basePrompt += `KODE LAMA:\n\`\`\`\n(paste potongan KODE LAMA persis 100% dengan spasi aslinya di sini)\n\`\`\`\n\n`;
+      basePrompt += `KODE BARU:\n\`\`\`\n(paste potongan KODE BARU yang sudah direvisi utuh di sini)\n\`\`\``;
+      
+      navigator.clipboard.writeText(basePrompt).then(() => {
+        toast('Prompt Master Disalin! Paste ke AI', 'success');
       }).catch(err => {
         toast('Gagal menyalin prompt', 'error');
       });
     }
 
     function openAIRevisi() {
-      // Buka modal tanpa mereset isi, barangkali user mau edit
       document.getElementById('aiRevisiStatus').textContent = '';
       document.getElementById('aiRevisiStatus').style.background = 'transparent';
       document.getElementById('aiRevisiModal').style.display = 'flex';
@@ -845,7 +863,7 @@
       }
     }
 
-    // Fungsi Undo dipindah ke luar modal agar bisa klik upload dulu
+    // Fungsi Undo di Editor Utama
     function undoMainRevisi() {
       if (globalUndoCode) {
         document.getElementById('singleCode').value = globalUndoCode;
