@@ -305,15 +305,15 @@
       </div>
     </div>
 
-    <!-- Tab Chat to ZIP -->
+    <!-- Tab Chat to ZIP (Disempurnakan) -->
     <div id="tab-chat" class="tab-content">
       <label>💬 Tempel kode dari Chat AI</label>
-      <textarea id="chatCode" placeholder="Tempel kode dari chat AI di sini...&#10;Gunakan penanda 📁 di awal setiap file.&#10;Contoh:&#10;📁 frontend/pages/about.js&#10;...kode...&#10;📁 style.css&#10;...kode..." style="min-height:200px;"></textarea>
+      <p style="font-size:0.75rem; margin-bottom:0.4rem; opacity:0.9; line-height:1.4;">
+        Gunakan tombol di bawah untuk menyalin perintah khusus, lalu kirim ke AI agar balasan AI otomatis berformat siap ekstrak (Full Project tanpa dummy).
+      </p>
+      <button onclick="copyChatToZipPrompt()" class="inline-btn" style="background:linear-gradient(135deg, #2196f3, #00bcd4); width:100%; margin-bottom:0.8rem; font-size:0.85rem; padding:0.6rem;">📋 Salin Prompt Chat to ZIP</button>
+      <textarea id="chatCode" placeholder="Tempel semua balasan dari chat AI di sini...&#10;Pastikan nama file diawali ikon 📁" style="min-height:200px;"></textarea>
       <div class="char-count" id="chatCodeStats">0 karakter | 0 baris</div>
-      <div style="display:flex; gap:0.3rem; margin-top:0.3rem;">
-        <input type="text" id="chatLink" placeholder="Atau masukkan link chat AI...">
-        <button onclick="fetchChatFromLink()" class="inline-btn">🌐 Ambil</button>
-      </div>
       <button class="primary" onclick="processChatToZip()">📦 Proses & Download ZIP</button>
       <div class="progress-bar" id="chatProgress" style="display:none;"><div class="fill"></div></div>
       <div id="chatStatus" style="margin-top:0.4rem; font-size:0.8rem;"></div>
@@ -332,7 +332,7 @@
       <p><b>✏️ Rename:</b> Cari file atau folder, pilih dari hasil, nama baru otomatis terisi, edit jika perlu, lalu klik <b>Rename</b> untuk memindahkan/rename.</p>
       <p><b>➕ Buat Repo:</b> Buat repositori GitHub baru langsung dari tool. Isi nama, pilih visibilitas, dan tambahkan README jika perlu.</p>
       <p><b>📋 Daftar:</b> Lihat semua repositori milik akun GitHub-mu. Centang repo yang ingin dihapus (repo <b>deploy-tool</b> dilindungi dan tidak bisa dicentang). Klik <b>Hapus Terpilih</b> untuk menghapus. Riwayat penghapusan tercatat di bawah.</p>
-      <p><b>💬 Chat to ZIP:</b> Tempelkan teks dari chat AI yang menggunakan penanda 📁 untuk setiap file. Tool akan memproses dan membuat file ZIP yang siap diunduh. Bisa juga memasukkan link chat AI untuk diambil teksnya. Sangat berguna untuk mengubah percakapan AI langsung menjadi struktur proyek.</p>
+      <p><b>💬 Chat to ZIP:</b> Tempelkan teks dari chat AI yang menggunakan penanda 📁 untuk setiap file. Tool akan memproses dan membuat file ZIP yang siap diunduh. Sangat berguna untuk mengubah percakapan AI langsung menjadi struktur proyek.</p>
       <p><b>👥 Akun:</b> Kelola banyak akun GitHub. Setiap akun menampilkan nama profil, username, repo, dan token (sebagian). Gunakan tombol ✅ untuk memilih akun, ✏️ untuk mengedit, dan 🗑️ untuk menghapus. Klik <b>➕ Tambah Akun</b> untuk menambah akun baru (form modern, bukan prompt). Saat menambah atau mengedit akun, otomatis akan beralih ke akun tersebut. Detail akun bisa dicopy dengan klik 📋. Akun yang sedang aktif ditandai dengan badge ✅ di daftar. Kredensial tetap tersimpan meskipun browser direfresh.</p>
       <p><b>🔑 Token:</b> Klik tombol 🔑 untuk panduan lengkap cara mendapatkan token GitHub dengan izin <code>repo</code> dan <code>delete_repo</code>.</p>
       <p><b>🎨 Tema:</b> Klik 🌓 di pojok kanan atas untuk beralih antara tema gelap dan terang.</p>
@@ -356,19 +356,21 @@
     </div>
   </div>
 
-  <!-- Modal Revisi AI -->
+  <!-- Modal Revisi AI (Diperbarui dengan Fitur Cek Kode) -->
   <div id="aiRevisiModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:600px; width:95%;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
       <p style="font-size:0.75rem; margin-bottom:0.4rem; opacity:0.9; line-height:1.4;">
-        <b>Cara Cepat:</b> Klik tombol di bawah ini untuk menyalin prompt, lalu kirim ke AI (ChatGPT/Gemini) agar AI membalas dengan format yang pas untuk ditaruh di sini.
+        <b>Cara Cepat:</b> Klik tombol di bawah ini untuk menyalin super prompt, lalu kirim ke AI (ChatGPT/Gemini) agar balasan AI tidak pakai data dummy dan berformat Code Block.
       </p>
       <button onclick="copyAIPrompt()" class="inline-btn" style="background:linear-gradient(135deg, #2196f3, #00bcd4); width:100%; margin-bottom:0.8rem; font-size:0.85rem; padding:0.6rem;">📋 Salin Prompt Rahasia untuk AI</button>
       
       <label>Kode Lama (Yang mau dihapus)</label>
-      <textarea id="aiOldCode" placeholder="Paste persis potongan kode asli yang dikirim AI di sini..." style="min-height:90px; margin-bottom:0.5rem;"></textarea>
+      <textarea id="aiOldCode" placeholder="Paste persis potongan kode asli dari editor di sini..." style="min-height:90px; margin-bottom:0.2rem;"></textarea>
+      <button onclick="checkOldCodeExists()" class="inline-btn" style="background:rgba(128,128,128,0.2); color:var(--text); width:100%; margin-bottom:0.5rem; font-size:0.8rem; border:1px solid var(--border);">🔍 Cek Keberadaan Kode Lama</button>
+      
       <label>Kode Baru (Dari Chat AI)</label>
-      <textarea id="aiNewCode" placeholder="Paste kode revisi baru dari AI di sini..." style="min-height:120px; margin-bottom:0.5rem;"></textarea>
+      <textarea id="aiNewCode" placeholder="Paste kode revisi utuh dari AI di sini..." style="min-height:120px; margin-bottom:0.5rem;"></textarea>
       
       <div id="aiRevisiStatus" style="font-size:0.8rem; margin-bottom:0.5rem; font-weight:600; padding:0.3rem;"></div>
       
@@ -437,7 +439,7 @@
     // ==================== STATE ====================
     const SK = 'hs_profiles', UK = 'hs_user', TK = 'hs_theme', HK = 'hs_history', AK = 'hs_antilag';
     let repoTree = [], selDelFolder = '', currentSearchTarget = null;
-    let singleCodeBackup = ''; // Untuk fitur Undo Revisi AI
+    let singleCodeBackup = ''; // Backup untuk fitur Undo hanya mundur 1 langkah
 
     // ==================== INIT ====================
     window.onload = () => {
@@ -706,11 +708,11 @@
       });
     }
 
-    // ==================== ⚡ REVISI AI (AUTO REPLACE) ====================
+    // ==================== ⚡ REVISI AI (SUPER PROMPT + CEK KODE) ====================
     function copyAIPrompt() {
-      const promptText = "Tolong perbaiki/revisi kode saya. Agar saya mudah menyalinnya ke sistem saya, tolong berikan format balasan persis seperti ini (gunakan block code terpisah):\n\nKODE LAMA:\n(masukkan potongan persis kode asli yang harus saya hapus)\n\nKODE BARU:\n(masukkan potongan kode revisi yang baru)";
+      const promptText = "Tolong perbaiki kode saya. SYARAT WAJIB (Jangan dilanggar): 1) DILARANG KERAS menggunakan data dummy, simulasi, placeholder, atau menyingkat kode. Berikan kode yang 100% utuh, Real Production Ready, dan berfungsi penuh. 2) WAJIB membungkus kode balasan menggunakan Markdown Code Block (```) agar muncul tombol Copy. Berikan format balasan persis seperti ini:\n\nKODE LAMA:\n(masukkan potongan persis kode asli yang harus saya hapus)\n\nKODE BARU:\n(masukkan potongan kode revisi yang baru secara utuh tanpa dipotong)";
       navigator.clipboard.writeText(promptText).then(() => {
-        toast('Prompt Rahasia Disalin! Paste ke AI', 'success');
+        toast('Super Prompt Disalin! Paste ke AI', 'success');
       }).catch(err => {
         toast('Gagal menyalin prompt', 'error');
       });
@@ -729,6 +731,40 @@
       document.getElementById('aiRevisiModal').style.display = 'none';
     }
 
+    // Fitur Cek Keberadaan Kode
+    function checkOldCodeExists() {
+      const oldCode = document.getElementById('aiOldCode').value;
+      const editor = document.getElementById('singleCode');
+      const statusBox = document.getElementById('aiRevisiStatus');
+
+      if (!oldCode.trim()) {
+        statusBox.innerHTML = '❌ Masukkan potongan kode lama terlebih dahulu!';
+        statusBox.style.color = 'var(--danger)';
+        statusBox.style.background = 'rgba(229,57,53,0.1)';
+        return;
+      }
+      if (!editor.value.trim()) {
+        statusBox.innerHTML = '❌ Editor utama masih kosong! Muat file terlebih dahulu.';
+        statusBox.style.color = 'var(--danger)';
+        return;
+      }
+
+      // Normalisasi enter/spasi agar tidak gagal karena beda OS
+      const normalize = (str) => str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      const editorText = normalize(editor.value);
+      const searchTarget = normalize(oldCode);
+
+      if (editorText.includes(searchTarget)) {
+        statusBox.innerHTML = '✅ Kode ditemukan! Aman, silakan tempel Kode Baru dan klik Ganti Kode.';
+        statusBox.style.color = '#4caf50';
+        statusBox.style.background = 'rgba(76,175,80,0.1)';
+      } else {
+        statusBox.innerHTML = '❌ Kode tidak ditemukan! Periksa spasi atau pastikan Anda menyalin persis dari editor.';
+        statusBox.style.color = 'var(--danger)';
+        statusBox.style.background = 'rgba(229,57,53,0.1)';
+      }
+    }
+
     function executeAIRevisi() {
       const oldCode = document.getElementById('aiOldCode').value;
       const newCode = document.getElementById('aiNewCode').value;
@@ -741,19 +777,13 @@
         statusBox.style.background = 'rgba(229,57,53,0.1)';
         return;
       }
-      if (!editor.value.trim()) {
-        statusBox.innerHTML = '❌ Editor utama masih kosong! Muat file terlebih dahulu.';
-        statusBox.style.color = 'var(--danger)';
-        return;
-      }
 
-      // Normalisasi line endings
       const normalize = (str) => str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-      
       const editorText = normalize(editor.value);
       const searchTarget = normalize(oldCode);
 
       if (editorText.includes(searchTarget)) {
+        // Simpan 1 kondisi terakhir untuk fitur Undo
         singleCodeBackup = editor.value;
 
         const newText = editorText.replace(searchTarget, normalize(newCode));
@@ -767,7 +797,7 @@
         document.getElementById('btnUndoRevisi').style.display = 'inline-block';
         toast('Revisi AI diterapkan!', 'success');
       } else {
-        statusBox.innerHTML = '❌ Kode lama tidak ditemukan! Pastikan AI memberikan potongan KODE LAMA persis seperti yang ada di editor.';
+        statusBox.innerHTML = '❌ GAGAL: Kode lama tidak ditemukan secara persis di dalam file. Klik tombol "Cek Keberadaan Kode Lama" untuk memastikan.';
         statusBox.style.color = 'var(--danger)';
         statusBox.style.background = 'rgba(229,57,53,0.1)';
       }
@@ -775,17 +805,18 @@
 
     function undoAIRevisi() {
       if (singleCodeBackup) {
+        // Mengembalikan hanya ke 1 status sebelum tindakan replace terakhir
         document.getElementById('singleCode').value = singleCodeBackup;
         updateCodeStats('singleCode', 'singleCodeStats');
-        singleCodeBackup = '';
+        singleCodeBackup = ''; // Reset memori undo
         
         const statusBox = document.getElementById('aiRevisiStatus');
-        statusBox.innerHTML = '⏪ Dikembalikan ke versi sebelum revisi.';
+        statusBox.innerHTML = '⏪ Dikembalikan ke kondisi tepat 1 langkah sebelum revisi terakhir.';
         statusBox.style.color = 'var(--accent)';
         statusBox.style.background = 'rgba(108,63,212,0.1)';
         
         document.getElementById('btnUndoRevisi').style.display = 'none';
-        toast('Revisi dibatalkan', 'info');
+        toast('Revisi terakhir dibatalkan', 'info');
       }
     }
 
@@ -1231,6 +1262,15 @@
     }
 
     // ==================== CHAT TO ZIP ====================
+    function copyChatToZipPrompt() {
+      const promptText = "Tolong buatkan kode proyek lengkap. SYARAT WAJIB (Jangan dilanggar): 1) DILARANG KERAS menggunakan data dummy, simulasi, placeholder, atau menyingkat kode. Berikan kode 100% utuh, Real Production Ready, dan berfungsi penuh. 2) Di baris pertama tepat sebelum setiap blok kode file, WAJIB tuliskan nama file lengkap dengan foldernya dan diawali ikon 📁 (Contoh: 📁 public/index.html). 3) Bungkus isi tiap kode dalam Markdown Code Block (```).";
+      navigator.clipboard.writeText(promptText).then(() => {
+        toast('Prompt Chat to ZIP Disalin!', 'success');
+      }).catch(err => {
+        toast('Gagal menyalin prompt', 'error');
+      });
+    }
+
     function parseChatCode(text) {
       const files = [];
       const lines = text.split('\n');
@@ -1246,7 +1286,10 @@
           currentFile = path || 'untitled.txt';
           currentContent = [];
         } else if (currentFile) {
-          currentContent.push(line);
+          // Hanya tambahkan baris yang bukan penanda markdown ```
+          if (!line.trim().startsWith('```')) {
+            currentContent.push(line);
+          }
         }
       }
       if (currentFile) {
@@ -1259,7 +1302,7 @@
       const code = document.getElementById('chatCode').value;
       if (!code.trim()) return toast('Masukkan kode dari chat AI', 'error');
       const files = parseChatCode(code);
-      if (files.length === 0) return toast('Tidak ada file ditemukan. Gunakan penanda 📁 di awal setiap file.', 'error');
+      if (files.length === 0) return toast('Tidak ada file ditemukan. Pastikan AI memakai ikon 📁', 'error');
       const bar = document.getElementById('chatProgress'), fill = bar.querySelector('.fill');
       const status = document.getElementById('chatStatus');
       bar.style.display = 'block'; fill.style.width = '0%';
@@ -1276,7 +1319,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'chat-code.zip';
+        a.download = 'ai-project.zip';
         a.click();
         URL.revokeObjectURL(url);
         status.textContent = `✅ ${files.length} file berhasil dibungkus ZIP!`;
@@ -1289,21 +1332,6 @@
         bar.style.display = 'none';
         status.textContent = '';
       }, 5000);
-    }
-
-    async function fetchChatFromLink() {
-      const link = document.getElementById('chatLink').value.trim();
-      if (!link) return toast('Masukkan link', 'error');
-      try {
-        const res = await fetch(link);
-        if (!res.ok) throw new Error('Gagal fetch');
-        const text = await res.text();
-        document.getElementById('chatCode').value = text;
-        updateCodeStats('chatCode','chatCodeStats');
-        toast('Teks berhasil diambil', 'success');
-      } catch (e) {
-        toast('Gagal mengambil link', 'error');
-      }
     }
 
     document.getElementById('chatCode').addEventListener('input', function() {
