@@ -160,7 +160,7 @@
   <div class="theme-toggle" onclick="toggleTheme()" title="Ganti tema">🌓</div>
 
   <div class="container">
-    <!-- Logo (hanya muncul jika logo.png ada) -->
+    <!-- Logo -->
     <div class="logo-area">
       <img src="logo.png" alt="Logo HABI STUDIO CODING" class="logo-img" id="logoImg" onload="this.style.display='block'; startLogoGlow();" onerror="this.style.display='none'">
     </div>
@@ -356,17 +356,19 @@
     </div>
   </div>
 
-  <!-- Modal Revisi AI (Pengganti Cari Kode) -->
+  <!-- Modal Revisi AI -->
   <div id="aiRevisiModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:600px; width:95%;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
-      <p style="font-size:0.75rem; margin-bottom:0.8rem; opacity:0.9; line-height:1.4;">
-        <b>Cara Aman:</b> 1) Blok sebagian kode di editor utama lalu copy & paste ke "Kode Lama". 2) Paste kode balasan AI ke "Kode Baru". 3) Klik Ganti Kode.
+      <p style="font-size:0.75rem; margin-bottom:0.4rem; opacity:0.9; line-height:1.4;">
+        <b>Cara Cepat:</b> Klik tombol di bawah ini untuk menyalin prompt, lalu kirim ke AI (ChatGPT/Gemini) agar AI membalas dengan format yang pas untuk ditaruh di sini.
       </p>
+      <button onclick="copyAIPrompt()" class="inline-btn" style="background:linear-gradient(135deg, #2196f3, #00bcd4); width:100%; margin-bottom:0.8rem; font-size:0.85rem; padding:0.6rem;">📋 Salin Prompt Rahasia untuk AI</button>
+      
       <label>Kode Lama (Yang mau dihapus)</label>
-      <textarea id="aiOldCode" placeholder="Paste persis potongan kode asli dari editor di sini..." style="min-height:90px; margin-bottom:0.5rem;"></textarea>
+      <textarea id="aiOldCode" placeholder="Paste persis potongan kode asli yang dikirim AI di sini..." style="min-height:90px; margin-bottom:0.5rem;"></textarea>
       <label>Kode Baru (Dari Chat AI)</label>
-      <textarea id="aiNewCode" placeholder="Paste kode revisi dari AI di sini..." style="min-height:120px; margin-bottom:0.5rem;"></textarea>
+      <textarea id="aiNewCode" placeholder="Paste kode revisi baru dari AI di sini..." style="min-height:120px; margin-bottom:0.5rem;"></textarea>
       
       <div id="aiRevisiStatus" style="font-size:0.8rem; margin-bottom:0.5rem; font-weight:600; padding:0.3rem;"></div>
       
@@ -704,7 +706,16 @@
       });
     }
 
-    // ==================== ⚡ REVISI AI (PENGGANTI CARI KODE) ====================
+    // ==================== ⚡ REVISI AI (AUTO REPLACE) ====================
+    function copyAIPrompt() {
+      const promptText = "Tolong perbaiki/revisi kode saya. Agar saya mudah menyalinnya ke sistem saya, tolong berikan format balasan persis seperti ini (gunakan block code terpisah):\n\nKODE LAMA:\n(masukkan potongan persis kode asli yang harus saya hapus)\n\nKODE BARU:\n(masukkan potongan kode revisi yang baru)";
+      navigator.clipboard.writeText(promptText).then(() => {
+        toast('Prompt Rahasia Disalin! Paste ke AI', 'success');
+      }).catch(err => {
+        toast('Gagal menyalin prompt', 'error');
+      });
+    }
+
     function openAIRevisi() {
       document.getElementById('aiOldCode').value = '';
       document.getElementById('aiNewCode').value = '';
@@ -736,18 +747,15 @@
         return;
       }
 
-      // Normalisasi line endings agar lebih kebal terhadap error copy-paste dari browser/OS berbeda
-      // Mengubah semua jenis enter (\r\n atau \r) menjadi standar \n
+      // Normalisasi line endings
       const normalize = (str) => str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
       
       const editorText = normalize(editor.value);
       const searchTarget = normalize(oldCode);
 
       if (editorText.includes(searchTarget)) {
-        // Simpan backup sebelum mengubah untuk fitur Undo
         singleCodeBackup = editor.value;
 
-        // Lakukan replace (hanya mengganti kemunculan pertama persis seperti target)
         const newText = editorText.replace(searchTarget, normalize(newCode));
         editor.value = newText;
         updateCodeStats('singleCode', 'singleCodeStats');
@@ -756,12 +764,10 @@
         statusBox.style.color = '#4caf50';
         statusBox.style.background = 'rgba(76,175,80,0.1)';
 
-        // Tampilkan tombol undo
         document.getElementById('btnUndoRevisi').style.display = 'inline-block';
         toast('Revisi AI diterapkan!', 'success');
       } else {
-        // Jika tidak ditemukan secara presisi
-        statusBox.innerHTML = '❌ Kode lama tidak ditemukan! Pastikan Anda memblok dan meng-copy <b>langsung dari editor Single</b>, jangan dari chat AI (agar spasinya persis sama).';
+        statusBox.innerHTML = '❌ Kode lama tidak ditemukan! Pastikan AI memberikan potongan KODE LAMA persis seperti yang ada di editor.';
         statusBox.style.color = 'var(--danger)';
         statusBox.style.background = 'rgba(229,57,53,0.1)';
       }
@@ -771,7 +777,7 @@
       if (singleCodeBackup) {
         document.getElementById('singleCode').value = singleCodeBackup;
         updateCodeStats('singleCode', 'singleCodeStats');
-        singleCodeBackup = ''; // Reset backup
+        singleCodeBackup = '';
         
         const statusBox = document.getElementById('aiRevisiStatus');
         statusBox.innerHTML = '⏪ Dikembalikan ke versi sebelum revisi.';
