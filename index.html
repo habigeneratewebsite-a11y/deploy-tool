@@ -153,6 +153,7 @@
     .account-detail small { opacity:0.7; margin-left:0.3rem; }
     .active-indicator { background:var(--accent); color:white; padding:0.15rem 0.4rem; border-radius:4px; font-size:0.7rem; margin-left:0.3rem; }
     .char-count { font-size:0.7rem; opacity:0.7; margin-top:0.2rem; }
+    .stats-row { display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; margin-bottom:0.3rem; }
   </style>
 </head>
 <body class="dark-theme">
@@ -215,7 +216,16 @@
       <div class="search-results" id="singleSearchResults"></div>
       <label>Tempel Kode <span style="font-weight:normal; font-size:0.75rem;">(atau hasil pencarian di atas)</span></label>
       <textarea id="singleCode" placeholder="// Kode akan muncul di sini..." oninput="updateCodeStats('singleCode','singleCodeStats')"></textarea>
-      <div class="char-count" id="singleCodeStats">0 karakter | 0 baris</div>
+      
+      <!-- Area Statistik dan Action Tambahan Utama -->
+      <div class="stats-row">
+        <div class="char-count" id="singleCodeStats" style="margin-top:0;">0 karakter | 0 baris</div>
+        <div style="display:flex; gap:0.3rem;">
+          <button onclick="copyMainCode()" class="inline-btn" style="padding:0.2rem 0.6rem; font-size:0.7rem; background:#3b6eff;">📋 Salin Kode</button>
+          <button onclick="undoMainRevisi()" id="mainUndoBtn" class="inline-btn" style="padding:0.2rem 0.6rem; font-size:0.7rem; background:#4caf50; display:none;">⏪ Undo Revisi</button>
+        </div>
+      </div>
+
       <div style="display:flex; gap:0.3rem; margin-top:0.3rem;">
         <button onclick="refreshSingleTab()" class="inline-btn">🔄 Refresh</button>
         <button onclick="clearSingleCode()" class="inline-btn" style="background:var(--danger);">🗑️ Hapus</button>
@@ -305,7 +315,7 @@
       </div>
     </div>
 
-    <!-- Tab Chat to ZIP (Disempurnakan) -->
+    <!-- Tab Chat to ZIP -->
     <div id="tab-chat" class="tab-content">
       <label>💬 Tempel kode dari Chat AI</label>
       <p style="font-size:0.75rem; margin-bottom:0.4rem; opacity:0.9; line-height:1.4;">
@@ -356,27 +366,36 @@
     </div>
   </div>
 
-  <!-- Modal Revisi AI (Diperbarui dengan Fitur Cek Kode) -->
+  <!-- Modal Revisi AI -->
   <div id="aiRevisiModal" class="modal-overlay">
-    <div class="modal" style="text-align:left; max-width:600px; width:95%;">
+    <div class="modal" style="text-align:left; max-width:600px; width:95%; max-height:95vh; overflow-y:auto;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
       <p style="font-size:0.75rem; margin-bottom:0.4rem; opacity:0.9; line-height:1.4;">
-        <b>Cara Cepat:</b> Klik tombol di bawah ini untuk menyalin super prompt, lalu kirim ke AI (ChatGPT/Gemini) agar balasan AI tidak pakai data dummy dan berformat Code Block.
+        <b>Cara Cepat:</b> Klik tombol di bawah ini untuk menyalin super prompt, agar balasan AI berformat Code Block rapi dan terpisah dari tulisannya.
       </p>
       <button onclick="copyAIPrompt()" class="inline-btn" style="background:linear-gradient(135deg, #2196f3, #00bcd4); width:100%; margin-bottom:0.8rem; font-size:0.85rem; padding:0.6rem;">📋 Salin Prompt Rahasia untuk AI</button>
       
+      <!-- Area Kode Lama -->
       <label>Kode Lama (Yang mau dihapus)</label>
-      <textarea id="aiOldCode" placeholder="Paste persis potongan kode asli dari editor di sini..." style="min-height:90px; margin-bottom:0.2rem;"></textarea>
+      <textarea id="aiOldCode" placeholder="Paste persis potongan kode asli dari editor di sini..." style="min-height:90px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiOldCode','aiOldStats')"></textarea>
+      <div class="stats-row">
+        <div class="char-count" id="aiOldStats" style="margin-top:0;">0 karakter | 0 baris</div>
+        <button onclick="clearArea('aiOldCode','aiOldStats')" class="inline-btn" style="padding:0.2rem 0.5rem; font-size:0.7rem; background:rgba(229,57,53,0.8);">🗑️ Hapus Teks</button>
+      </div>
       <button onclick="checkOldCodeExists()" class="inline-btn" style="background:rgba(128,128,128,0.2); color:var(--text); width:100%; margin-bottom:0.5rem; font-size:0.8rem; border:1px solid var(--border);">🔍 Cek Keberadaan Kode Lama</button>
       
+      <!-- Area Kode Baru -->
       <label>Kode Baru (Dari Chat AI)</label>
-      <textarea id="aiNewCode" placeholder="Paste kode revisi utuh dari AI di sini..." style="min-height:120px; margin-bottom:0.5rem;"></textarea>
+      <textarea id="aiNewCode" placeholder="Paste kode revisi utuh dari AI di sini..." style="min-height:120px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiNewCode','aiNewStats')"></textarea>
+      <div class="stats-row">
+        <div class="char-count" id="aiNewStats" style="margin-top:0;">0 karakter | 0 baris</div>
+        <button onclick="clearArea('aiNewCode','aiNewStats')" class="inline-btn" style="padding:0.2rem 0.5rem; font-size:0.7rem; background:rgba(229,57,53,0.8);">🗑️ Hapus Teks</button>
+      </div>
       
-      <div id="aiRevisiStatus" style="font-size:0.8rem; margin-bottom:0.5rem; font-weight:600; padding:0.3rem;"></div>
+      <div id="aiRevisiStatus" style="font-size:0.8rem; margin-top:0.4rem; margin-bottom:0.5rem; font-weight:600; padding:0.3rem;"></div>
       
       <div style="display:flex; gap:0.4rem; margin-top:0.5rem;">
         <button onclick="executeAIRevisi()" class="btn-confirm" style="flex:2; background:linear-gradient(135deg, #ff9800, #f44336); color:white; box-shadow:0 4px 12px rgba(255,152,0,0.3);">⚡ Ganti Kode</button>
-        <button onclick="undoAIRevisi()" id="btnUndoRevisi" class="btn-cancel" style="flex:1; display:none; background:#4caf50; color:white;">⏪ Undo</button>
         <button onclick="closeAIRevisi()" class="btn-cancel" style="flex:1;">Tutup</button>
       </div>
     </div>
@@ -439,7 +458,7 @@
     // ==================== STATE ====================
     const SK = 'hs_profiles', UK = 'hs_user', TK = 'hs_theme', HK = 'hs_history', AK = 'hs_antilag';
     let repoTree = [], selDelFolder = '', currentSearchTarget = null;
-    let singleCodeBackup = ''; // Backup untuk fitur Undo hanya mundur 1 langkah
+    let globalUndoCode = ''; // Memori Undo untuk tombol di Editor Utama
 
     // ==================== INIT ====================
     window.onload = () => {
@@ -648,7 +667,7 @@
       c.innerHTML = html;
     }
 
-    // ==================== CODE STATS HELPER ====================
+    // ==================== CODE STATS HELPER & COPY ====================
     function updateCodeStats(textareaId, statsId) {
       const textarea = document.getElementById(textareaId);
       const stats = document.getElementById(statsId);
@@ -657,6 +676,23 @@
       const chars = text.length;
       const lines = text === '' ? 0 : text.split('\n').length;
       stats.textContent = `${chars} karakter | ${lines} baris`;
+    }
+
+    function clearArea(id, statId) {
+      document.getElementById(id).value = '';
+      updateCodeStats(id, statId);
+      toast('Teks dibersihkan', 'info');
+    }
+
+    // Menangani copy ribuan bahkan jutaan karakter
+    function copyMainCode() {
+      const code = document.getElementById('singleCode').value;
+      if (!code) return toast('Tidak ada kode di editor', 'error');
+      navigator.clipboard.writeText(code).then(() => {
+        toast('Kode utuh berhasil disalin!', 'success');
+      }).catch(err => {
+        toast('Gagal menyalin kode', 'error');
+      });
     }
 
     // ==================== SINGLE TAB ====================
@@ -708,9 +744,11 @@
       });
     }
 
-    // ==================== ⚡ REVISI AI (SUPER PROMPT + CEK KODE) ====================
+    // ==================== ⚡ REVISI AI (SUPER PROMPT & UNDO DI LUAR) ====================
     function copyAIPrompt() {
-      const promptText = "Tolong perbaiki kode saya. SYARAT WAJIB (Jangan dilanggar): 1) DILARANG KERAS menggunakan data dummy, simulasi, placeholder, atau menyingkat kode. Berikan kode yang 100% utuh, Real Production Ready, dan berfungsi penuh. 2) WAJIB membungkus kode balasan menggunakan Markdown Code Block (```) agar muncul tombol Copy. Berikan format balasan persis seperti ini:\n\nKODE LAMA:\n(masukkan potongan persis kode asli yang harus saya hapus)\n\nKODE BARU:\n(masukkan potongan kode revisi yang baru secara utuh tanpa dipotong)";
+      // Prompt diubah agar label KODE LAMA ada di luar Code Block.
+      const promptText = "Tolong perbaiki kode saya. SYARAT WAJIB (Jangan dilanggar): 1) DILARANG KERAS menggunakan data dummy, simulasi, placeholder, atau menyingkat kode. Berikan kode yang 100% utuh, Real Production Ready, dan berfungsi penuh. 2) Pastikan KODE BARU benar-benar berisi perubahan dari kode lama (jangan memberikan kode yang sama persis). 3) Gunakan Markdown Code Block (```) HANYA untuk isi kodenya saja, JANGAN masukkan tulisan label ke dalam kotak kode! \n\nBerikan format balasan PERSIS seperti ini:\n\nKODE LAMA:\n```\n(paste KODE LAMA persis 100% dengan spasi aslinya di sini)\n```\n\nKODE BARU:\n```\n(paste KODE BARU yang sudah direvisi utuh di sini)\n```";
+      
       navigator.clipboard.writeText(promptText).then(() => {
         toast('Super Prompt Disalin! Paste ke AI', 'success');
       }).catch(err => {
@@ -719,11 +757,9 @@
     }
 
     function openAIRevisi() {
-      document.getElementById('aiOldCode').value = '';
-      document.getElementById('aiNewCode').value = '';
+      // Buka modal tanpa mereset isi, barangkali user mau edit
       document.getElementById('aiRevisiStatus').textContent = '';
       document.getElementById('aiRevisiStatus').style.background = 'transparent';
-      document.getElementById('btnUndoRevisi').style.display = 'none';
       document.getElementById('aiRevisiModal').style.display = 'flex';
     }
 
@@ -731,7 +767,6 @@
       document.getElementById('aiRevisiModal').style.display = 'none';
     }
 
-    // Fitur Cek Keberadaan Kode
     function checkOldCodeExists() {
       const oldCode = document.getElementById('aiOldCode').value;
       const editor = document.getElementById('singleCode');
@@ -749,7 +784,6 @@
         return;
       }
 
-      // Normalisasi enter/spasi agar tidak gagal karena beda OS
       const normalize = (str) => str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
       const editorText = normalize(editor.value);
       const searchTarget = normalize(oldCode);
@@ -759,7 +793,7 @@
         statusBox.style.color = '#4caf50';
         statusBox.style.background = 'rgba(76,175,80,0.1)';
       } else {
-        statusBox.innerHTML = '❌ Kode tidak ditemukan! Periksa spasi atau pastikan Anda menyalin persis dari editor.';
+        statusBox.innerHTML = '❌ Kode tidak ditemukan! Pastikan Anda menyalin HANYA blok kodenya saja, jangan meng-copy kata "KODE LAMA".';
         statusBox.style.color = 'var(--danger)';
         statusBox.style.background = 'rgba(229,57,53,0.1)';
       }
@@ -783,19 +817,27 @@
       const searchTarget = normalize(oldCode);
 
       if (editorText.includes(searchTarget)) {
-        // Simpan 1 kondisi terakhir untuk fitur Undo
-        singleCodeBackup = editor.value;
+        // Simpan state untuk Undo di Editor Utama
+        globalUndoCode = editor.value;
 
         const newText = editorText.replace(searchTarget, normalize(newCode));
         editor.value = newText;
         updateCodeStats('singleCode', 'singleCodeStats');
 
-        statusBox.innerHTML = '✅ Berhasil! Kode lama telah ditimpa dengan mulus.';
+        // Kosongkan form Modal
+        clearArea('aiOldCode', 'aiOldStats');
+        clearArea('aiNewCode', 'aiNewStats');
+
+        statusBox.innerHTML = '✅ Berhasil menimpa kode!';
         statusBox.style.color = '#4caf50';
         statusBox.style.background = 'rgba(76,175,80,0.1)';
 
-        document.getElementById('btnUndoRevisi').style.display = 'inline-block';
-        toast('Revisi AI diterapkan!', 'success');
+        // Tampilkan tombol undo di editor utama
+        document.getElementById('mainUndoBtn').style.display = 'inline-block';
+        toast('Revisi AI diterapkan! Silakan cek editor utama.', 'success');
+        
+        // Tutup modal otomatis setelah 1 detik
+        setTimeout(() => { closeAIRevisi(); }, 1000);
       } else {
         statusBox.innerHTML = '❌ GAGAL: Kode lama tidak ditemukan secara persis di dalam file. Klik tombol "Cek Keberadaan Kode Lama" untuk memastikan.';
         statusBox.style.color = 'var(--danger)';
@@ -803,20 +845,15 @@
       }
     }
 
-    function undoAIRevisi() {
-      if (singleCodeBackup) {
-        // Mengembalikan hanya ke 1 status sebelum tindakan replace terakhir
-        document.getElementById('singleCode').value = singleCodeBackup;
+    // Fungsi Undo dipindah ke luar modal agar bisa klik upload dulu
+    function undoMainRevisi() {
+      if (globalUndoCode) {
+        document.getElementById('singleCode').value = globalUndoCode;
         updateCodeStats('singleCode', 'singleCodeStats');
-        singleCodeBackup = ''; // Reset memori undo
+        globalUndoCode = ''; // Reset memori
         
-        const statusBox = document.getElementById('aiRevisiStatus');
-        statusBox.innerHTML = '⏪ Dikembalikan ke kondisi tepat 1 langkah sebelum revisi terakhir.';
-        statusBox.style.color = 'var(--accent)';
-        statusBox.style.background = 'rgba(108,63,212,0.1)';
-        
-        document.getElementById('btnUndoRevisi').style.display = 'none';
-        toast('Revisi terakhir dibatalkan', 'info');
+        document.getElementById('mainUndoBtn').style.display = 'none';
+        toast('⏪ Revisi terakhir berhasil dibatalkan!', 'success');
       }
     }
 
@@ -1286,7 +1323,6 @@
           currentFile = path || 'untitled.txt';
           currentContent = [];
         } else if (currentFile) {
-          // Hanya tambahkan baris yang bukan penanda markdown ```
           if (!line.trim().startsWith('```')) {
             currentContent.push(line);
           }
