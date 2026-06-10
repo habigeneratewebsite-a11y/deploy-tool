@@ -89,7 +89,7 @@
     }
     .modal {
       background:var(--card-bg); padding:1.5rem; border-radius:16px;
-      max-width:450px; width:92%; border:1px solid var(--border);
+      max-width:480px; width:92%; border:1px solid var(--border);
       box-shadow:0 16px 48px rgba(0,0,0,0.3);
     }
     .modal h3 { color:var(--accent); margin-bottom:0.8rem; font-size:1.1rem; }
@@ -366,15 +366,18 @@
     </div>
   </div>
 
-  <!-- Modal Revisi AI (Diperbarui dengan Auto Check & Prompt Dewa) -->
+  <!-- Modal Revisi AI (Diperbarui dengan Auto Check, Paste, & Anti-Duplicate) -->
   <div id="aiRevisiModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:600px; width:95%; max-height:95vh; overflow-y:auto;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
       
-      <!-- GENERATOR PROMPT DINAMIS -->
+      <!-- GENERATOR PROMPT DINAMIS: Ada 2 Pilihan Prompt -->
       <div style="background:var(--input-bg); padding:0.8rem; border-radius:10px; border:1px solid var(--accent); margin-bottom:0.5rem;">
-        <button onclick="copyAIPrompt()" class="inline-btn" style="background:linear-gradient(135deg, #2196f3, #00bcd4); width:100%; font-size:0.85rem; padding:0.6rem;">📋 Salin Prompt Master ke AI</button>
-        <p style="font-size:0.7rem; margin-top:0.4rem; opacity:0.8; margin-bottom:0;">Kirim ini di awal chat agar AI mengingat kode selamanya, menyertakan nama file, tidak memotong baris, dan memberikan kode siap pakai.</p>
+        <div style="display:flex; gap:0.4rem; margin-bottom:0.4rem;">
+          <button onclick="copySystemPrompt()" class="inline-btn" style="flex:1; background:linear-gradient(135deg, #9c27b0, #673ab7); font-size:0.75rem; padding:0.6rem;">📋 Prompt System (AI Studio)</button>
+          <button onclick="copyChatPrompt()" class="inline-btn" style="flex:1; background:linear-gradient(135deg, #2196f3, #00bcd4); font-size:0.75rem; padding:0.6rem;">📋 Prompt Chat Biasa</button>
+        </div>
+        <p style="font-size:0.7rem; margin-top:0; opacity:0.8; margin-bottom:0;">Pilih prompt sesuai AI Anda. Mencegah AI salah potong baris (mencegah kode duplikat) dan memaksa format Code Block murni.</p>
       </div>
 
       <!-- NOTIFIKASI CEK KODE & STATUS -->
@@ -385,7 +388,10 @@
       <textarea id="aiOldCode" placeholder="Paste potongan kode asli dari editor utama di sini..." style="min-height:90px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiOldCode','aiOldStats'); autoCheckOldCode();"></textarea>
       <div class="stats-row">
         <div class="char-count" id="aiOldStats" style="margin-top:0;">0 karakter | 0 baris</div>
-        <button onclick="clearArea('aiOldCode','aiOldStats')" class="inline-btn" style="padding:0.2rem 0.5rem; font-size:0.7rem; background:rgba(229,57,53,0.8);">🗑️ Hapus Teks</button>
+        <div style="display:flex; gap:0.3rem;">
+          <button onclick="pasteToArea('aiOldCode','aiOldStats')" class="inline-btn" style="padding:0.2rem 0.5rem; font-size:0.7rem; background:#4caf50;">📋 Paste Kode</button>
+          <button onclick="clearArea('aiOldCode','aiOldStats')" class="inline-btn" style="padding:0.2rem 0.5rem; font-size:0.7rem; background:rgba(229,57,53,0.8);">🗑️ Hapus Teks</button>
+        </div>
       </div>
       
       <!-- Area Kode Baru -->
@@ -393,7 +399,10 @@
       <textarea id="aiNewCode" placeholder="Paste kode revisi utuh dari AI di sini..." style="min-height:120px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiNewCode','aiNewStats')"></textarea>
       <div class="stats-row">
         <div class="char-count" id="aiNewStats" style="margin-top:0;">0 karakter | 0 baris</div>
-        <button onclick="clearArea('aiNewCode','aiNewStats')" class="inline-btn" style="padding:0.2rem 0.5rem; font-size:0.7rem; background:rgba(229,57,53,0.8);">🗑️ Hapus Teks</button>
+        <div style="display:flex; gap:0.3rem;">
+          <button onclick="pasteToArea('aiNewCode','aiNewStats')" class="inline-btn" style="padding:0.2rem 0.5rem; font-size:0.7rem; background:#4caf50;">📋 Paste Kode</button>
+          <button onclick="clearArea('aiNewCode','aiNewStats')" class="inline-btn" style="padding:0.2rem 0.5rem; font-size:0.7rem; background:rgba(229,57,53,0.8);">🗑️ Hapus Teks</button>
+        </div>
       </div>
       
       <div style="display:flex; gap:0.4rem; margin-top:0.5rem;">
@@ -669,7 +678,7 @@
       c.innerHTML = html;
     }
 
-    // ==================== CODE STATS HELPER & COPY ====================
+    // ==================== CODE STATS HELPER, COPY & PASTE ====================
     function updateCodeStats(textareaId, statsId) {
       const textarea = document.getElementById(textareaId);
       const stats = document.getElementById(statsId);
@@ -695,6 +704,21 @@
       }).catch(err => {
         toast('Gagal menyalin kode', 'error');
       });
+    }
+
+    // Fungsi Paste Super Kuat dari Clipboard
+    async function pasteToArea(id, statId) {
+      try {
+        const text = await navigator.clipboard.readText();
+        if(!text) return toast('Clipboard kosong!', 'error');
+        const el = document.getElementById(id);
+        el.value = text;
+        updateCodeStats(id, statId);
+        if(id === 'aiOldCode') autoCheckOldCode();
+        toast('Kode berhasil di-paste!', 'success');
+      } catch (err) {
+        toast('Gagal paste. Izinkan akses clipboard di browser Anda!', 'error');
+      }
     }
 
     // ==================== SINGLE TAB ====================
@@ -747,38 +771,43 @@
     }
 
     // ==================== ⚡ REVISI AI (AUTO CHECK & PROMPT DEWA) ====================
-    function copyAIPrompt() {
-      const basePrompt = `Bertindaklah sebagai Senior Programmer. Saya akan memberikan kode proyek saya.
+    function copySystemPrompt() {
+      const systemPrompt = `Kamu adalah Senior Programmer. Tugasmu adalah memberikan revisi kode untuk sistem Auto-Replace Habi Studio.
 
-SYARAT WAJIB (INGAT SELAMANYA SAMPAI CHAT BERAKHIR):
-1. INGAT SEMUA KONTEKS KODE. Jangan sampai lupa kode apa yang sedang kita kerjakan.
-2. Setiap revisi, WAJIB sebutkan nama file/folder yang diubah (Misal: 'File: beranda/index.html'). Jangan sampai salah file!
-3. Berikan penjelasan singkat: Apa yang direvisi, solusi teknisnya, dan pastikan jaminan 100% berfungsi saat di-deploy.
-4. KODE TIDAK BOLEH TERPOTONG (Downgrade). Jika kode lama 3000 karakter, kode baru tidak boleh kepotong menjadi 2000 karakter. Berikan kode revisi yang utuh dan lebih baik!
-5. HANYA berikan blok kode yang direvisi saja. DILARANG KERAS menulis ulang seluruh isi file jika tidak diminta!
-6. DILARANG menggunakan data dummy atau simulasi (...).
-7. Gunakan Markdown Code Block (\`\`\`) HANYA untuk isi kodenya. JANGAN masukkan label 'KODE LAMA'/'KODE BARU' ke dalam kotak copy code!
+SYARAT MUTLAK (PANTANG DILANGGAR):
+1. INGAT SEMUA KONTEKS KODE SELAMANYA.
+2. Setiap revisi, WAJIB sebutkan Nama File/Folder yang direvisi di awal (Misal: File: app/page.tsx) agar tidak salah sasaran.
+3. BATAS AWAL & BATAS AKHIR KODE LAMA DAN KODE BARU HARUS SAMA PERSIS! Jangan memasukkan baris tambahan di KODE BARU yang berada di luar jangkauan blok KODE LAMA (agar tidak memicu duplikat kode saat di-replace). Hanya berikan blok yang benar-benar berubah beserta sedikit baris pembatasnya.
+4. KODE TIDAK BOLEH TERPOTONG. Dilarang menyingkat kode (dummy/simulasi).
+5. Gunakan Markdown Code Block (\`\`\`) HANYA untuk isi kodenya. JANGAN memasukkan kata "KODE LAMA:" atau "KODE BARU:" ke dalam kotak code block tersebut!
 
-Tunggu saya mengirimkan kode dan instruksi. Balas dengan format PERSIS seperti ini:
+Format Balasan Wajib:
 
 File: [Nama File]
-Penjelasan: [Solusi Anda]
+Penjelasan: [Solusi dan jaminan 100% jalan]
 
 KODE LAMA:
 \`\`\`
-(paste potongan KODE LAMA persis 100% sesuai di file saya)
+(potongan kode lama)
 \`\`\`
 
 KODE BARU:
 \`\`\`
-(paste KODE BARU yang sudah direvisi utuh tanpa dipotong)
+(potongan kode baru yang ukurannya sepadan, tanpa baris berlebih)
 \`\`\``;
-      
-      navigator.clipboard.writeText(basePrompt).then(() => {
-        toast('Prompt Master Disalin! Paste ke AI', 'success');
-      }).catch(err => {
-        toast('Gagal menyalin prompt', 'error');
-      });
+      navigator.clipboard.writeText(systemPrompt).then(() => {
+        toast('Prompt System Disalin!', 'success');
+      }).catch(err => toast('Gagal menyalin', 'error'));
+    }
+
+    function copyChatPrompt() {
+      const chatPrompt = `Tolong revisi kode saya. INGAT ATURAN SISTEM KITA:
+1. Batas awal dan batas akhir KODE LAMA dan KODE BARU harus sama persis. Jangan menyalin baris ekstra di atas/bawah kode yang direvisi ke dalam KODE BARU, karena akan menyebabkan duplikat!
+2. DILARANG pakai dummy/menyingkat kode.
+3. Gunakan format KODE LAMA: dan KODE BARU: di luar kotak markdown code block. Sebutkan juga Nama File-nya.`;
+      navigator.clipboard.writeText(chatPrompt).then(() => {
+        toast('Prompt Chat Disalin!', 'success');
+      }).catch(err => toast('Gagal menyalin', 'error'));
     }
 
     function openAIRevisi() {
@@ -839,11 +868,18 @@ KODE BARU:
       const normalize = (str) => str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
       const editorText = normalize(editor.value);
       const searchTarget = normalize(oldCode);
+      const newCodeNorm = normalize(newCode);
+
+      // Fitur Keamanan Anti-Duplikat (Mencegah AI salah kasih ukuran)
+      if (newCodeNorm.length > (searchTarget.length * 3) + 200) {
+        let proceed = window.confirm("⚠️ PERINGATAN ANTI-DUPLIKAT:\n\nKODE BARU jauh lebih panjang dari KODE LAMA. Ini berisiko tinggi menyebabkan kode ganda/duplikat di dalam file Anda jika AI memasukkan baris yang seharusnya tidak direvisi.\n\nTetap lanjutkan mengganti kode?");
+        if (!proceed) return;
+      }
 
       if (editorText.includes(searchTarget)) {
         globalUndoCode = editor.value;
 
-        const newText = editorText.replace(searchTarget, normalize(newCode));
+        const newText = editorText.replace(searchTarget, newCodeNorm);
         editor.value = newText;
         updateCodeStats('singleCode', 'singleCodeStats');
 
