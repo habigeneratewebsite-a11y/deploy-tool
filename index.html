@@ -221,14 +221,14 @@
       <div class="stats-row">
         <div class="char-count" id="singleCodeStats" style="margin-top:0;">0 karakter | 0 baris</div>
         <div style="display:flex; gap:0.3rem;">
-          <button onclick="copyMainCode()" class="inline-btn" style="padding:0.2rem 0.6rem; font-size:0.7rem; background:#3b6eff;">📋 Salin Kode</button>
+          <button onclick="copyContent('singleCode')" class="inline-btn" style="padding:0.2rem 0.6rem; font-size:0.7rem; background:#3b6eff;">📋 Salin Kode</button>
           <button onclick="undoMainRevisi()" id="mainUndoBtn" class="inline-btn" style="padding:0.2rem 0.6rem; font-size:0.7rem; background:#4caf50; display:none;">⏪ Undo Revisi</button>
         </div>
       </div>
 
       <div style="display:flex; gap:0.3rem; margin-top:0.3rem;">
         <button onclick="refreshSingleTab()" class="inline-btn">🔄 Refresh</button>
-        <button onclick="clearSingleCode()" class="inline-btn" style="background:var(--danger);">🗑️ Hapus</button>
+        <button onclick="clearArea('singleCode','singleCodeStats')" class="inline-btn" style="background:var(--danger);">🗑️ Hapus</button>
         <button onclick="openAIRevisi()" class="inline-btn" style="background:linear-gradient(135deg, #ff9800, #f44336); box-shadow:0 2px 8px rgba(255,152,0,0.3);">⚡ Revisi AI</button>
       </div>
       <button class="primary" onclick="deploySingle()">🚀 Upload File</button>
@@ -249,11 +249,24 @@
     <!-- Tab Editor (Buat File Baru) -->
     <div id="tab-editor" class="tab-content">
       <label>📁 Bikin baru file</label>
-      <input type="text" id="newFilePath" placeholder="nama-repo/app/tools/music-cover/page.tsx">
-      <small style="opacity:0.8;">Path lengkap, diawali nama repo. Folder otomatis dibuat.</small>
+      <div style="display:flex; gap:0.4rem; align-items:center;">
+        <input type="text" id="newFilePath" placeholder="nama-repo/app/page.tsx" style="flex:1;">
+        <button onclick="pasteToArea('newFilePath')" class="inline-btn" style="padding:0.4rem; background:#4caf50;" title="Paste">📋</button>
+        <button onclick="copyContent('newFilePath')" class="inline-btn" style="padding:0.4rem; background:#3b6eff;" title="Salin">📄</button>
+        <button onclick="clearArea('newFilePath')" class="inline-btn" style="padding:0.4rem; background:var(--danger);" title="Hapus">🗑️</button>
+      </div>
+      <small style="opacity:0.8; display:block; margin-top:0.3rem;">Path lengkap, diawali nama repo. Folder otomatis dibuat.</small>
+      
       <label>📝 File konten</label>
       <textarea id="newFileContent" placeholder="// tulis kode di sini..." oninput="updateCodeStats('newFileContent','newFileContentStats')"></textarea>
-      <div class="char-count" id="newFileContentStats">0 karakter | 0 baris</div>
+      <div class="stats-row">
+        <div class="char-count" id="newFileContentStats" style="margin-top:0;">0 karakter | 0 baris</div>
+        <div style="display:flex; gap:0.3rem;">
+          <button onclick="pasteToArea('newFileContent','newFileContentStats')" class="inline-btn" style="padding:0.2rem 0.6rem; font-size:0.7rem; background:#4caf50;">📋 Paste</button>
+          <button onclick="copyContent('newFileContent')" class="inline-btn" style="padding:0.2rem 0.6rem; font-size:0.7rem; background:#3b6eff;">📋 Salin</button>
+          <button onclick="clearArea('newFileContent','newFileContentStats')" class="inline-btn" style="padding:0.2rem 0.6rem; font-size:0.7rem; background:rgba(229,57,53,0.8);">🗑️ Hapus</button>
+        </div>
+      </div>
       <button class="primary" onclick="createNewFile()">💾 Simpan</button>
       <div id="newFileStatus" style="margin-top:0.4rem; font-size:0.8rem;"></div>
     </div>
@@ -457,8 +470,10 @@
     <div class="modal">
       <h3>📝 HABI STUDIO NOTE</h3>
       <p id="confirmMessage"></p>
-      <button class="btn-confirm" id="confirmOk">Ya</button>
-      <button class="btn-cancel" id="confirmCancel">Batal</button>
+      <div style="display:flex; gap:0.4rem; justify-content:center; margin-top:1rem;">
+        <button class="btn-confirm" id="confirmOk">Ya</button>
+        <button class="btn-cancel" id="confirmCancel">Batal</button>
+      </div>
     </div>
   </div>
 
@@ -554,6 +569,8 @@
       t.style.display = 'block';
       clearTimeout(t._t); t._t = setTimeout(() => t.style.display = 'none', 3000);
     }
+    
+    // Custom Confirm function diperbaiki (Asynchronous)
     function confirm(msg, cb) {
       const m = document.getElementById('confirmModal');
       document.getElementById('confirmMessage').innerHTML = msg;
@@ -561,6 +578,7 @@
       document.getElementById('confirmOk').onclick = () => { m.style.display = 'none'; if (cb) cb(); };
       document.getElementById('confirmCancel').onclick = () => { m.style.display = 'none'; };
     }
+    
     function setStatus(msg, type) {
       const d = document.getElementById('globalStatus');
       if (!msg) { d.textContent = ''; d.style.background = 'transparent'; return; }
@@ -691,18 +709,18 @@
 
     function clearArea(id, statId) {
       document.getElementById(id).value = '';
-      updateCodeStats(id, statId);
-      if(id === 'aiOldCode') autoCheckOldCode();
-      toast('Teks dibersihkan', 'info');
+      if (statId) updateCodeStats(id, statId);
+      if (id === 'aiOldCode') autoCheckOldCode();
+      toast('Dibersihkan', 'info');
     }
 
-    function copyMainCode() {
-      const code = document.getElementById('singleCode').value;
-      if (!code) return toast('Tidak ada kode di editor', 'error');
+    function copyContent(id) {
+      const code = document.getElementById(id).value;
+      if (!code) return toast('Tidak ada teks', 'error');
       navigator.clipboard.writeText(code).then(() => {
-        toast('Kode utuh berhasil disalin!', 'success');
+        toast('Berhasil disalin!', 'success');
       }).catch(err => {
-        toast('Gagal menyalin kode', 'error');
+        toast('Gagal menyalin', 'error');
       });
     }
 
@@ -712,11 +730,11 @@
         if(!text) return toast('Clipboard kosong!', 'error');
         const el = document.getElementById(id);
         el.value = text;
-        updateCodeStats(id, statId);
-        if(id === 'aiOldCode') autoCheckOldCode();
-        toast('Kode berhasil di-paste!', 'success');
+        if (statId) updateCodeStats(id, statId);
+        if (id === 'aiOldCode') autoCheckOldCode();
+        toast('Berhasil di-paste!', 'success');
       } catch (err) {
-        toast('Gagal paste. Izinkan akses clipboard di browser Anda!', 'error');
+        toast('Gagal paste. Izinkan akses clipboard!', 'error');
       }
     }
 
@@ -750,7 +768,6 @@
       } catch (e) { toast('Gagal: ' + e.message, 'error'); }
     }
     function refreshSingleTab() { document.getElementById('singleSearchInput').value = ''; document.getElementById('singleCode').value = ''; updateCodeStats('singleCode','singleCodeStats'); toast('Tab direfresh', 'info'); }
-    function clearSingleCode() { document.getElementById('singleCode').value = ''; updateCodeStats('singleCode','singleCodeStats'); toast('Kode dihapus', 'info'); }
     
     async function deploySingle() {
       const path = document.getElementById('singleSearchInput').value.trim();
@@ -851,6 +868,32 @@ KODE BARU:
       }
     }
 
+    // Logika Inti Penimpaan Kode
+    function doReplaceLogic(searchTarget, newCodeNorm) {
+      const editor = document.getElementById('singleCode');
+      const statusBox = document.getElementById('aiRevisiStatus');
+      const editorText = editor.value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+      globalUndoCode = editor.value;
+
+      // Fitur Force Replace: Menghapus Kode Lama, menggantinya dengan Kode Baru secara paksa
+      const newText = editorText.replace(searchTarget, newCodeNorm);
+      editor.value = newText;
+      updateCodeStats('singleCode', 'singleCodeStats');
+
+      clearArea('aiOldCode', 'aiOldStats');
+      clearArea('aiNewCode', 'aiNewStats');
+
+      statusBox.innerHTML = '✅ Berhasil menimpa kode!';
+      statusBox.style.color = '#4caf50';
+      statusBox.style.background = 'rgba(76,175,80,0.1)';
+
+      document.getElementById('mainUndoBtn').style.display = 'inline-block';
+      toast('Revisi AI diterapkan! Silakan cek editor utama.', 'success');
+      
+      setTimeout(() => { closeAIRevisi(); }, 1000);
+    }
+
     function executeAIRevisi() {
       const oldCode = document.getElementById('aiOldCode').value;
       const newCode = document.getElementById('aiNewCode').value;
@@ -869,33 +912,20 @@ KODE BARU:
       const searchTarget = normalize(oldCode);
       const newCodeNorm = normalize(newCode);
 
-      if (newCodeNorm.length > (searchTarget.length * 3) + 200) {
-        let proceed = window.confirm("⚠️ PERINGATAN ANTI-DUPLIKAT:\n\nKODE BARU jauh lebih panjang dari KODE LAMA. Ini berisiko tinggi menyebabkan kode ganda/duplikat di dalam file Anda jika AI memasukkan baris yang seharusnya tidak direvisi.\n\nTetap lanjutkan mengganti kode?");
-        if (!proceed) return;
-      }
-
-      if (editorText.includes(searchTarget)) {
-        globalUndoCode = editor.value;
-
-        const newText = editorText.replace(searchTarget, newCodeNorm);
-        editor.value = newText;
-        updateCodeStats('singleCode', 'singleCodeStats');
-
-        clearArea('aiOldCode', 'aiOldStats');
-        clearArea('aiNewCode', 'aiNewStats');
-
-        statusBox.innerHTML = '✅ Berhasil menimpa kode!';
-        statusBox.style.color = '#4caf50';
-        statusBox.style.background = 'rgba(76,175,80,0.1)';
-
-        document.getElementById('mainUndoBtn').style.display = 'inline-block';
-        toast('Revisi AI diterapkan! Silakan cek editor utama.', 'success');
-        
-        setTimeout(() => { closeAIRevisi(); }, 1000);
-      } else {
+      if (!editorText.includes(searchTarget)) {
         statusBox.innerHTML = '❌ GAGAL: Kode lama tidak ditemukan secara persis di dalam file.';
         statusBox.style.color = 'var(--danger)';
         statusBox.style.background = 'rgba(229,57,53,0.1)';
+        return;
+      }
+
+      // Deteksi Duplikasi (Jika AI kebablasan ngasih panjang kode)
+      if (newCodeNorm.length > (searchTarget.length * 3) + 200) {
+        confirm("⚠️ PERINGATAN ANTI-DUPLIKAT:<br><br>KODE BARU jauh lebih panjang dari KODE LAMA. Ini berisiko tinggi menyebabkan kode ganda/duplikat di dalam file Anda jika AI memasukkan baris yang seharusnya tidak direvisi.<br><br>Tetap lanjutkan mengganti kode?", () => {
+          doReplaceLogic(searchTarget, newCodeNorm);
+        });
+      } else {
+        doReplaceLogic(searchTarget, newCodeNorm);
       }
     }
 
