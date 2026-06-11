@@ -366,12 +366,12 @@
     </div>
   </div>
 
-  <!-- Modal Revisi AI (Diperbarui dengan Auto Check, Paste, & Anti-Duplicate) -->
+  <!-- Modal Revisi AI (Diperbarui dengan Auto Check, Paste, & Anti-Duplicate Extreme) -->
   <div id="aiRevisiModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:600px; width:95%; max-height:95vh; overflow-y:auto;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
       
-      <!-- GENERATOR PROMPT DINAMIS: Ada 2 Pilihan Prompt -->
+      <!-- GENERATOR PROMPT DINAMIS -->
       <div style="background:var(--input-bg); padding:0.8rem; border-radius:10px; border:1px solid var(--accent); margin-bottom:0.5rem;">
         <div style="display:flex; gap:0.4rem; margin-bottom:0.4rem;">
           <button onclick="copySystemPrompt()" class="inline-btn" style="flex:1; background:linear-gradient(135deg, #9c27b0, #673ab7); font-size:0.75rem; padding:0.6rem;">📋 Prompt System (AI Studio)</button>
@@ -384,8 +384,8 @@
       <div id="aiRevisiStatus" style="font-size:0.8rem; margin-bottom:0.8rem; font-weight:600; padding:0.4rem; border-radius:6px; min-height:10px;"></div>
       
       <!-- Area Kode Lama -->
-      <label>1️⃣ Kode Lama (Yang mau dihapus)</label>
-      <textarea id="aiOldCode" placeholder="Paste potongan kode asli dari editor utama di sini..." style="min-height:90px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiOldCode','aiOldStats'); autoCheckOldCode();"></textarea>
+      <label>1️⃣ Kode Lama (Yang mau dihapus/diubah kecil)</label>
+      <textarea id="aiOldCode" placeholder="Paste potongan kode asli / teks yang ingin diganti di sini..." style="min-height:90px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiOldCode','aiOldStats'); autoCheckOldCode();"></textarea>
       <div class="stats-row">
         <div class="char-count" id="aiOldStats" style="margin-top:0;">0 karakter | 0 baris</div>
         <div style="display:flex; gap:0.3rem;">
@@ -395,8 +395,8 @@
       </div>
       
       <!-- Area Kode Baru -->
-      <label>2️⃣ Kode Baru (Dari balasan Chat AI)</label>
-      <textarea id="aiNewCode" placeholder="Paste kode revisi utuh dari AI di sini..." style="min-height:120px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiNewCode','aiNewStats')"></textarea>
+      <label>2️⃣ Kode Baru (Dari balasan Chat AI / Teks Baru)</label>
+      <textarea id="aiNewCode" placeholder="Paste kode revisi / teks pengganti di sini..." style="min-height:120px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiNewCode','aiNewStats')"></textarea>
       <div class="stats-row">
         <div class="char-count" id="aiNewStats" style="margin-top:0;">0 karakter | 0 baris</div>
         <div style="display:flex; gap:0.3rem;">
@@ -706,7 +706,6 @@
       });
     }
 
-    // Fungsi Paste Super Kuat dari Clipboard
     async function pasteToArea(id, statId) {
       try {
         const text = await navigator.clipboard.readText();
@@ -777,7 +776,7 @@
 SYARAT MUTLAK (PANTANG DILANGGAR):
 1. INGAT SEMUA KONTEKS KODE SELAMANYA.
 2. Setiap revisi, WAJIB sebutkan Nama File/Folder yang direvisi di awal (Misal: File: app/page.tsx) agar tidak salah sasaran.
-3. BATAS AWAL & BATAS AKHIR KODE LAMA DAN KODE BARU HARUS SAMA PERSIS! Jangan memasukkan baris tambahan di KODE BARU yang berada di luar jangkauan blok KODE LAMA (agar tidak memicu duplikat kode saat di-replace). Hanya berikan blok yang benar-benar berubah beserta sedikit baris pembatasnya.
+3. ANTI-DUPLIKAT (SANGAT PENTING): BATAS AWAL & BATAS AKHIR KODE LAMA DAN KODE BARU HARUS SAMA PERSIS! DILARANG KERAS menyertakan baris kode ekstra (sebelum/sesudah) di luar blok yang direvisi. KODE BARU harus memiliki jumlah baris yang sepadan. Jika KODE LAMA 15 baris, KODE BARU jangan jadi 150 baris! JANGAN PERNAH menulis ulang seluruh isi file.
 4. KODE TIDAK BOLEH TERPOTONG. Dilarang menyingkat kode (dummy/simulasi).
 5. Gunakan Markdown Code Block (\`\`\`) HANYA untuk isi kodenya. JANGAN memasukkan kata "KODE LAMA:" atau "KODE BARU:" ke dalam kotak code block tersebut!
 
@@ -793,7 +792,7 @@ KODE LAMA:
 
 KODE BARU:
 \`\`\`
-(potongan kode baru yang ukurannya sepadan, tanpa baris berlebih)
+(potongan kode baru yang ukurannya sepadan, tanpa baris ekstra di atas/bawahnya)
 \`\`\``;
       navigator.clipboard.writeText(systemPrompt).then(() => {
         toast('Prompt System Disalin!', 'success');
@@ -802,7 +801,7 @@ KODE BARU:
 
     function copyChatPrompt() {
       const chatPrompt = `Tolong revisi kode saya. INGAT ATURAN SISTEM KITA:
-1. Batas awal dan batas akhir KODE LAMA dan KODE BARU harus sama persis. Jangan menyalin baris ekstra di atas/bawah kode yang direvisi ke dalam KODE BARU, karena akan menyebabkan duplikat!
+1. ANTI-DUPLIKAT: Batas awal dan batas akhir KODE LAMA dan KODE BARU harus sama persis. Jika KODE LAMA 10 baris, KODE BARU dilarang keras menjadi 100 baris (Jangan menyalin baris ekstra di atas/bawah kode yang direvisi)!
 2. DILARANG pakai dummy/menyingkat kode.
 3. Gunakan format KODE LAMA: dan KODE BARU: di luar kotak markdown code block. Sebutkan juga Nama File-nya.`;
       navigator.clipboard.writeText(chatPrompt).then(() => {
@@ -870,7 +869,6 @@ KODE BARU:
       const searchTarget = normalize(oldCode);
       const newCodeNorm = normalize(newCode);
 
-      // Fitur Keamanan Anti-Duplikat (Mencegah AI salah kasih ukuran)
       if (newCodeNorm.length > (searchTarget.length * 3) + 200) {
         let proceed = window.confirm("⚠️ PERINGATAN ANTI-DUPLIKAT:\n\nKODE BARU jauh lebih panjang dari KODE LAMA. Ini berisiko tinggi menyebabkan kode ganda/duplikat di dalam file Anda jika AI memasukkan baris yang seharusnya tidak direvisi.\n\nTetap lanjutkan mengganti kode?");
         if (!proceed) return;
