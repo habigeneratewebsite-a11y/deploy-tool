@@ -398,7 +398,7 @@
       
       <!-- Area Kode Lama -->
       <label>1️⃣ Kode Lama (Yang mau dihapus/diubah kecil)</label>
-      <textarea id="aiOldCode" placeholder="Paste potongan kode asli / teks yang ingin diganti di sini..." style="min-height:90px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiOldCode','aiOldStats'); autoCheckOldCode();"></textarea>
+      <textarea id="aiOldCode" placeholder="TIPS: Paste potongan kode asli LANGSUNG DARI EDITOR UTAMA di sini..." style="min-height:90px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiOldCode','aiOldStats'); autoCheckOldCode();"></textarea>
       <div class="stats-row">
         <div class="char-count" id="aiOldStats" style="margin-top:0;">0 karakter | 0 baris</div>
         <div style="display:flex; gap:0.3rem;">
@@ -409,7 +409,7 @@
       
       <!-- Area Kode Baru -->
       <label>2️⃣ Kode Baru (Dari balasan Chat AI / Teks Baru)</label>
-      <textarea id="aiNewCode" placeholder="Paste kode revisi / teks pengganti di sini..." style="min-height:120px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiNewCode','aiNewStats')"></textarea>
+      <textarea id="aiNewCode" placeholder="Paste kode revisi utuh dari AI di sini..." style="min-height:120px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiNewCode','aiNewStats')"></textarea>
       <div class="stats-row">
         <div class="char-count" id="aiNewStats" style="margin-top:0;">0 karakter | 0 baris</div>
         <div style="display:flex; gap:0.3rem;">
@@ -600,18 +600,31 @@
 
     // ==================== GITHUB API & UTF8 FIX ====================
     
-    // ENCODE: Memastikan Emoji tersimpan benar di GitHub
-    function toB64(s) {
-        return btoa(unescape(encodeURIComponent(s)));
+    function toB64(str) {
+        const bytes = new TextEncoder().encode(str);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
     }
     
-    // DECODE: Mencegah karakter aneh/mojibake pada emoji saat mendownload dari Github
-    function fromB64(str) {
-      try {
-        return decodeURIComponent(escape(atob(str)));
-      } catch(e) {
-        return atob(str); // Fallback jika kode asli dari sananya rusak
-      }
+    function fromB64(b64) {
+        try {
+            const binary = atob(b64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            return new TextDecoder('utf-8', {fatal: true}).decode(bytes);
+        } catch(e) {
+            const binary = atob(b64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            return new TextDecoder('windows-1252').decode(bytes);
+        }
     }
 
     async function ghReq(url, opts) {
@@ -774,7 +787,6 @@
       try {
         const d = await ghGet(username, repo, path, token);
         if (d.content) {
-          // MENGGUNAKAN fromB64 (UTF-8 FIX) AGAR EMOJI TIDAK RUSAK!
           document.getElementById('singleCode').value = fromB64(d.content);
           updateCodeStats('singleCode','singleCodeStats');
           toast('File dimuat: ' + path, 'success');
@@ -850,10 +862,17 @@ KODE BARU:
       document.getElementById('aiRevisiModal').style.display = 'none';
     }
 
-    // ALGORITMA FUZZY MATCH TINGKAT DEWA (Mengabaikan Spasi & Enter saat Mencari)
+    // ALGORITMA FUZZY MATCH TINGKAT DEWA (Mengabaikan Spasi, Enter & Tanda Kutip Miring)
     function findFuzzyMatch(editorText, searchText) {
-        const editorNoSpace = editorText.replace(/\s+/g, '');
-        const searchNoSpace = searchText.replace(/\s+/g, '');
+        // Normalisasi tanda kutip AI (Smart Quotes) menjadi kutip lurus
+        const norm = (s) => s.replace(/[\u2018\u2019`]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/[\u2013\u2014]/g, '-');
+        const editorNorm = norm(editorText);
+        const searchNorm = norm(searchText);
+
+        // Menghapus semua spasi dan karakter invisible
+        const editorNoSpace = editorNorm.replace(/[\s\uFEFF\xA0\u200B]+/g, '');
+        const searchNoSpace = searchNorm.replace(/[\s\uFEFF\xA0\u200B]+/g, '');
+
         if (!searchNoSpace) return null;
 
         const startIndex = editorNoSpace.indexOf(searchNoSpace);
@@ -863,8 +882,9 @@ KODE BARU:
         let actualStart = -1;
         let actualEnd = -1;
 
+        // Mencari kembali Index asli di teks editor yang memiliki spasi
         for (let i = 0; i < editorText.length; i++) {
-            if (!/\s/.test(editorText[i])) {
+            if (!/[\s\uFEFF\xA0\u200B]/.test(editorText[i])) {
                 if (noSpaceCount === startIndex) actualStart = i;
                 if (noSpaceCount === startIndex + searchNoSpace.length - 1) {
                     actualEnd = i;
@@ -893,18 +913,41 @@ KODE BARU:
         return;
       }
 
-      // Menggunakan Fuzzy Match
       const match = findFuzzyMatch(editor.value, oldCode);
 
       if (match) {
-        statusBox.innerHTML = '✅ Kode ditemukan! Spasi/Enter otomatis disesuaikan. Aman untuk diganti.';
+        statusBox.innerHTML = '✅ Kode ditemukan! Spasi & karakter otomatis disesuaikan. Aman untuk diganti.';
         statusBox.style.color = '#4caf50';
         statusBox.style.background = 'rgba(76,175,80,0.1)';
       } else {
-        statusBox.innerHTML = '❌ Kode tidak ditemukan! Pastikan Anda menyalin HANYA blok kodenya saja (Copy karakter aneh dari editor jika ada).';
+        statusBox.innerHTML = '❌ Kode tidak ditemukan! Pastikan Anda menyalin HANYA blok kodenya saja (Copy karakter aneh/mojibake dari editor jika ada).';
         statusBox.style.color = 'var(--danger)';
         statusBox.style.background = 'rgba(229,57,53,0.1)';
       }
+    }
+
+    function doReplaceLogic(match, newCode) {
+      const editor = document.getElementById('singleCode');
+      const statusBox = document.getElementById('aiRevisiStatus');
+
+      globalUndoCode = editor.value;
+
+      // Force Replace: Menghapus Kode Lama persis di titik Index Fuzzy Match, menggantinya dengan Kode Baru
+      const newText = editor.value.substring(0, match.start) + newCode + editor.value.substring(match.end + 1);
+      editor.value = newText;
+      updateCodeStats('singleCode', 'singleCodeStats');
+
+      clearArea('aiOldCode', 'aiOldStats');
+      clearArea('aiNewCode', 'aiNewStats');
+
+      statusBox.innerHTML = '✅ Berhasil menimpa kode!';
+      statusBox.style.color = '#4caf50';
+      statusBox.style.background = 'rgba(76,175,80,0.1)';
+
+      document.getElementById('mainUndoBtn').style.display = 'inline-block';
+      toast('Revisi AI diterapkan! Silakan cek editor utama.', 'success');
+      
+      setTimeout(() => { closeAIRevisi(); }, 1000);
     }
 
     function executeAIRevisi() {
@@ -929,7 +972,7 @@ KODE BARU:
         return;
       }
 
-      // Deteksi Duplikasi (Jika AI kebablasan ngasih panjang kode)
+      // Deteksi Duplikasi
       const oldCodeNorm = oldCode.replace(/\s+/g, '');
       const newCodeNorm = newCode.replace(/\s+/g, '');
       
@@ -940,31 +983,6 @@ KODE BARU:
       } else {
         doReplaceLogic(match, newCode);
       }
-    }
-
-    // Logika Inti Penimpaan Kode menggunakan Index dari Fuzzy Match
-    function doReplaceLogic(match, newCode) {
-      const editor = document.getElementById('singleCode');
-      const statusBox = document.getElementById('aiRevisiStatus');
-
-      globalUndoCode = editor.value;
-
-      // Fitur Force Replace: Menghapus Kode Lama persis di titik Index, menggantinya dengan Kode Baru
-      const newText = editor.value.substring(0, match.start) + newCode + editor.value.substring(match.end + 1);
-      editor.value = newText;
-      updateCodeStats('singleCode', 'singleCodeStats');
-
-      clearArea('aiOldCode', 'aiOldStats');
-      clearArea('aiNewCode', 'aiNewStats');
-
-      statusBox.innerHTML = '✅ Berhasil menimpa kode!';
-      statusBox.style.color = '#4caf50';
-      statusBox.style.background = 'rgba(76,175,80,0.1)';
-
-      document.getElementById('mainUndoBtn').style.display = 'inline-block';
-      toast('Revisi AI diterapkan! Silakan cek editor utama.', 'success');
-      
-      setTimeout(() => { closeAIRevisi(); }, 1000);
     }
 
     function undoMainRevisi() {
@@ -1057,13 +1075,11 @@ KODE BARU:
       if (!found && q) toast('Tidak ditemukan', 'error');
     }
     
-    // MENGGUNAKAN UTF-8 SAFE CONVERSION AGAR FILE DIDOWNLOAD DENGAN EMOJI YANG BENAR
     async function downloadFile(path) {
       const { username, repo, token } = getCreds();
       try {
         const d = await ghGet(username, repo, path, token);
         if (d.content) {
-          // Perbaiki bug corrupt download emoji
           const bytes = new Uint8Array(atob(d.content).split('').map(c => c.charCodeAt(0)));
           const blob = new Blob([bytes], { type: 'application/octet-stream' });
           const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = path.split('/').pop(); a.click();
@@ -1150,7 +1166,6 @@ KODE BARU:
           try {
             const d = await ghGet(username, repo, f.path, token);
             if (d.content) {
-              // MENGGUNAKAN UTF-8 SAFE BYTES AGAR EMOJI/GAMBAR DI DALAM ZIP TIDAK CORRUPT
               const bytes = new Uint8Array(atob(d.content).split('').map(c => c.charCodeAt(0)));
               zip.file(f.path, bytes, { binary: true });
             }
@@ -1207,7 +1222,6 @@ KODE BARU:
         try {
           if (isFile) {
             const d = await ghGet(username, repo, oldPath, token);
-            // MENGGUNAKAN fromB64 UNTUK MENCEGAH KORUPSI DATA SAAT RENAME!
             await ghUpload(username, repo, newPath, fromB64(d.content), token);
             await ghDelete(username, repo, oldPath, d.sha, token);
           } else if (isFolder) {
@@ -1339,7 +1353,7 @@ KODE BARU:
           return `
           <div style="background:var(--input-bg); border-radius:8px; padding:0.5rem; margin-bottom:0.4rem; ${isActive ? 'border:1px solid var(--accent);' : ''}">
             <div class="account-detail"><strong>Nama profil:</strong> ${p.name} ${isActive ? '<span class="active-indicator">✅ Aktif</span>' : ''}</div>
-            <div class="account-detail"><strong>Username:</strong> ${p.username} <button onclick="copyContent('dummy')" onclick="navigator.clipboard.writeText('${p.username}');toast('Disalin!','success')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
+            <div class="account-detail"><strong>Username:</strong> ${p.username} <button onclick="navigator.clipboard.writeText('${p.username}');toast('Disalin!','success')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
             <div class="account-detail"><strong>Repo:</strong> ${p.repo} <button onclick="navigator.clipboard.writeText('${p.repo}');toast('Disalin!','success')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
             <div class="account-detail"><strong>Token:</strong> ${p.token.substring(0,8)}... <button onclick="navigator.clipboard.writeText('${p.token}');toast('Disalin!','success')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
             <div style="display:flex; gap:0.3rem; margin-top:0.4rem;">
