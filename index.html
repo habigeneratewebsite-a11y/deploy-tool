@@ -384,7 +384,7 @@
     <div class="modal" style="text-align:left; max-width:600px; width:95%; max-height:95vh; overflow-y:auto;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
       
-      <!-- GENERATOR PROMPT DINAMIS -->
+      <!-- GENERATOR PROMPT DINAMIS: Ada 2 Pilihan Prompt -->
       <div style="background:var(--input-bg); padding:0.8rem; border-radius:10px; border:1px solid var(--accent); margin-bottom:0.5rem;">
         <div style="display:flex; gap:0.4rem; margin-bottom:0.4rem;">
           <button onclick="copySystemPrompt()" class="inline-btn" style="flex:1; background:linear-gradient(135deg, #9c27b0, #673ab7); font-size:0.75rem; padding:0.6rem;">📋 Prompt System (AI Studio)</button>
@@ -599,8 +599,18 @@
       if (tab === 'editor') updateActiveRepoInfo();
     }
 
-    // ==================== GITHUB API ====================
+    // ==================== GITHUB API & UTF8 FIX ====================
     function toB64(s) { return btoa(Array.from(new TextEncoder().encode(s), b => String.fromCharCode(b)).join('')); }
+    
+    // FUNGSI BARU: Mencegah karakter aneh/mojibake pada emoji saat mendownload dari Github
+    function fromB64(str) {
+      try {
+        return new TextDecoder('utf-8').decode(Uint8Array.from(atob(str), c => c.charCodeAt(0)));
+      } catch(e) {
+        return atob(str); // Fallback jika gagal
+      }
+    }
+
     async function ghReq(url, opts) {
       const r = await fetch(url, opts);
       if (!r.ok) { let m = `HTTP ${r.status}`; try { const e = await r.json(); m = e.message || m; } catch (_) {} throw new Error(m); }
@@ -761,7 +771,8 @@
       try {
         const d = await ghGet(username, repo, path, token);
         if (d.content) {
-          document.getElementById('singleCode').value = atob(d.content);
+          // MENGGUNAKAN fromB64 (UTF-8 FIX) AGAR EMOJI TIDAK RUSAK!
+          document.getElementById('singleCode').value = fromB64(d.content);
           updateCodeStats('singleCode','singleCodeStats');
           toast('File dimuat: ' + path, 'success');
         }
@@ -1018,16 +1029,20 @@ KODE BARU:
       });
       if (!found && q) toast('Tidak ditemukan', 'error');
     }
+    
+    // MENGGUNAKAN UTF-8 SAFE CONVERSION AGAR FILE DIDOWNLOAD DENGAN EMOJI YANG BENAR
     async function downloadFile(path) {
       const { username, repo, token } = getCreds();
       try {
         const d = await ghGet(username, repo, path, token);
         if (d.content) {
-          const blob = new Blob([atob(d.content)], { type: 'text/plain' });
+          const bytes = Uint8Array.from(atob(d.content), c => c.charCodeAt(0));
+          const blob = new Blob([bytes], { type: 'application/octet-stream' });
           const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = path.split('/').pop(); a.click();
         }
       } catch (_) { toast('Gagal download', 'error'); }
     }
+    
     async function deleteFile(path) {
       const { username, repo, token } = getCreds();
       confirm(`Hapus ${path}?`, async () => {
@@ -1107,7 +1122,9 @@ KODE BARU:
           try {
             const d = await ghGet(username, repo, f.path, token);
             if (d.content) {
-              zip.file(f.path, atob(d.content), { binary: false });
+              // MENGGUNAKAN UTF-8 SAFE BYTES AGAR EMOJI/GAMBAR DI DALAM ZIP TIDAK CORRUPT
+              const bytes = Uint8Array.from(atob(d.content), c => c.charCodeAt(0));
+              zip.file(f.path, bytes, { binary: true });
             }
           } catch (_) {}
           done++;
@@ -1162,14 +1179,15 @@ KODE BARU:
         try {
           if (isFile) {
             const d = await ghGet(username, repo, oldPath, token);
-            await ghUpload(username, repo, newPath, atob(d.content), token);
+            // MENGGUNAKAN fromB64 UNTUK MENCEGAH KORUPSI DATA SAAT RENAME!
+            await ghUpload(username, repo, newPath, fromB64(d.content), token);
             await ghDelete(username, repo, oldPath, d.sha, token);
           } else if (isFolder) {
             const tree = await fetchTree(username, repo, token);
             const files = tree.filter(i => i.type === 'blob' && i.path.startsWith(oldPath + '/'));
             for (const f of files) {
               const d = await ghGet(username, repo, f.path, token);
-              await ghUpload(username, repo, f.path.replace(oldPath, newPath), atob(d.content), token);
+              await ghUpload(username, repo, f.path.replace(oldPath, newPath), fromB64(d.content), token);
               await ghDelete(username, repo, f.path, d.sha, token);
             }
           }
