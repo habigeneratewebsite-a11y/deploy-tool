@@ -379,12 +379,12 @@
     </div>
   </div>
 
-  <!-- Modal Revisi AI (Diperbarui dengan Auto Check, Paste, & Anti-Duplicate Extreme) -->
+  <!-- Modal Revisi AI (FUZZY MATCH & UTF-8 FIX) -->
   <div id="aiRevisiModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:600px; width:95%; max-height:95vh; overflow-y:auto;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
       
-      <!-- GENERATOR PROMPT DINAMIS: Ada 2 Pilihan Prompt -->
+      <!-- GENERATOR PROMPT DINAMIS -->
       <div style="background:var(--input-bg); padding:0.8rem; border-radius:10px; border:1px solid var(--accent); margin-bottom:0.5rem;">
         <div style="display:flex; gap:0.4rem; margin-bottom:0.4rem;">
           <button onclick="copySystemPrompt()" class="inline-btn" style="flex:1; background:linear-gradient(135deg, #9c27b0, #673ab7); font-size:0.75rem; padding:0.6rem;">📋 Prompt System (AI Studio)</button>
@@ -570,7 +570,6 @@
       clearTimeout(t._t); t._t = setTimeout(() => t.style.display = 'none', 3000);
     }
     
-    // Custom Confirm function diperbaiki (Asynchronous)
     function confirm(msg, cb) {
       const m = document.getElementById('confirmModal');
       document.getElementById('confirmMessage').innerHTML = msg;
@@ -600,14 +599,18 @@
     }
 
     // ==================== GITHUB API & UTF8 FIX ====================
-    function toB64(s) { return btoa(Array.from(new TextEncoder().encode(s), b => String.fromCharCode(b)).join('')); }
     
-    // FUNGSI BARU: Mencegah karakter aneh/mojibake pada emoji saat mendownload dari Github
+    // ENCODE: Memastikan Emoji tersimpan benar di GitHub
+    function toB64(s) {
+        return btoa(unescape(encodeURIComponent(s)));
+    }
+    
+    // DECODE: Mencegah karakter aneh/mojibake pada emoji saat mendownload dari Github
     function fromB64(str) {
       try {
-        return new TextDecoder('utf-8').decode(Uint8Array.from(atob(str), c => c.charCodeAt(0)));
+        return decodeURIComponent(escape(atob(str)));
       } catch(e) {
-        return atob(str); // Fallback jika gagal
+        return atob(str); // Fallback jika kode asli dari sananya rusak
       }
     }
 
@@ -797,7 +800,7 @@
       });
     }
 
-    // ==================== ⚡ REVISI AI (AUTO CHECK & PROMPT DEWA) ====================
+    // ==================== ⚡ REVISI AI (FUZZY MATCH & PROMPT DEWA) ====================
     function copySystemPrompt() {
       const systemPrompt = `Kamu adalah Senior Programmer. Tugasmu adalah memberikan revisi kode untuk sistem Auto-Replace Habi Studio.
 
@@ -847,6 +850,32 @@ KODE BARU:
       document.getElementById('aiRevisiModal').style.display = 'none';
     }
 
+    // ALGORITMA FUZZY MATCH TINGKAT DEWA (Mengabaikan Spasi & Enter saat Mencari)
+    function findFuzzyMatch(editorText, searchText) {
+        const editorNoSpace = editorText.replace(/\s+/g, '');
+        const searchNoSpace = searchText.replace(/\s+/g, '');
+        if (!searchNoSpace) return null;
+
+        const startIndex = editorNoSpace.indexOf(searchNoSpace);
+        if (startIndex === -1) return null;
+
+        let noSpaceCount = 0;
+        let actualStart = -1;
+        let actualEnd = -1;
+
+        for (let i = 0; i < editorText.length; i++) {
+            if (!/\s/.test(editorText[i])) {
+                if (noSpaceCount === startIndex) actualStart = i;
+                if (noSpaceCount === startIndex + searchNoSpace.length - 1) {
+                    actualEnd = i;
+                    break;
+                }
+                noSpaceCount++;
+            }
+        }
+        return { start: actualStart, end: actualEnd };
+    }
+
     function autoCheckOldCode() {
       const oldCode = document.getElementById('aiOldCode').value;
       const editor = document.getElementById('singleCode');
@@ -864,45 +893,18 @@ KODE BARU:
         return;
       }
 
-      const normalize = (str) => str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-      const editorText = normalize(editor.value);
-      const searchTarget = normalize(oldCode);
+      // Menggunakan Fuzzy Match
+      const match = findFuzzyMatch(editor.value, oldCode);
 
-      if (editorText.includes(searchTarget)) {
-        statusBox.innerHTML = '✅ Kode ditemukan! Aman, silakan tempel Kode Baru dan klik Ganti Kode.';
+      if (match) {
+        statusBox.innerHTML = '✅ Kode ditemukan! Spasi/Enter otomatis disesuaikan. Aman untuk diganti.';
         statusBox.style.color = '#4caf50';
         statusBox.style.background = 'rgba(76,175,80,0.1)';
       } else {
-        statusBox.innerHTML = '❌ Kode tidak ditemukan! Pastikan Anda menyalin HANYA blok kodenya saja, jangan meng-copy kata "KODE LAMA".';
+        statusBox.innerHTML = '❌ Kode tidak ditemukan! Pastikan Anda menyalin HANYA blok kodenya saja (Copy karakter aneh dari editor jika ada).';
         statusBox.style.color = 'var(--danger)';
         statusBox.style.background = 'rgba(229,57,53,0.1)';
       }
-    }
-
-    // Logika Inti Penimpaan Kode
-    function doReplaceLogic(searchTarget, newCodeNorm) {
-      const editor = document.getElementById('singleCode');
-      const statusBox = document.getElementById('aiRevisiStatus');
-      const editorText = editor.value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-
-      globalUndoCode = editor.value;
-
-      // Fitur Force Replace: Menghapus Kode Lama, menggantinya dengan Kode Baru secara paksa
-      const newText = editorText.replace(searchTarget, newCodeNorm);
-      editor.value = newText;
-      updateCodeStats('singleCode', 'singleCodeStats');
-
-      clearArea('aiOldCode', 'aiOldStats');
-      clearArea('aiNewCode', 'aiNewStats');
-
-      statusBox.innerHTML = '✅ Berhasil menimpa kode!';
-      statusBox.style.color = '#4caf50';
-      statusBox.style.background = 'rgba(76,175,80,0.1)';
-
-      document.getElementById('mainUndoBtn').style.display = 'inline-block';
-      toast('Revisi AI diterapkan! Silakan cek editor utama.', 'success');
-      
-      setTimeout(() => { closeAIRevisi(); }, 1000);
     }
 
     function executeAIRevisi() {
@@ -918,12 +920,9 @@ KODE BARU:
         return;
       }
 
-      const normalize = (str) => str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-      const editorText = normalize(editor.value);
-      const searchTarget = normalize(oldCode);
-      const newCodeNorm = normalize(newCode);
+      const match = findFuzzyMatch(editor.value, oldCode);
 
-      if (!editorText.includes(searchTarget)) {
+      if (!match) {
         statusBox.innerHTML = '❌ GAGAL: Kode lama tidak ditemukan secara persis di dalam file.';
         statusBox.style.color = 'var(--danger)';
         statusBox.style.background = 'rgba(229,57,53,0.1)';
@@ -931,13 +930,41 @@ KODE BARU:
       }
 
       // Deteksi Duplikasi (Jika AI kebablasan ngasih panjang kode)
-      if (newCodeNorm.length > (searchTarget.length * 3) + 200) {
-        confirm("⚠️ PERINGATAN ANTI-DUPLIKAT:<br><br>KODE BARU jauh lebih panjang dari KODE LAMA. Ini berisiko tinggi menyebabkan kode ganda/duplikat di dalam file Anda jika AI memasukkan baris yang seharusnya tidak direvisi.<br><br>Tetap lanjutkan mengganti kode?", () => {
-          doReplaceLogic(searchTarget, newCodeNorm);
+      const oldCodeNorm = oldCode.replace(/\s+/g, '');
+      const newCodeNorm = newCode.replace(/\s+/g, '');
+      
+      if (newCodeNorm.length > (oldCodeNorm.length * 3) + 200) {
+        confirm("⚠️ PERINGATAN ANTI-DUPLIKAT:<br><br>KODE BARU jauh lebih panjang dari KODE LAMA. Ini berisiko tinggi menyebabkan kode ganda/duplikat di dalam file Anda jika AI memasukkan baris ekstra.<br><br>Tetap lanjutkan mengganti kode?", () => {
+          doReplaceLogic(match, newCode);
         });
       } else {
-        doReplaceLogic(searchTarget, newCodeNorm);
+        doReplaceLogic(match, newCode);
       }
+    }
+
+    // Logika Inti Penimpaan Kode menggunakan Index dari Fuzzy Match
+    function doReplaceLogic(match, newCode) {
+      const editor = document.getElementById('singleCode');
+      const statusBox = document.getElementById('aiRevisiStatus');
+
+      globalUndoCode = editor.value;
+
+      // Fitur Force Replace: Menghapus Kode Lama persis di titik Index, menggantinya dengan Kode Baru
+      const newText = editor.value.substring(0, match.start) + newCode + editor.value.substring(match.end + 1);
+      editor.value = newText;
+      updateCodeStats('singleCode', 'singleCodeStats');
+
+      clearArea('aiOldCode', 'aiOldStats');
+      clearArea('aiNewCode', 'aiNewStats');
+
+      statusBox.innerHTML = '✅ Berhasil menimpa kode!';
+      statusBox.style.color = '#4caf50';
+      statusBox.style.background = 'rgba(76,175,80,0.1)';
+
+      document.getElementById('mainUndoBtn').style.display = 'inline-block';
+      toast('Revisi AI diterapkan! Silakan cek editor utama.', 'success');
+      
+      setTimeout(() => { closeAIRevisi(); }, 1000);
     }
 
     function undoMainRevisi() {
@@ -1036,7 +1063,8 @@ KODE BARU:
       try {
         const d = await ghGet(username, repo, path, token);
         if (d.content) {
-          const bytes = Uint8Array.from(atob(d.content), c => c.charCodeAt(0));
+          // Perbaiki bug corrupt download emoji
+          const bytes = new Uint8Array(atob(d.content).split('').map(c => c.charCodeAt(0)));
           const blob = new Blob([bytes], { type: 'application/octet-stream' });
           const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = path.split('/').pop(); a.click();
         }
@@ -1123,7 +1151,7 @@ KODE BARU:
             const d = await ghGet(username, repo, f.path, token);
             if (d.content) {
               // MENGGUNAKAN UTF-8 SAFE BYTES AGAR EMOJI/GAMBAR DI DALAM ZIP TIDAK CORRUPT
-              const bytes = Uint8Array.from(atob(d.content), c => c.charCodeAt(0));
+              const bytes = new Uint8Array(atob(d.content).split('').map(c => c.charCodeAt(0)));
               zip.file(f.path, bytes, { binary: true });
             }
           } catch (_) {}
@@ -1311,9 +1339,9 @@ KODE BARU:
           return `
           <div style="background:var(--input-bg); border-radius:8px; padding:0.5rem; margin-bottom:0.4rem; ${isActive ? 'border:1px solid var(--accent);' : ''}">
             <div class="account-detail"><strong>Nama profil:</strong> ${p.name} ${isActive ? '<span class="active-indicator">✅ Aktif</span>' : ''}</div>
-            <div class="account-detail"><strong>Username:</strong> ${p.username} <button onclick="copyText('${p.username}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
-            <div class="account-detail"><strong>Repo:</strong> ${p.repo} <button onclick="copyText('${p.repo}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
-            <div class="account-detail"><strong>Token:</strong> ${p.token.substring(0,8)}... <button onclick="copyText('${p.token}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
+            <div class="account-detail"><strong>Username:</strong> ${p.username} <button onclick="copyContent('dummy')" onclick="navigator.clipboard.writeText('${p.username}');toast('Disalin!','success')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
+            <div class="account-detail"><strong>Repo:</strong> ${p.repo} <button onclick="navigator.clipboard.writeText('${p.repo}');toast('Disalin!','success')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
+            <div class="account-detail"><strong>Token:</strong> ${p.token.substring(0,8)}... <button onclick="navigator.clipboard.writeText('${p.token}');toast('Disalin!','success')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.75rem;">📋</button></div>
             <div style="display:flex; gap:0.3rem; margin-top:0.4rem;">
               <button onclick="switchAccount(${i})" class="inline-btn">✅ Pilih</button>
               <button onclick="editAccount(${i})" class="inline-btn" style="background:#ff9800;">✏️ Edit</button>
@@ -1325,9 +1353,6 @@ KODE BARU:
       document.getElementById('accountModal').style.display = 'flex';
     }
     
-    function copyText(text) {
-      navigator.clipboard.writeText(text).then(() => toast('Disalin!', 'success'));
-    }
     function closeAccountModal() { document.getElementById('accountModal').style.display = 'none'; }
     function switchAccount(i) {
       const p = getProfiles()[i];
