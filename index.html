@@ -379,7 +379,7 @@
     </div>
   </div>
 
-  <!-- Modal Revisi AI (FUZZY MATCH & UTF-8 FIX) -->
+  <!-- Modal Revisi AI (MDN UTF-8 FIX & SUPER FUZZY MATCH) -->
   <div id="aiRevisiModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:600px; width:95%; max-height:95vh; overflow-y:auto;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
@@ -598,32 +598,26 @@
       if (tab === 'editor') updateActiveRepoInfo();
     }
 
-    // ==================== GITHUB API & UTF8 FIX ====================
+    // ==================== GITHUB API (MDN UTF-8 BASE64 FIX) ====================
     
     function toB64(str) {
-        const bytes = new TextEncoder().encode(str);
-        let binary = '';
-        for (let i = 0; i < bytes.length; i++) {
-            binary += String.fromCharCode(bytes[i]);
-        }
-        return btoa(binary);
+        return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+            function toSolidBytes(match, p1) {
+                return String.fromCharCode('0x' + p1);
+        }));
     }
     
-    function fromB64(b64) {
+    function fromB64(str) {
         try {
-            const binary = atob(b64);
-            const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) {
-                bytes[i] = binary.charCodeAt(i);
+            return decodeURIComponent(atob(str).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+        } catch (e) {
+            try {
+                return decodeURIComponent(escape(atob(str)));
+            } catch (e2) {
+                return atob(str);
             }
-            return new TextDecoder('utf-8', {fatal: true}).decode(bytes);
-        } catch(e) {
-            const binary = atob(b64);
-            const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) {
-                bytes[i] = binary.charCodeAt(i);
-            }
-            return new TextDecoder('windows-1252').decode(bytes);
         }
     }
 
@@ -787,6 +781,7 @@
       try {
         const d = await ghGet(username, repo, path, token);
         if (d.content) {
+          // MENGGUNAKAN fromB64 (MDN UTF-8 FIX)
           document.getElementById('singleCode').value = fromB64(d.content);
           updateCodeStats('singleCode','singleCodeStats');
           toast('File dimuat: ' + path, 'success');
@@ -812,7 +807,7 @@
       });
     }
 
-    // ==================== ⚡ REVISI AI (FUZZY MATCH & PROMPT DEWA) ====================
+    // ==================== ⚡ REVISI AI (SUPER FUZZY MATCH & PROMPT DEWA) ====================
     function copySystemPrompt() {
       const systemPrompt = `Kamu adalah Senior Programmer. Tugasmu adalah memberikan revisi kode untuk sistem Auto-Replace Habi Studio.
 
@@ -862,35 +857,34 @@ KODE BARU:
       document.getElementById('aiRevisiModal').style.display = 'none';
     }
 
-    // ALGORITMA FUZZY MATCH TINGKAT DEWA (Mengabaikan Spasi, Enter & Tanda Kutip Miring)
+    // ALGORITMA FUZZY MATCH SUPER DEWA (Mengabaikan Spasi, Enter & Karakter Tak Kasat Mata)
     function findFuzzyMatch(editorText, searchText) {
-        // Normalisasi tanda kutip AI (Smart Quotes) menjadi kutip lurus
-        const norm = (s) => s.replace(/[\u2018\u2019`]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/[\u2013\u2014]/g, '-');
-        const editorNorm = norm(editorText);
-        const searchNorm = norm(searchText);
+        const isIgnored = (char) => /[\s\uFEFF\xA0\u200B\u200C\u200D]/.test(char);
+        const normalizeQuotes = (char) => /['"‘“’”`]/.test(char) ? '"' : char;
 
-        // Menghapus semua spasi dan karakter invisible
-        const editorNoSpace = editorNorm.replace(/[\s\uFEFF\xA0\u200B]+/g, '');
-        const searchNoSpace = searchNorm.replace(/[\s\uFEFF\xA0\u200B]+/g, '');
+        let editorClean = '';
+        let searchClean = '';
 
-        if (!searchNoSpace) return null;
+        for (let char of editorText) if (!isIgnored(char)) editorClean += normalizeQuotes(char);
+        for (let char of searchText) if (!isIgnored(char)) searchClean += normalizeQuotes(char);
 
-        const startIndex = editorNoSpace.indexOf(searchNoSpace);
+        if (!searchClean) return null;
+
+        const startIndex = editorClean.indexOf(searchClean);
         if (startIndex === -1) return null;
 
-        let noSpaceCount = 0;
+        let cleanCount = 0;
         let actualStart = -1;
         let actualEnd = -1;
 
-        // Mencari kembali Index asli di teks editor yang memiliki spasi
         for (let i = 0; i < editorText.length; i++) {
-            if (!/[\s\uFEFF\xA0\u200B]/.test(editorText[i])) {
-                if (noSpaceCount === startIndex) actualStart = i;
-                if (noSpaceCount === startIndex + searchNoSpace.length - 1) {
+            if (!isIgnored(editorText[i])) {
+                if (cleanCount === startIndex) actualStart = i;
+                if (cleanCount === startIndex + searchClean.length - 1) {
                     actualEnd = i;
                     break;
                 }
-                noSpaceCount++;
+                cleanCount++;
             }
         }
         return { start: actualStart, end: actualEnd };
@@ -932,7 +926,7 @@ KODE BARU:
 
       globalUndoCode = editor.value;
 
-      // Force Replace: Menghapus Kode Lama persis di titik Index Fuzzy Match, menggantinya dengan Kode Baru
+      // Force Replace berdasarkan index murni
       const newText = editor.value.substring(0, match.start) + newCode + editor.value.substring(match.end + 1);
       editor.value = newText;
       updateCodeStats('singleCode', 'singleCodeStats');
@@ -973,8 +967,11 @@ KODE BARU:
       }
 
       // Deteksi Duplikasi
-      const oldCodeNorm = oldCode.replace(/\s+/g, '');
-      const newCodeNorm = newCode.replace(/\s+/g, '');
+      const isIgnored = (char) => /[\s\uFEFF\xA0\u200B\u200C\u200D]/.test(char);
+      let oldCodeNorm = '';
+      for (let char of oldCode) if (!isIgnored(char)) oldCodeNorm += char;
+      let newCodeNorm = '';
+      for (let char of newCode) if (!isIgnored(char)) newCodeNorm += char;
       
       if (newCodeNorm.length > (oldCodeNorm.length * 3) + 200) {
         confirm("⚠️ PERINGATAN ANTI-DUPLIKAT:<br><br>KODE BARU jauh lebih panjang dari KODE LAMA. Ini berisiko tinggi menyebabkan kode ganda/duplikat di dalam file Anda jika AI memasukkan baris ekstra.<br><br>Tetap lanjutkan mengganti kode?", () => {
