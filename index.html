@@ -379,12 +379,11 @@
     </div>
   </div>
 
-  <!-- Modal Revisi AI (MDN UTF-8 FIX & SUPER FUZZY MATCH) -->
+  <!-- Modal Revisi AI (SMART ANCHOR MATCHING) -->
   <div id="aiRevisiModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:600px; width:95%; max-height:95vh; overflow-y:auto;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
       
-      <!-- GENERATOR PROMPT DINAMIS -->
       <div style="background:var(--input-bg); padding:0.8rem; border-radius:10px; border:1px solid var(--accent); margin-bottom:0.5rem;">
         <div style="display:flex; gap:0.4rem; margin-bottom:0.4rem;">
           <button onclick="copySystemPrompt()" class="inline-btn" style="flex:1; background:linear-gradient(135deg, #9c27b0, #673ab7); font-size:0.75rem; padding:0.6rem;">📋 Prompt System (AI Studio)</button>
@@ -393,10 +392,8 @@
         <p style="font-size:0.7rem; margin-top:0; opacity:0.8; margin-bottom:0;">Pilih prompt sesuai AI Anda. Mencegah AI salah potong baris (mencegah kode duplikat) dan memaksa format Code Block murni.</p>
       </div>
 
-      <!-- NOTIFIKASI CEK KODE & STATUS -->
       <div id="aiRevisiStatus" style="font-size:0.8rem; margin-bottom:0.8rem; font-weight:600; padding:0.4rem; border-radius:6px; min-height:10px;"></div>
       
-      <!-- Area Kode Lama -->
       <label>1️⃣ Kode Lama (Yang mau dihapus/diubah kecil)</label>
       <textarea id="aiOldCode" placeholder="TIPS: Paste potongan kode asli LANGSUNG DARI EDITOR UTAMA di sini..." style="min-height:90px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiOldCode','aiOldStats'); autoCheckOldCode();"></textarea>
       <div class="stats-row">
@@ -407,7 +404,6 @@
         </div>
       </div>
       
-      <!-- Area Kode Baru -->
       <label>2️⃣ Kode Baru (Dari balasan Chat AI / Teks Baru)</label>
       <textarea id="aiNewCode" placeholder="Paste kode revisi utuh dari AI di sini..." style="min-height:120px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiNewCode','aiNewStats')"></textarea>
       <div class="stats-row">
@@ -435,7 +431,7 @@
     </div>
   </div>
 
-  <!-- Modal Tambah Akun (form baru) -->
+  <!-- Modal Tambah Akun -->
   <div id="addAccountFormModal" class="modal-overlay">
     <div class="modal" style="text-align:left;">
       <h3>➕ Tambah Akun Baru</h3>
@@ -484,7 +480,7 @@
     // ==================== STATE ====================
     const SK = 'hs_profiles', UK = 'hs_user', TK = 'hs_theme', HK = 'hs_history', AK = 'hs_antilag';
     let repoTree = [], selDelFolder = '', currentSearchTarget = null;
-    let globalUndoCode = ''; // Memori Undo untuk tombol di Editor Utama
+    let globalUndoCode = ''; 
 
     // ==================== INIT ====================
     window.onload = () => {
@@ -598,8 +594,7 @@
       if (tab === 'editor') updateActiveRepoInfo();
     }
 
-    // ==================== GITHUB API (MDN UTF-8 BASE64 FIX) ====================
-    
+    // ==================== GITHUB API & UTF8 FIX ====================
     function toB64(str) {
         return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
             function toSolidBytes(match, p1) {
@@ -613,11 +608,8 @@
                 return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
             }).join(''));
         } catch (e) {
-            try {
-                return decodeURIComponent(escape(atob(str)));
-            } catch (e2) {
-                return atob(str);
-            }
+            try { return decodeURIComponent(escape(atob(str))); } 
+            catch (e2) { return atob(str); }
         }
     }
 
@@ -781,7 +773,6 @@
       try {
         const d = await ghGet(username, repo, path, token);
         if (d.content) {
-          // MENGGUNAKAN fromB64 (MDN UTF-8 FIX)
           document.getElementById('singleCode').value = fromB64(d.content);
           updateCodeStats('singleCode','singleCodeStats');
           toast('File dimuat: ' + path, 'success');
@@ -807,7 +798,7 @@
       });
     }
 
-    // ==================== ⚡ REVISI AI (SUPER FUZZY MATCH & PROMPT DEWA) ====================
+    // ==================== ⚡ REVISI AI (SMART ANCHOR MATCHING) ====================
     function copySystemPrompt() {
       const systemPrompt = `Kamu adalah Senior Programmer. Tugasmu adalah memberikan revisi kode untuk sistem Auto-Replace Habi Studio.
 
@@ -857,37 +848,61 @@ KODE BARU:
       document.getElementById('aiRevisiModal').style.display = 'none';
     }
 
-    // ALGORITMA FUZZY MATCH SUPER DEWA (Mengabaikan Spasi, Enter & Karakter Tak Kasat Mata)
-    function findFuzzyMatch(editorText, searchText) {
-        const isIgnored = (char) => /[\s\uFEFF\xA0\u200B\u200C\u200D]/.test(char);
-        const normalizeQuotes = (char) => /['"‘“’”`]/.test(char) ? '"' : char;
+    // ALGORITMA SMART ANCHOR (KEBAL MOJIBAKE & SPASI)
+    function findSmartMatch(editorText, searchText) {
+        // 1. Coba Exact Match (Biasa)
+        const normalize = (str) => str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        const edNorm = normalize(editorText);
+        const stNorm = normalize(searchText);
+        let exactIdx = edNorm.indexOf(stNorm);
+        if (exactIdx !== -1) return { start: exactIdx, end: exactIdx + stNorm.length - 1 };
 
-        let editorClean = '';
-        let searchClean = '';
-
-        for (let char of editorText) if (!isIgnored(char)) editorClean += normalizeQuotes(char);
-        for (let char of searchText) if (!isIgnored(char)) searchClean += normalizeQuotes(char);
-
-        if (!searchClean) return null;
-
-        const startIndex = editorClean.indexOf(searchClean);
-        if (startIndex === -1) return null;
-
-        let cleanCount = 0;
-        let actualStart = -1;
-        let actualEnd = -1;
-
-        for (let i = 0; i < editorText.length; i++) {
-            if (!isIgnored(editorText[i])) {
-                if (cleanCount === startIndex) actualStart = i;
-                if (cleanCount === startIndex + searchClean.length - 1) {
-                    actualEnd = i;
-                    break;
+        // 2. Coba No-Space Match
+        const noSpaceEd = edNorm.replace(/\s+/g, '');
+        const noSpaceSt = stNorm.replace(/\s+/g, '');
+        if (noSpaceSt && noSpaceEd.includes(noSpaceSt)) {
+            const startNS = noSpaceEd.indexOf(noSpaceSt);
+            let noSpaceCount = 0;
+            let actStart = -1, actEnd = -1;
+            for (let i = 0; i < edNorm.length; i++) {
+                if (!/\s/.test(edNorm[i])) {
+                    if (noSpaceCount === startNS) actStart = i;
+                    if (noSpaceCount === startNS + noSpaceSt.length - 1) { actEnd = i; break; }
+                    noSpaceCount++;
                 }
-                cleanCount++;
+            }
+            if (actStart !== -1) return { start: actStart, end: actEnd };
+        }
+
+        // 3. SMART ANCHOR (Menggunakan Kepala & Ekor) - Ini yang mengalahkan Mojibake!
+        const tokens = stNorm.trim().split(/\s+/).filter(Boolean);
+        if (tokens.length >= 4) {
+            // Ambil 3 kata pertama dan 3 kata terakhir
+            const head = tokens.slice(0, 3).join(' ');
+            const tail = tokens.slice(-3).join(' ');
+
+            const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const headRegexStr = head.split(' ').map(escapeRegExp).join('\\s+');
+            const tailRegexStr = tail.split(' ').map(escapeRegExp).join('\\s+');
+
+            const headRe = new RegExp(headRegexStr);
+            const tailRe = new RegExp(tailRegexStr, 'g');
+
+            const headMatch = headRe.exec(edNorm);
+            if (headMatch) {
+                tailRe.lastIndex = headMatch.index + headMatch[0].length;
+                const tailMatch = tailRe.exec(edNorm);
+                if (tailMatch) {
+                    const start = headMatch.index;
+                    const end = tailMatch.index + tailMatch[0].length - 1;
+                    // Pastikan yang di-match ukurannya masuk akal (tidak nge-replace seisi file)
+                    if ((end - start) < (stNorm.length * 5) + 2000) {
+                        return { start, end };
+                    }
+                }
             }
         }
-        return { start: actualStart, end: actualEnd };
+        return null;
     }
 
     function autoCheckOldCode() {
@@ -907,14 +922,14 @@ KODE BARU:
         return;
       }
 
-      const match = findFuzzyMatch(editor.value, oldCode);
+      const match = findSmartMatch(editor.value, oldCode);
 
       if (match) {
-        statusBox.innerHTML = '✅ Kode ditemukan! Spasi & karakter otomatis disesuaikan. Aman untuk diganti.';
+        statusBox.innerHTML = '✅ Kode ditemukan! Mengabaikan karakter aneh/spasi. Aman untuk diganti.';
         statusBox.style.color = '#4caf50';
         statusBox.style.background = 'rgba(76,175,80,0.1)';
       } else {
-        statusBox.innerHTML = '❌ Kode tidak ditemukan! Pastikan Anda menyalin HANYA blok kodenya saja (Copy karakter aneh/mojibake dari editor jika ada).';
+        statusBox.innerHTML = '❌ Kode tidak ditemukan! Pastikan Anda menyalin HANYA blok kodenya saja.';
         statusBox.style.color = 'var(--danger)';
         statusBox.style.background = 'rgba(229,57,53,0.1)';
       }
@@ -923,11 +938,12 @@ KODE BARU:
     function doReplaceLogic(match, newCode) {
       const editor = document.getElementById('singleCode');
       const statusBox = document.getElementById('aiRevisiStatus');
+      const editorText = editor.value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
       globalUndoCode = editor.value;
 
-      // Force Replace berdasarkan index murni
-      const newText = editor.value.substring(0, match.start) + newCode + editor.value.substring(match.end + 1);
+      // Force Replace berdasarkan index hasil pencarian pintar
+      const newText = editorText.substring(0, match.start) + newCode + editorText.substring(match.end + 1);
       editor.value = newText;
       updateCodeStats('singleCode', 'singleCodeStats');
 
@@ -957,7 +973,7 @@ KODE BARU:
         return;
       }
 
-      const match = findFuzzyMatch(editor.value, oldCode);
+      const match = findSmartMatch(editor.value, oldCode);
 
       if (!match) {
         statusBox.innerHTML = '❌ GAGAL: Kode lama tidak ditemukan secara persis di dalam file.';
@@ -967,11 +983,8 @@ KODE BARU:
       }
 
       // Deteksi Duplikasi
-      const isIgnored = (char) => /[\s\uFEFF\xA0\u200B\u200C\u200D]/.test(char);
-      let oldCodeNorm = '';
-      for (let char of oldCode) if (!isIgnored(char)) oldCodeNorm += char;
-      let newCodeNorm = '';
-      for (let char of newCode) if (!isIgnored(char)) newCodeNorm += char;
+      const oldCodeNorm = oldCode.replace(/\s+/g, '');
+      const newCodeNorm = newCode.replace(/\s+/g, '');
       
       if (newCodeNorm.length > (oldCodeNorm.length * 3) + 200) {
         confirm("⚠️ PERINGATAN ANTI-DUPLIKAT:<br><br>KODE BARU jauh lebih panjang dari KODE LAMA. Ini berisiko tinggi menyebabkan kode ganda/duplikat di dalam file Anda jika AI memasukkan baris ekstra.<br><br>Tetap lanjutkan mengganti kode?", () => {
