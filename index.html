@@ -379,7 +379,7 @@
     </div>
   </div>
 
-  <!-- Modal Revisi AI (SMART ANCHOR MATCHING) -->
+  <!-- Modal Revisi AI (AUTO DEDUPLICATOR) -->
   <div id="aiRevisiModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:600px; width:95%; max-height:95vh; overflow-y:auto;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
@@ -798,7 +798,7 @@
       });
     }
 
-    // ==================== ⚡ REVISI AI (SMART ANCHOR MATCHING) ====================
+    // ==================== ⚡ REVISI AI (AUTO DEDUPLICATOR) ====================
     function copySystemPrompt() {
       const systemPrompt = `Kamu adalah Senior Programmer. Tugasmu adalah memberikan revisi kode untuk sistem Auto-Replace Habi Studio.
 
@@ -848,16 +848,13 @@ KODE BARU:
       document.getElementById('aiRevisiModal').style.display = 'none';
     }
 
-    // ALGORITMA SMART ANCHOR (KEBAL MOJIBAKE & SPASI)
     function findSmartMatch(editorText, searchText) {
-        // 1. Coba Exact Match (Biasa)
         const normalize = (str) => str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
         const edNorm = normalize(editorText);
         const stNorm = normalize(searchText);
         let exactIdx = edNorm.indexOf(stNorm);
         if (exactIdx !== -1) return { start: exactIdx, end: exactIdx + stNorm.length - 1 };
 
-        // 2. Coba No-Space Match
         const noSpaceEd = edNorm.replace(/\s+/g, '');
         const noSpaceSt = stNorm.replace(/\s+/g, '');
         if (noSpaceSt && noSpaceEd.includes(noSpaceSt)) {
@@ -874,10 +871,8 @@ KODE BARU:
             if (actStart !== -1) return { start: actStart, end: actEnd };
         }
 
-        // 3. SMART ANCHOR (Menggunakan Kepala & Ekor) - Ini yang mengalahkan Mojibake!
         const tokens = stNorm.trim().split(/\s+/).filter(Boolean);
         if (tokens.length >= 4) {
-            // Ambil 3 kata pertama dan 3 kata terakhir
             const head = tokens.slice(0, 3).join(' ');
             const tail = tokens.slice(-3).join(' ');
 
@@ -895,7 +890,6 @@ KODE BARU:
                 if (tailMatch) {
                     const start = headMatch.index;
                     const end = tailMatch.index + tailMatch[0].length - 1;
-                    // Pastikan yang di-match ukurannya masuk akal (tidak nge-replace seisi file)
                     if ((end - start) < (stNorm.length * 5) + 2000) {
                         return { start, end };
                     }
@@ -935,6 +929,79 @@ KODE BARU:
       }
     }
 
+    // --- ALGORITMA PENGHAPUS DUPLIKAT OTOMATIS (SELF-HEALING) ---
+    function removeDuplicatePrefix(prefix, newCode) {
+        const isIgnored = (char) => /[\s\uFEFF\xA0\u200B\u200C\u200D]/.test(char);
+        let prefChars = [];
+        for(let i=0; i<prefix.length; i++) {
+            if(!isIgnored(prefix[i])) prefChars.push({c: prefix[i], idx: i});
+        }
+        let newChars = [];
+        for(let i=0; i<newCode.length; i++) {
+            if(!isIgnored(newCode[i])) newChars.push({c: newCode[i], idx: i});
+        }
+
+        let maxOverlap = 0;
+        let maxLen = Math.min(prefChars.length, newChars.length, 15000);
+        
+        for (let k = maxLen; k >= 15; k--) {
+            let match = true;
+            let prefStart = prefChars.length - k;
+            for (let j = 0; j < k; j++) {
+                if (prefChars[prefStart + j].c !== newChars[j].c) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                maxOverlap = k;
+                break;
+            }
+        }
+
+        if (maxOverlap > 0) {
+            let cutIndex = prefChars[prefChars.length - maxOverlap].idx;
+            return prefix.substring(0, cutIndex);
+        }
+        return prefix;
+    }
+
+    function removeDuplicateSuffix(newCode, suffix) {
+        const isIgnored = (char) => /[\s\uFEFF\xA0\u200B\u200C\u200D]/.test(char);
+        let newChars = [];
+        for(let i=0; i<newCode.length; i++) {
+            if(!isIgnored(newCode[i])) newChars.push({c: newCode[i], idx: i});
+        }
+        let sufChars = [];
+        for(let i=0; i<suffix.length; i++) {
+            if(!isIgnored(suffix[i])) sufChars.push({c: suffix[i], idx: i});
+        }
+
+        let maxOverlap = 0;
+        let maxLen = Math.min(newChars.length, sufChars.length, 15000);
+        
+        for (let k = maxLen; k >= 15; k--) {
+            let match = true;
+            let newStart = newChars.length - k;
+            for (let j = 0; j < k; j++) {
+                if (newChars[newStart + j].c !== sufChars[j].c) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                maxOverlap = k;
+                break;
+            }
+        }
+
+        if (maxOverlap > 0) {
+            let cutIndex = sufChars[maxOverlap - 1].idx + 1;
+            return suffix.substring(cutIndex);
+        }
+        return suffix;
+    }
+
     function doReplaceLogic(match, newCode) {
       const editor = document.getElementById('singleCode');
       const statusBox = document.getElementById('aiRevisiStatus');
@@ -942,22 +1009,28 @@ KODE BARU:
 
       globalUndoCode = editor.value;
 
-      // Force Replace berdasarkan index hasil pencarian pintar
-      const newText = editorText.substring(0, match.start) + newCode + editorText.substring(match.end + 1);
+      let prefix = editorText.substring(0, match.start);
+      let suffix = editorText.substring(match.end + 1);
+
+      // AUTO DEDUPLICATION MAGIC (Menghapus kode ganda otomatis)
+      prefix = removeDuplicatePrefix(prefix, newCode);
+      suffix = removeDuplicateSuffix(newCode, suffix);
+
+      const newText = prefix + newCode + suffix;
       editor.value = newText;
       updateCodeStats('singleCode', 'singleCodeStats');
 
       clearArea('aiOldCode', 'aiOldStats');
       clearArea('aiNewCode', 'aiNewStats');
 
-      statusBox.innerHTML = '✅ Berhasil menimpa kode!';
+      statusBox.innerHTML = '✅ Berhasil menimpa kode & menghapus duplikat otomatis!';
       statusBox.style.color = '#4caf50';
       statusBox.style.background = 'rgba(76,175,80,0.1)';
 
       document.getElementById('mainUndoBtn').style.display = 'inline-block';
-      toast('Revisi AI diterapkan! Silakan cek editor utama.', 'success');
+      toast('Revisi AI diterapkan! Duplikat dibersihkan.', 'success');
       
-      setTimeout(() => { closeAIRevisi(); }, 1000);
+      setTimeout(() => { closeAIRevisi(); }, 1500);
     }
 
     function executeAIRevisi() {
@@ -982,12 +1055,11 @@ KODE BARU:
         return;
       }
 
-      // Deteksi Duplikasi
       const oldCodeNorm = oldCode.replace(/\s+/g, '');
       const newCodeNorm = newCode.replace(/\s+/g, '');
       
       if (newCodeNorm.length > (oldCodeNorm.length * 3) + 200) {
-        confirm("⚠️ PERINGATAN ANTI-DUPLIKAT:<br><br>KODE BARU jauh lebih panjang dari KODE LAMA. Ini berisiko tinggi menyebabkan kode ganda/duplikat di dalam file Anda jika AI memasukkan baris ekstra.<br><br>Tetap lanjutkan mengganti kode?", () => {
+        confirm("⚠️ INFO PINTAR:<br><br>AI memberikan KODE BARU yang jauh lebih panjang dari KODE LAMA. Jangan khawatir, sistem akan <b>otomatis melacak dan menghapus kode ganda (duplikat)</b> di sekitarnya agar web tidak eror.<br><br>Lanjutkan proses ini?", () => {
           doReplaceLogic(match, newCode);
         });
       } else {
