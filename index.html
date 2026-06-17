@@ -379,7 +379,7 @@
     </div>
   </div>
 
-  <!-- Modal Revisi AI (TIMPA FULL DIPERBARUI) -->
+  <!-- Modal Revisi AI -->
   <div id="aiRevisiModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:600px; width:95%; max-height:95vh; overflow-y:auto;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
@@ -981,8 +981,9 @@ KODE BARU:
       const oldCodeNorm = oldCode.replace(/\s+/g, '');
       const newCodeNorm = newCode.replace(/\s+/g, '');
       
-      if (newCodeNorm.length > (oldCodeNorm.length * 2) + 500) {
-        confirm("⚠️ BAHAYA DUPLIKAT KODE!<br><br>KODE BARU sangat panjang dibandingkan KODE LAMA. Jika Anda lanjutkan, sisa kode di bawahnya TIDAK AKAN TERHAPUS dan web Anda akan ERROR (SyntaxError).<br><br>SARAN: Batalkan ini, lalu klik tombol <b>'🔥 Timpa Full File'</b> di sebelah tombol Ganti.<br><br>Tetap paksa ganti sebagian?", () => {
+      // Mengubah sensitivitas alarm duplikat menjadi jauh lebih longgar
+      if (newCodeNorm.length > (oldCodeNorm.length * 5) + 1500) {
+        confirm("⚠️ INFO KEAMANAN:<br><br>KODE BARU jauh lebih panjang dari KODE LAMA. Jika AI memang sedang menambahkan fitur baru yang panjang, silakan klik <b>'Ya'</b>.<br><br>Namun, jika AI tidak sengaja memberikan seluruh isi file, klik 'Batal' dan gunakan tombol 'Timpa Full File'.<br><br>Lanjutkan ganti sebagian?", () => {
           doReplaceLogic(match, newCode);
         });
       } else {
@@ -990,7 +991,6 @@ KODE BARU:
       }
     }
 
-    // FUNGSI BARU: TIMPA SELURUH FILE (OTOMATIS HAPUS KODE LAMA)
     function replaceAllCode() {
       const newCode = document.getElementById('aiNewCode').value;
       const editor = document.getElementById('singleCode');
@@ -1008,7 +1008,6 @@ KODE BARU:
         editor.value = newCode;
         updateCodeStats('singleCode', 'singleCodeStats');
         
-        // OTOMATIS MEMBERSIHKAN KODE LAMA KARENA TIDAK DIBUTUHKAN LAGI
         clearArea('aiOldCode', 'aiOldStats');
         clearArea('aiNewCode', 'aiNewStats');
 
