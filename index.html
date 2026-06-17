@@ -379,7 +379,7 @@
     </div>
   </div>
 
-  <!-- Modal Revisi AI (AUTO DEDUPLICATOR) -->
+  <!-- Modal Revisi AI (REPLACE SEBAGIAN ATAU TIMPA FULL) -->
   <div id="aiRevisiModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:600px; width:95%; max-height:95vh; overflow-y:auto;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
@@ -414,9 +414,10 @@
         </div>
       </div>
       
-      <div style="display:flex; gap:0.4rem; margin-top:0.5rem;">
-        <button onclick="executeAIRevisi()" class="btn-confirm" style="flex:2; background:linear-gradient(135deg, #ff9800, #f44336); color:white; box-shadow:0 4px 12px rgba(255,152,0,0.3);">⚡ Ganti Kode</button>
-        <button onclick="closeAIRevisi()" class="btn-cancel" style="flex:1;">Tutup</button>
+      <div style="display:flex; gap:0.4rem; margin-top:0.5rem; flex-wrap:wrap;">
+        <button onclick="executeAIRevisi()" class="btn-confirm" style="flex:1; min-width:120px; background:linear-gradient(135deg, #ff9800, #f44336); color:white; box-shadow:0 4px 12px rgba(255,152,0,0.3);" title="Ganti hanya bagian Kode Lama dengan Kode Baru">⚡ Ganti Sebagian</button>
+        <button onclick="replaceAllCode()" class="btn-confirm" style="flex:1; min-width:120px; background:linear-gradient(135deg, #e53935, #b71c1c); color:white; box-shadow:0 4px 12px rgba(229,57,53,0.3);" title="Hapus seluruh isi file dan timpa dengan Kode Baru">🔥 Timpa Full File</button>
+        <button onclick="closeAIRevisi()" class="btn-cancel" style="flex:1; min-width:80px;">Tutup</button>
       </div>
     </div>
   </div>
@@ -798,16 +799,17 @@
       });
     }
 
-    // ==================== ⚡ REVISI AI (AUTO DEDUPLICATOR) ====================
+    // ==================== ⚡ REVISI AI (REPLACE ALL / PARTIAL) ====================
     function copySystemPrompt() {
       const systemPrompt = `Kamu adalah Senior Programmer. Tugasmu adalah memberikan revisi kode untuk sistem Auto-Replace Habi Studio.
 
 SYARAT MUTLAK (PANTANG DILANGGAR):
 1. INGAT SEMUA KONTEKS KODE SELAMANYA.
 2. Setiap revisi, WAJIB sebutkan Nama File/Folder yang direvisi di awal (Misal: File: app/page.tsx) agar tidak salah sasaran.
-3. ANTI-DUPLIKAT (SANGAT PENTING): BATAS AWAL & BATAS AKHIR KODE LAMA DAN KODE BARU HARUS SAMA PERSIS! DILARANG KERAS menyertakan baris kode ekstra (sebelum/sesudah) di luar blok yang direvisi. KODE BARU harus memiliki jumlah baris yang sepadan. Jika KODE LAMA 15 baris, KODE BARU jangan jadi 150 baris! JANGAN PERNAH menulis ulang seluruh isi file.
-4. KODE TIDAK BOLEH TERPOTONG. Dilarang menyingkat kode (dummy/simulasi).
-5. Gunakan Markdown Code Block (\`\`\`) HANYA untuk isi kodenya. JANGAN memasukkan kata "KODE LAMA:" atau "KODE BARU:" ke dalam kotak code block tersebut!
+3. JIKA ERROR PARAH: Berikan SELURUH ISI FILE di KODE BARU, dan beri instruksi "HAPUS SELURUH ISI FILE".
+4. JIKA ERROR KECIL: Berikan KODE LAMA dan KODE BARU dengan batas awal dan akhir yang SAMA PERSIS! DILARANG KERAS menyertakan baris kode ekstra di luar blok yang direvisi agar tidak duplikat.
+5. KODE TIDAK BOLEH TERPOTONG. Dilarang menyingkat kode (dummy/simulasi).
+6. Gunakan Markdown Code Block (\`\`\`) HANYA untuk isi kodenya. JANGAN memasukkan kata "KODE LAMA:" atau "KODE BARU:" ke dalam kotak code block tersebut!
 
 Format Balasan Wajib:
 
@@ -821,7 +823,7 @@ KODE LAMA:
 
 KODE BARU:
 \`\`\`
-(potongan kode baru yang ukurannya sepadan, tanpa baris ekstra di atas/bawahnya)
+(potongan kode baru)
 \`\`\``;
       navigator.clipboard.writeText(systemPrompt).then(() => {
         toast('Prompt System Disalin!', 'success');
@@ -830,9 +832,10 @@ KODE BARU:
 
     function copyChatPrompt() {
       const chatPrompt = `Tolong revisi kode saya. INGAT ATURAN SISTEM KITA:
-1. ANTI-DUPLIKAT: Batas awal dan batas akhir KODE LAMA dan KODE BARU harus sama persis. Jika KODE LAMA 10 baris, KODE BARU dilarang keras menjadi 100 baris (Jangan menyalin baris ekstra di atas/bawah kode yang direvisi)!
-2. DILARANG pakai dummy/menyingkat kode.
-3. Gunakan format KODE LAMA: dan KODE BARU: di luar kotak markdown code block. Sebutkan juga Nama File-nya.`;
+1. ANTI-DUPLIKAT: Batas awal dan batas akhir KODE LAMA dan KODE BARU harus sama persis. Jangan menyalin baris ekstra di atas/bawah kode yang direvisi!
+2. JIKA ERROR BANYAK: Berikan saja SELURUH ISI FILE di KODE BARU dan suruh saya menimpa seluruh file.
+3. DILARANG pakai dummy/menyingkat kode.
+4. Gunakan format KODE LAMA: dan KODE BARU: di luar kotak markdown code block. Sebutkan juga Nama File-nya.`;
       navigator.clipboard.writeText(chatPrompt).then(() => {
         toast('Prompt Chat Disalin!', 'success');
       }).catch(err => toast('Gagal menyalin', 'error'));
@@ -929,79 +932,6 @@ KODE BARU:
       }
     }
 
-    // --- ALGORITMA PENGHAPUS DUPLIKAT OTOMATIS (SELF-HEALING) ---
-    function removeDuplicatePrefix(prefix, newCode) {
-        const isIgnored = (char) => /[\s\uFEFF\xA0\u200B\u200C\u200D]/.test(char);
-        let prefChars = [];
-        for(let i=0; i<prefix.length; i++) {
-            if(!isIgnored(prefix[i])) prefChars.push({c: prefix[i], idx: i});
-        }
-        let newChars = [];
-        for(let i=0; i<newCode.length; i++) {
-            if(!isIgnored(newCode[i])) newChars.push({c: newCode[i], idx: i});
-        }
-
-        let maxOverlap = 0;
-        let maxLen = Math.min(prefChars.length, newChars.length, 15000);
-        
-        for (let k = maxLen; k >= 15; k--) {
-            let match = true;
-            let prefStart = prefChars.length - k;
-            for (let j = 0; j < k; j++) {
-                if (prefChars[prefStart + j].c !== newChars[j].c) {
-                    match = false;
-                    break;
-                }
-            }
-            if (match) {
-                maxOverlap = k;
-                break;
-            }
-        }
-
-        if (maxOverlap > 0) {
-            let cutIndex = prefChars[prefChars.length - maxOverlap].idx;
-            return prefix.substring(0, cutIndex);
-        }
-        return prefix;
-    }
-
-    function removeDuplicateSuffix(newCode, suffix) {
-        const isIgnored = (char) => /[\s\uFEFF\xA0\u200B\u200C\u200D]/.test(char);
-        let newChars = [];
-        for(let i=0; i<newCode.length; i++) {
-            if(!isIgnored(newCode[i])) newChars.push({c: newCode[i], idx: i});
-        }
-        let sufChars = [];
-        for(let i=0; i<suffix.length; i++) {
-            if(!isIgnored(suffix[i])) sufChars.push({c: suffix[i], idx: i});
-        }
-
-        let maxOverlap = 0;
-        let maxLen = Math.min(newChars.length, sufChars.length, 15000);
-        
-        for (let k = maxLen; k >= 15; k--) {
-            let match = true;
-            let newStart = newChars.length - k;
-            for (let j = 0; j < k; j++) {
-                if (newChars[newStart + j].c !== sufChars[j].c) {
-                    match = false;
-                    break;
-                }
-            }
-            if (match) {
-                maxOverlap = k;
-                break;
-            }
-        }
-
-        if (maxOverlap > 0) {
-            let cutIndex = sufChars[maxOverlap - 1].idx + 1;
-            return suffix.substring(cutIndex);
-        }
-        return suffix;
-    }
-
     function doReplaceLogic(match, newCode) {
       const editor = document.getElementById('singleCode');
       const statusBox = document.getElementById('aiRevisiStatus');
@@ -1009,28 +939,21 @@ KODE BARU:
 
       globalUndoCode = editor.value;
 
-      let prefix = editorText.substring(0, match.start);
-      let suffix = editorText.substring(match.end + 1);
-
-      // AUTO DEDUPLICATION MAGIC (Menghapus kode ganda otomatis)
-      prefix = removeDuplicatePrefix(prefix, newCode);
-      suffix = removeDuplicateSuffix(newCode, suffix);
-
-      const newText = prefix + newCode + suffix;
+      const newText = editorText.substring(0, match.start) + newCode + editorText.substring(match.end + 1);
       editor.value = newText;
       updateCodeStats('singleCode', 'singleCodeStats');
 
       clearArea('aiOldCode', 'aiOldStats');
       clearArea('aiNewCode', 'aiNewStats');
 
-      statusBox.innerHTML = '✅ Berhasil menimpa kode & menghapus duplikat otomatis!';
+      statusBox.innerHTML = '✅ Berhasil menimpa kode sebagian!';
       statusBox.style.color = '#4caf50';
       statusBox.style.background = 'rgba(76,175,80,0.1)';
 
       document.getElementById('mainUndoBtn').style.display = 'inline-block';
-      toast('Revisi AI diterapkan! Duplikat dibersihkan.', 'success');
+      toast('Revisi AI diterapkan! Silakan cek editor utama.', 'success');
       
-      setTimeout(() => { closeAIRevisi(); }, 1500);
+      setTimeout(() => { closeAIRevisi(); }, 1000);
     }
 
     function executeAIRevisi() {
@@ -1058,13 +981,44 @@ KODE BARU:
       const oldCodeNorm = oldCode.replace(/\s+/g, '');
       const newCodeNorm = newCode.replace(/\s+/g, '');
       
-      if (newCodeNorm.length > (oldCodeNorm.length * 3) + 200) {
-        confirm("⚠️ INFO PINTAR:<br><br>AI memberikan KODE BARU yang jauh lebih panjang dari KODE LAMA. Jangan khawatir, sistem akan <b>otomatis melacak dan menghapus kode ganda (duplikat)</b> di sekitarnya agar web tidak eror.<br><br>Lanjutkan proses ini?", () => {
+      if (newCodeNorm.length > (oldCodeNorm.length * 2) + 500) {
+        confirm("⚠️ BAHAYA DUPLIKAT KODE!<br><br>KODE BARU sangat panjang dibandingkan KODE LAMA. Jika Anda lanjutkan, sisa kode di bawahnya TIDAK AKAN TERHAPUS dan web Anda akan ERROR (SyntaxError).<br><br>SARAN: Batalkan ini, lalu klik tombol <b>'🔥 Timpa Full File'</b> di sebelah tombol Ganti.<br><br>Tetap paksa ganti sebagian?", () => {
           doReplaceLogic(match, newCode);
         });
       } else {
         doReplaceLogic(match, newCode);
       }
+    }
+
+    // FUNGSI BARU: TIMPA SELURUH FILE
+    function replaceAllCode() {
+      const newCode = document.getElementById('aiNewCode').value;
+      const editor = document.getElementById('singleCode');
+      const statusBox = document.getElementById('aiRevisiStatus');
+
+      if (!newCode.trim()) {
+        statusBox.innerHTML = '❌ Masukkan Kode Baru terlebih dahulu!';
+        statusBox.style.color = 'var(--danger)';
+        statusBox.style.background = 'rgba(229,57,53,0.1)';
+        return;
+      }
+
+      confirm("🔥 PERINGATAN: Ini akan menghapus SELURUH isi file saat ini dan menggantinya 100% dengan Kode Baru. Lanjutkan?", () => {
+        globalUndoCode = editor.value;
+        editor.value = newCode;
+        updateCodeStats('singleCode', 'singleCodeStats');
+        
+        clearArea('aiOldCode', 'aiOldStats');
+        clearArea('aiNewCode', 'aiNewStats');
+
+        statusBox.innerHTML = '✅ Seluruh file berhasil ditimpa bersih!';
+        statusBox.style.color = '#4caf50';
+        statusBox.style.background = 'rgba(76,175,80,0.1)';
+
+        document.getElementById('mainUndoBtn').style.display = 'inline-block';
+        toast('Seluruh file ditimpa! Silakan cek editor.', 'success');
+        setTimeout(() => { closeAIRevisi(); }, 1000);
+      });
     }
 
     function undoMainRevisi() {
