@@ -18,7 +18,6 @@
       --card-bg: rgba(20,20,40,0.85); --text: #e0e0e0;
       --accent: #7c4dff; --accent2: #448aff;
       --border: rgba(255,255,255,0.12); --input-bg: rgba(0,0,0,0.4);
-      --input-bg: rgba(0,0,0,0.4);
       --shadow: 0 8px 32px rgba(0,0,0,0.5);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -223,7 +222,7 @@
         <div class="char-count" id="singleCodeStats" style="margin-top:0;">0 karakter | 0 baris</div>
         <div style="display:flex; gap:0.3rem;">
           <button onclick="copyContent('singleCode')" class="inline-btn" style="padding:0.2rem 0.6rem; font-size:0.7rem; background:#3b6eff;">📋 Salin Kode</button>
-          <button onclick="undoMainRevisi()" id="mainUndoBtn" class="inline-btn" style="padding:0.2rem 0.6rem; font-size:0.7rem; background:#4caf50; display:none;">⏪ Undo Revisi</button>
+          <button onclick="undoMainRevisi()" id="mainUndoBtn" class="inline-btn" style="padding:0.2rem 0.6rem; font-size:0.7rem; background:#4caf50; display:none;">⏪ Undo Cepat</button>
         </div>
       </div>
 
@@ -233,6 +232,15 @@
         <button onclick="openAIRevisi()" class="inline-btn" style="background:linear-gradient(135deg, #ff9800, #f44336); box-shadow:0 2px 8px rgba(255,152,0,0.3);">⚡ Revisi AI</button>
       </div>
       <button class="primary" onclick="deploySingle()">🚀 Upload File</button>
+
+      <!-- HISTORI REVISI LOKAL -->
+      <div style="margin-top:1rem; border-top:1px solid var(--border); padding-top:0.8rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+            <strong style="font-size:0.85rem; color:var(--accent);">📜 Histori File Lokal (Backup)</strong>
+            <button onclick="clearAllLocalHistory()" class="inline-btn" style="background:var(--danger); padding:0.2rem 0.5rem; font-size:0.7rem;">Hapus Semua</button>
+        </div>
+        <div id="localHistoryContainer" style="max-height:200px; overflow-y:auto; font-size:0.75rem;"></div>
+      </div>
     </div>
 
     <!-- Tab ZIP -->
@@ -480,7 +488,7 @@
 
   <script>
     // ==================== STATE ====================
-    const SK = 'hs_profiles', UK = 'hs_user', TK = 'hs_theme', HK = 'hs_history', AK = 'hs_antilag';
+    const SK = 'hs_profiles', UK = 'hs_user', TK = 'hs_theme', HK = 'hs_history', AK = 'hs_antilag', HK_FILE = 'hs_file_history';
     let repoTree = [], selDelFolder = '', currentSearchTarget = null;
     let globalUndoCode = ''; 
 
@@ -488,6 +496,7 @@
     window.onload = () => {
       loadTheme(); genParticles(); initAntiLag(); loadCredsFromStorage();
       updateActiveRepoInfo();
+      renderLocalHistory();
     };
 
     function loadTheme() {
@@ -752,6 +761,92 @@
       }
     }
 
+    // ==================== HISTORI REVISI LOKAL ====================
+    function saveToLocalHistory(filename, content, label) {
+        let hist = JSON.parse(localStorage.getItem(HK_FILE) || '[]');
+        const now = new Date();
+        const timeStr = now.toLocaleString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        hist.unshift({
+            id: Date.now().toString(),
+            filename: filename,
+            content: content,
+            time: timeStr,
+            label: label || 'Normal'
+        });
+        if(hist.length > 20) hist.pop(); // Simpan maksimal 20 histori terakhir
+        localStorage.setItem(HK_FILE, JSON.stringify(hist));
+        renderLocalHistory();
+    }
+
+    function renderLocalHistory() {
+        const c = document.getElementById('localHistoryContainer');
+        if(!c) return;
+        let hist = JSON.parse(localStorage.getItem(HK_FILE) || '[]');
+        if(hist.length === 0) {
+            c.innerHTML = '<div style="opacity:0.6; padding:0.5rem 0;">Belum ada histori revisi tersimpan.</div>';
+            return;
+        }
+        c.innerHTML = hist.map(h => {
+            let labelColor = '#4caf50';
+            if(h.label.toLowerCase().includes('error')) labelColor = 'var(--danger)';
+            else if(h.label.toLowerCase().includes('sebelum')) labelColor = '#ff9800';
+            
+            return `
+            <div style="background:var(--input-bg); border:1px solid var(--border); border-radius:8px; padding:0.5rem; margin-bottom:0.4rem;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
+                    <strong style="color:var(--accent2); word-break:break-all;">${h.filename}</strong>
+                    <span style="opacity:0.7; font-size:0.65rem;">${h.time}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="background:${labelColor}; color:white; padding:0.1rem 0.4rem; border-radius:4px; font-size:0.65rem; cursor:pointer;" onclick="renameHistoryLabel('${h.id}')" title="Klik untuk ubah label">${h.label} ✏️</span>
+                    <div style="display:flex; gap:0.3rem;">
+                        <button onclick="restoreLocalHistory('${h.id}')" class="inline-btn" style="padding:0.2rem 0.5rem; font-size:0.65rem;">⏪ Pulihkan</button>
+                        <button onclick="deleteLocalHistory('${h.id}')" class="inline-btn" style="padding:0.2rem 0.5rem; font-size:0.65rem; background:var(--danger);">🗑️</button>
+                    </div>
+                </div>
+            </div>
+        `}).join('');
+    }
+
+    function renameHistoryLabel(id) {
+        let hist = JSON.parse(localStorage.getItem(HK_FILE) || '[]');
+        let item = hist.find(h => h.id === id);
+        if(!item) return;
+        let newLabel = prompt("Ubah label histori (misal: Normal, Error, SyntaxError):", item.label);
+        if(newLabel !== null && newLabel.trim() !== "") {
+            item.label = newLabel.trim();
+            localStorage.setItem(HK_FILE, JSON.stringify(hist));
+            renderLocalHistory();
+        }
+    }
+
+    function restoreLocalHistory(id) {
+        let hist = JSON.parse(localStorage.getItem(HK_FILE) || '[]');
+        let item = hist.find(h => h.id === id);
+        if(!item) return;
+        confirm(`Pulihkan file ke versi: ${item.time}?`, () => {
+            document.getElementById('singleCode').value = item.content;
+            updateCodeStats('singleCode', 'singleCodeStats');
+            toast('Histori berhasil dipulihkan!', 'success');
+        });
+    }
+
+    function deleteLocalHistory(id) {
+        let hist = JSON.parse(localStorage.getItem(HK_FILE) || '[]');
+        hist = hist.filter(h => h.id !== id);
+        localStorage.setItem(HK_FILE, JSON.stringify(hist));
+        renderLocalHistory();
+        toast('Histori dihapus', 'info');
+    }
+
+    function clearAllLocalHistory() {
+        confirm("Hapus SEMUA histori file lokal?", () => {
+            localStorage.removeItem(HK_FILE);
+            renderLocalHistory();
+            toast('Semua histori dihapus', 'info');
+        });
+    }
+
     // ==================== SINGLE TAB ====================
     function liveSearchSingle() {
       const q = document.getElementById('singleSearchInput').value.toLowerCase();
@@ -937,9 +1032,10 @@ KODE BARU:
     function performSafeReplace(fullContent, oldCode, newCode) {
         // 1. Cek Keseimbangan Kurung (Syntax Check)
         const checkBracketBalance = (str) => {
+            const cleanStr = str.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, ''); 
             const stack = [];
             const pairs = { '}': '{', ')': '(', ']': '[' };
-            for (let char of str) {
+            for (let char of cleanStr) {
                 if (['{', '(', '['].includes(char)) {
                     stack.push(char);
                 } else if (['}', ')', ']'].includes(char)) {
@@ -949,11 +1045,9 @@ KODE BARU:
             return stack.length === 0;
         };
 
+        let warning = null;
         if (!checkBracketBalance(newCode)) {
-            return { 
-                success: false, 
-                error: "PERINGATAN SINTAKSIS: Kode baru memiliki tanda kurung {}, (), atau [] yang tidak seimbang. Mohon periksa kembali kelengkapan kodenya sebelum menyimpan." 
-            };
+            warning = "PERINGATAN SINTAKSIS: Sistem mendeteksi jumlah tanda kurung {} / () / [] tidak seimbang pada Kode Baru Anda. Pastikan tidak ada kurung penutup yang tertinggal agar tidak memicu SyntaxError.";
         }
 
         // 2. Cek Keberadaan Kode Lama (Di-upgrade menggunakan Smart Match agar kebal Mojibake)
@@ -961,48 +1055,23 @@ KODE BARU:
         if (!match) {
             return { 
                 success: false, 
-                error: "Kode Lama tidak ditemukan! Pastikan spasi, tab, dan baris barunya sama persis." 
+                error: "KODE TIDAK DITEMUKAN: Pastikan spasi, tab, huruf besar-kecil, dan tanda bacanya sama (Atau copy karakter aneh dari editor jika ada)." 
             };
         }
 
         // 3. Cek Duplikasi Lokasi (Mencegah salah replace jika kode lama terlalu umum)
-        const normalizeForCount = str => str.replace(/\s+/g, '');
-        const cleanFull = normalizeForCount(fullContent);
-        const cleanOld = normalizeForCount(oldCode);
-        const occurrences = cleanFull.split(cleanOld).length - 1;
+        const normFullNoSpace = fullContent.replace(/\s+/g, '');
+        const normOldNoSpace = oldCode.replace(/\s+/g, '');
+        const occurrences = normFullNoSpace.split(normOldNoSpace).length - 1;
         
         if (occurrences > 1) {
             return { 
                 success: false, 
-                error: `BAHAYA: Kode Lama terdeteksi di ${occurrences} lokasi berbeda pada file! Mohon salin potongan Kode Lama yang lebih panjang/unik agar tidak merusak baris kode lain.` 
+                error: `SISTEM TERBLOKIR: Kode Lama terdeteksi di ${occurrences} lokasi berbeda pada file! Mohon salin potongan Kode Lama yang lebih panjang (unik) agar sistem tahu persis lokasi mana yang ingin Anda ganti.` 
             };
         }
 
-        return { success: true, match: match };
-    }
-
-    function doReplaceLogic(match, newCode) {
-      const editor = document.getElementById('singleCode');
-      const statusBox = document.getElementById('aiRevisiStatus');
-      const editorText = editor.value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-
-      globalUndoCode = editor.value;
-
-      const newText = editorText.substring(0, match.start) + newCode + editorText.substring(match.end + 1);
-      editor.value = newText;
-      updateCodeStats('singleCode', 'singleCodeStats');
-
-      clearArea('aiOldCode', 'aiOldStats');
-      clearArea('aiNewCode', 'aiNewStats');
-
-      statusBox.innerHTML = '✅ Berhasil menimpa kode sebagian!';
-      statusBox.style.color = '#4caf50';
-      statusBox.style.background = 'rgba(76,175,80,0.1)';
-
-      document.getElementById('mainUndoBtn').style.display = 'inline-block';
-      toast('Revisi AI diterapkan! Silakan cek editor utama.', 'success');
-      
-      setTimeout(() => { closeAIRevisi(); }, 1000);
+        return { success: true, match: match, warning: warning };
     }
 
     function executeAIRevisi() {
@@ -1010,6 +1079,7 @@ KODE BARU:
       const newCode = document.getElementById('aiNewCode').value;
       const editor = document.getElementById('singleCode');
       const statusBox = document.getElementById('aiRevisiStatus');
+      const filename = document.getElementById('singleSearchInput').value || 'File Tidak Bernama';
 
       if (!oldCode.trim()) {
         statusBox.innerHTML = '❌ Masukkan potongan kode lama yang ingin diganti!';
@@ -1030,23 +1100,40 @@ KODE BARU:
 
       const match = safeCheck.match;
 
-      // Deteksi Duplikasi Panjang
-      const oldCodeNorm = oldCode.replace(/\s+/g, '');
-      const newCodeNorm = newCode.replace(/\s+/g, '');
+      // Simpan Histori sebelum ditimpa
+      saveToLocalHistory(filename, editor.value, 'Sebelum Revisi Sebagian');
+      globalUndoCode = editor.value; // Quick Undo
+
+      const editorText = editor.value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      const newText = editorText.substring(0, match.start) + newCode + editorText.substring(match.end + 1);
       
-      if (newCodeNorm.length > (oldCodeNorm.length * 2) + 500) {
-        confirm("⚠️ BAHAYA DUPLIKAT KODE!<br><br>KODE BARU sangat panjang dibandingkan KODE LAMA. Jika Anda lanjutkan, sisa kode di bawahnya TIDAK AKAN TERHAPUS dan web Anda akan ERROR (SyntaxError).<br><br>SARAN: Batalkan ini, lalu klik tombol <b>'🔥 Timpa Full File'</b> di sebelah tombol Ganti.<br><br>Tetap paksa ganti sebagian?", () => {
-          doReplaceLogic(match, newCode);
-        });
+      editor.value = newText;
+      updateCodeStats('singleCode', 'singleCodeStats');
+
+      clearArea('aiOldCode', 'aiOldStats');
+      clearArea('aiNewCode', 'aiNewStats');
+
+      if (safeCheck.warning) {
+          statusBox.innerHTML = '✅ Berhasil menimpa kode! <br><br>⚠️ ' + safeCheck.warning;
+          statusBox.style.color = '#ff9800';
+          statusBox.style.background = 'rgba(255,152,0,0.1)';
       } else {
-        doReplaceLogic(match, newCode);
+          statusBox.innerHTML = '✅ Berhasil menimpa kode sebagian!';
+          statusBox.style.color = '#4caf50';
+          statusBox.style.background = 'rgba(76,175,80,0.1)';
       }
+
+      document.getElementById('mainUndoBtn').style.display = 'inline-block';
+      toast('Revisi AI diterapkan! Silakan cek editor utama.', 'success');
+      
+      setTimeout(() => { closeAIRevisi(); }, 2500); // Waktu ekstra untuk baca warning
     }
 
     function replaceAllCode() {
       const newCode = document.getElementById('aiNewCode').value;
       const editor = document.getElementById('singleCode');
       const statusBox = document.getElementById('aiRevisiStatus');
+      const filename = document.getElementById('singleSearchInput').value || 'File Tidak Bernama';
 
       if (!newCode.trim()) {
         statusBox.innerHTML = '❌ Masukkan Kode Baru terlebih dahulu!';
@@ -1056,7 +1143,10 @@ KODE BARU:
       }
 
       confirm("🔥 PERINGATAN: Ini akan menghapus SELURUH isi file saat ini dan menggantinya 100% dengan Kode Baru. Lanjutkan?", () => {
+        // Simpan Histori sebelum ditimpa
+        saveToLocalHistory(filename, editor.value, 'Sebelum Timpa Full');
         globalUndoCode = editor.value;
+
         editor.value = newCode;
         updateCodeStats('singleCode', 'singleCodeStats');
         
@@ -1075,7 +1165,7 @@ KODE BARU:
 
     function undoMainRevisi() {
       if (globalUndoCode) {
-        confirm("Mau balik ke revisi sebelumnya?", () => {
+        confirm("Mau balik ke revisi sebelumnya (Quick Undo)?", () => {
           document.getElementById('singleCode').value = globalUndoCode;
           updateCodeStats('singleCode', 'singleCodeStats');
           globalUndoCode = ''; 
@@ -1186,7 +1276,7 @@ KODE BARU:
       });
     }
     async function deleteFolderInteractive() {
-      if (!selDelFolder) return toast('Pilih folder from daftar (klik tombol 🗑️ di folder)', 'error');
+      if (!selDelFolder) return toast('Pilih folder dari daftar (klik tombol 🗑️ di folder)', 'error');
       const { username, repo, token } = getCreds();
       confirm(`Hapus folder ${selDelFolder}?`, async () => {
         const bar = document.getElementById('filesProgress'), fill = bar.querySelector('.fill');
