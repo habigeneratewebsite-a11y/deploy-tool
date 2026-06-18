@@ -18,6 +18,7 @@
       --card-bg: rgba(20,20,40,0.85); --text: #e0e0e0;
       --accent: #7c4dff; --accent2: #448aff;
       --border: rgba(255,255,255,0.12); --input-bg: rgba(0,0,0,0.4);
+      --input-bg: rgba(0,0,0,0.4);
       --shadow: 0 8px 32px rgba(0,0,0,0.5);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -379,7 +380,7 @@
     </div>
   </div>
 
-  <!-- Modal Revisi AI -->
+  <!-- Modal Revisi AI (DENGAN FUNGSI PENGAMAN USER) -->
   <div id="aiRevisiModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:600px; width:95%; max-height:95vh; overflow-y:auto;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
@@ -799,7 +800,7 @@
       });
     }
 
-    // ==================== ⚡ REVISI AI (TIMPA FULL & PARTIAL) ====================
+    // ==================== ⚡ REVISI AI (DENGAN PENGAMAN USER) ====================
     function copySystemPrompt() {
       const systemPrompt = `Kamu adalah Senior Programmer. Tugasmu adalah memberikan revisi kode untuk sistem Auto-Replace Habi Studio.
 
@@ -932,6 +933,54 @@ KODE BARU:
       }
     }
 
+    // --- FUNGSI PENGAMAN (VALIDATOR) DARI USER ---
+    function performSafeReplace(fullContent, oldCode, newCode) {
+        // 1. Cek Keseimbangan Kurung (Syntax Check)
+        const checkBracketBalance = (str) => {
+            const stack = [];
+            const pairs = { '}': '{', ')': '(', ']': '[' };
+            for (let char of str) {
+                if (['{', '(', '['].includes(char)) {
+                    stack.push(char);
+                } else if (['}', ')', ']'].includes(char)) {
+                    if (stack.pop() !== pairs[char]) return false;
+                }
+            }
+            return stack.length === 0;
+        };
+
+        if (!checkBracketBalance(newCode)) {
+            return { 
+                success: false, 
+                error: "PERINGATAN SINTAKSIS: Kode baru memiliki tanda kurung {}, (), atau [] yang tidak seimbang. Mohon periksa kembali kelengkapan kodenya sebelum menyimpan." 
+            };
+        }
+
+        // 2. Cek Keberadaan Kode Lama (Di-upgrade menggunakan Smart Match agar kebal Mojibake)
+        const match = findSmartMatch(fullContent, oldCode);
+        if (!match) {
+            return { 
+                success: false, 
+                error: "Kode Lama tidak ditemukan! Pastikan spasi, tab, dan baris barunya sama persis." 
+            };
+        }
+
+        // 3. Cek Duplikasi Lokasi (Mencegah salah replace jika kode lama terlalu umum)
+        const normalizeForCount = str => str.replace(/\s+/g, '');
+        const cleanFull = normalizeForCount(fullContent);
+        const cleanOld = normalizeForCount(oldCode);
+        const occurrences = cleanFull.split(cleanOld).length - 1;
+        
+        if (occurrences > 1) {
+            return { 
+                success: false, 
+                error: `BAHAYA: Kode Lama terdeteksi di ${occurrences} lokasi berbeda pada file! Mohon salin potongan Kode Lama yang lebih panjang/unik agar tidak merusak baris kode lain.` 
+            };
+        }
+
+        return { success: true, match: match };
+    }
+
     function doReplaceLogic(match, newCode) {
       const editor = document.getElementById('singleCode');
       const statusBox = document.getElementById('aiRevisiStatus');
@@ -969,21 +1018,24 @@ KODE BARU:
         return;
       }
 
-      const match = findSmartMatch(editor.value, oldCode);
+      // --- MEMANGGIL FUNGSI PENGAMAN DARI USER ---
+      const safeCheck = performSafeReplace(editor.value, oldCode, newCode);
 
-      if (!match) {
-        statusBox.innerHTML = '❌ GAGAL: Kode lama tidak ditemukan secara persis di dalam file.';
+      if (!safeCheck.success) {
+        statusBox.innerHTML = '❌ ' + safeCheck.error;
         statusBox.style.color = 'var(--danger)';
         statusBox.style.background = 'rgba(229,57,53,0.1)';
         return;
       }
 
+      const match = safeCheck.match;
+
+      // Deteksi Duplikasi Panjang
       const oldCodeNorm = oldCode.replace(/\s+/g, '');
       const newCodeNorm = newCode.replace(/\s+/g, '');
       
-      // Mengubah sensitivitas alarm duplikat menjadi jauh lebih longgar
-      if (newCodeNorm.length > (oldCodeNorm.length * 5) + 1500) {
-        confirm("⚠️ INFO KEAMANAN:<br><br>KODE BARU jauh lebih panjang dari KODE LAMA. Jika AI memang sedang menambahkan fitur baru yang panjang, silakan klik <b>'Ya'</b>.<br><br>Namun, jika AI tidak sengaja memberikan seluruh isi file, klik 'Batal' dan gunakan tombol 'Timpa Full File'.<br><br>Lanjutkan ganti sebagian?", () => {
+      if (newCodeNorm.length > (oldCodeNorm.length * 2) + 500) {
+        confirm("⚠️ BAHAYA DUPLIKAT KODE!<br><br>KODE BARU sangat panjang dibandingkan KODE LAMA. Jika Anda lanjutkan, sisa kode di bawahnya TIDAK AKAN TERHAPUS dan web Anda akan ERROR (SyntaxError).<br><br>SARAN: Batalkan ini, lalu klik tombol <b>'🔥 Timpa Full File'</b> di sebelah tombol Ganti.<br><br>Tetap paksa ganti sebagian?", () => {
           doReplaceLogic(match, newCode);
         });
       } else {
@@ -1134,7 +1186,7 @@ KODE BARU:
       });
     }
     async function deleteFolderInteractive() {
-      if (!selDelFolder) return toast('Pilih folder dari daftar (klik tombol 🗑️ di folder)', 'error');
+      if (!selDelFolder) return toast('Pilih folder from daftar (klik tombol 🗑️ di folder)', 'error');
       const { username, repo, token } = getCreds();
       confirm(`Hapus folder ${selDelFolder}?`, async () => {
         const bar = document.getElementById('filesProgress'), fill = bar.querySelector('.fill');
