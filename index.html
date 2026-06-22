@@ -945,24 +945,26 @@ KODE BARU:
         const normalize = (str) => str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
         const edNorm = normalize(editorText);
         const stNorm = normalize(searchText);
+        
+        // 1. Pencarian Persis (Paling Cepat)
         let exactIdx = edNorm.indexOf(stNorm);
         if (exactIdx !== -1) return { start: exactIdx, end: exactIdx + stNorm.length - 1 };
 
-        const noSpaceEd = edNorm.replace(/\s+/g, '');
-        const noSpaceSt = stNorm.replace(/\s+/g, '');
-        if (noSpaceSt && noSpaceEd.includes(noSpaceSt)) {
-            const startNS = noSpaceEd.indexOf(noSpaceSt);
-            let noSpaceCount = 0;
-            let actStart = -1, actEnd = -1;
-            for (let i = 0; i < edNorm.length; i++) {
-                if (!/\s/.test(edNorm[i])) {
-                    if (noSpaceCount === startNS) actStart = i;
-                    if (noSpaceCount === startNS + noSpaceSt.length - 1) { actEnd = i; break; }
-                    noSpaceCount++;
-                }
+        // 2. Pencarian Cerdas (Abaikan perbedaan spasi, tab, dan enter)
+        const trimmedSearch = stNorm.trim();
+        if (!trimmedSearch) return null;
+        
+        const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regexPattern = escapeRegExp(trimmedSearch).replace(/\s+/g, '\\s+');
+        
+        try {
+            const regex = new RegExp(regexPattern);
+            const match = edNorm.match(regex);
+            if (match) {
+                return { start: match.index, end: match.index + match[0].length - 1 };
             }
-            if (actStart !== -1) return { start: actStart, end: actEnd };
-        }
+        } catch(e) {}
+
         return null;
     }
 
@@ -990,7 +992,7 @@ KODE BARU:
         statusBox.style.color = '#4caf50';
         statusBox.style.background = 'rgba(76,175,80,0.1)';
       } else {
-        statusBox.innerHTML = '❌ Kode tidak ditemukan! Pastikan Anda menyalin HANYA blok kodenya saja.';
+        statusBox.innerHTML = '❌ Kode tidak ditemukan! Pastikan Anda menyalin blok kodenya dengan benar.';
         statusBox.style.color = 'var(--danger)';
         statusBox.style.background = 'rgba(229,57,53,0.1)';
       }
@@ -998,42 +1000,12 @@ KODE BARU:
 
     // --- FUNGSI PENGAMAN SYNTAX (BRACKET SHIELD) ---
     function performSafeReplace(fullContent, oldCode, newCode) {
-        
-        // Fungsi untuk menghitung keseimbangan kurung secara aman (mengabaikan komentar & string)
-        function checkBracketBalance(code) {
-            const stripped = code
-                .replace(/`([^`\\]|\\.)*`/g, '') 
-                .replace(/'([^'\\]|\\.)*'/g, '') 
-                .replace(/"([^"\\]|\\.)*"/g, '') 
-                .replace(/\/\*[\s\S]*?\*\//g, '') 
-                .replace(/\/\/.*$/gm, ''); 
-
-            let openBraces = (stripped.match(/\{/g) || []).length;
-            let closeBraces = (stripped.match(/\}/g) || []).length;
-            return openBraces === closeBraces;
-        }
-
         const match = findSmartMatch(fullContent, oldCode);
         if (!match) {
-            return { success: false, error: "KODE TIDAK DITEMUKAN: Pastikan spasi, tab, huruf besar-kecil, dan tanda bacanya sama." };
+            return { success: false, error: "KODE TIDAK DITEMUKAN: Pastikan potongan kode lama benar-benar ada di dalam file." };
         }
 
-        // Lakukan simulasi replace
-        const simulatedText = fullContent.substring(0, match.start) + newCode + fullContent.substring(match.end + 1);
-
-        // Cek keseimbangan sebelum dan sesudah
-        const isOriginalBalanced = checkBracketBalance(fullContent);
-        const isNewBalanced = checkBracketBalance(simulatedText);
-
-        // Jika aslinya seimbang, tapi setelah direplace jadi tidak seimbang = BLOKIR!
-        if (isOriginalBalanced && !isNewBalanced) {
-            return { 
-                success: false, 
-                error: "SISTEM TERBLOKIR (PENCEGAHAN SYNTAX ERROR): Penggantian ini akan menghilangkan tanda kurung penutup '}' pada file Anda. Mintalah AI untuk memberikan KODE BARU dengan kurung kurawal yang utuh!" 
-            };
-        }
-
-        // Cek Duplikasi Lokasi
+        // Cek Duplikasi Lokasi (Mencegah salah replace jika ada kode yang kembar)
         const normFullNoSpace = fullContent.replace(/\s+/g, '');
         const normOldNoSpace = oldCode.replace(/\s+/g, '');
         const occurrences = normFullNoSpace.split(normOldNoSpace).length - 1;
@@ -1041,9 +1013,13 @@ KODE BARU:
         if (occurrences > 1) {
             return { 
                 success: false, 
-                error: `SISTEM TERBLOKIR: Kode Lama terdeteksi di ${occurrences} lokasi berbeda pada file! Mohon salin potongan Kode Lama yang lebih panjang (unik).` 
+                error: `SISTEM TERBLOKIR: Kode Lama terdeteksi di ${occurrences} lokasi berbeda pada file! Mohon salin potongan Kode Lama yang lebih panjang agar unik.` 
             };
         }
+
+        // Catatan Revisi: Pengecekan kurung kurawal (Bracket Shield) yang terlalu ketat telah DIMATIKAN.
+        // Karena tool ini sudah memiliki fitur "Undo Cepat", lebih baik mengizinkan replace 
+        // daripada memblokir pengguna secara terus-menerus akibat false-alarm regex.
 
         return { success: true, match: match };
     }
