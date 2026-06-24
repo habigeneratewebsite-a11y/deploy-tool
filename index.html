@@ -348,6 +348,12 @@
     <div id="globalStatus" style="margin-top:0.6rem; padding:0.5rem; border-radius:10px; font-size:0.8rem;"></div>
   </div>
 
+  <div class="container guide">
+    <details><summary>📘 Panduan Lengkap HABI STUDIO CODING .ZIP</summary>
+      <p><b>📄 Single:</b> Cari file/folder di input pencarian, klik hasil untuk memuat kode ke editor, edit jika perlu, lalu klik <b>Upload File</b>. Gunakan fitur <b>⚡ Revisi AI</b> untuk mengganti potongan kode dengan cerdas dan aman.</p>
+    </details>
+  </div>
+
   <footer>
     Powered by <strong>HABI STUDIO AI</strong> — Melampaui Batas Kreativitas
   </footer>
@@ -363,7 +369,7 @@
     </div>
   </div>
 
-  <!-- Modal Revisi AI (DENGAN AUTO-SUGGEST DEWA) -->
+  <!-- Modal Revisi AI (DENGAN SENSOR ANTI-SHRINK) -->
   <div id="aiRevisiModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:600px; width:95%; max-height:95vh; overflow-y:auto;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
@@ -886,7 +892,7 @@
       });
     }
 
-    // ==================== ⚡ REVISI AI (AUTO-SUGGEST & BYPASS COMMENT) ====================
+    // ==================== ⚡ REVISI AI (ANTI-SHRINK SHIELD) ====================
     function copySystemPrompt() {
       const systemPrompt = `Kamu adalah Senior Programmer. Tugasmu adalah memberikan revisi kode untuk sistem Auto-Replace Habi Studio.
 
@@ -961,7 +967,6 @@ KODE BARU:
         statusBox.style.background = 'transparent';
     }
 
-    // --- ALGORITMA PENCARI PINTAR (AUTO-SUGGEST DENGAN BYPASS KOMENTAR) ---
     function findSmartMatch(editorText, searchText) {
         const normalizeStr = (str) => str.replace(/[\u2018\u2019`]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/[\u200B-\u200D\uFEFF]/g, '');
         const edNorm = normalizeStr(editorText);
@@ -992,9 +997,7 @@ KODE BARU:
         return null;
     }
 
-    // Fitur Penebak jika kode AI halusinasi (Mengabaikan Komentar)
     function findSuggestion(editorText, oldCode) {
-        // Buang komentar dari kode AI saat mencari anchor (Ini yang menembus halusinasi komentar AI)
         let codeWithoutComments = oldCode.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '').trim();
 
         const lines = codeWithoutComments.split('\n').map(l => l.trim()).filter(l => l.length > 5);
@@ -1002,7 +1005,6 @@ KODE BARU:
 
         const editorLines = editorText.split('\n');
         
-        // Case-insensitive & No-space match untuk anchor
         const firstLineNorm = lines[0].replace(/\s+/g, '').toLowerCase();
         let startIdx = -1;
         for (let i = 0; i < editorLines.length; i++) {
@@ -1022,7 +1024,6 @@ KODE BARU:
         }
 
         if (startIdx !== -1 && endIdx !== -1 && startIdx <= endIdx) {
-            // Tarik baris asli dari editor (termasuk komentar aslinya)
             let start = Math.max(0, startIdx - 1);
             let end = Math.min(editorLines.length, endIdx + 2);
             return editorLines.slice(start, end).join('\n');
@@ -1059,7 +1060,6 @@ KODE BARU:
                 ✅ <strong>Kode ditemukan!</strong> Aman untuk diganti.
             </div>`;
       } else {
-        // JIKA GAGAL, COBA CARIKAN SUGGESTION YANG MENGABAIKAN KOMENTAR
         const suggestion = findSuggestion(editor.value, oldCode);
         
         if (suggestion) {
@@ -1142,28 +1142,51 @@ KODE BARU:
         return;
       }
 
-      saveToLocalHistory(filename, editor.value, 'Sebelum Revisi Sebagian');
-      globalUndoCode = editor.value;
+      const match = safeCheck.match;
 
-      editor.value = safeCheck.updatedContent;
-      updateCodeStats('singleCode', 'singleCodeStats');
+      // ANTI-SHRINK SHIELD (Sensor Anti-Penyusutan)
+      const oldCodeNorm = oldCode.replace(/\s+/g, '');
+      const newCodeNorm = newCode.replace(/\s+/g, '');
+      
+      const proceedReplace = () => {
+          saveToLocalHistory(filename, editor.value, 'Sebelum Revisi Sebagian');
+          globalUndoCode = editor.value;
 
-      clearArea('aiOldCode', 'aiOldStats');
-      clearArea('aiNewCode', 'aiNewStats');
+          editor.value = safeCheck.updatedContent;
+          updateCodeStats('singleCode', 'singleCodeStats');
 
-      if (safeCheck.warning) {
-          showStatusWarning("PERINGATAN SINTAKSIS", safeCheck.warning);
-          toast('Berhasil, tapi periksa kurung kode!', 'info');
-      } else {
-          statusBox.innerHTML = `
-            <div style="background:#4caf50; color:white; padding:0.8rem; border-radius:8px;">
-                ✅ <strong>Berhasil menimpa kode sebagian!</strong>
-            </div>`;
-          toast('Revisi AI diterapkan!', 'success');
+          clearArea('aiOldCode', 'aiOldStats');
+          clearArea('aiNewCode', 'aiNewStats');
+
+          if (safeCheck.warning) {
+              showStatusWarning("PERINGATAN SINTAKSIS", safeCheck.warning);
+              toast('Berhasil, tapi periksa kurung kode!', 'info');
+          } else {
+              statusBox.innerHTML = `
+                <div style="background:#4caf50; color:white; padding:0.8rem; border-radius:8px;">
+                    ✅ <strong>Berhasil menimpa kode sebagian!</strong>
+                </div>`;
+              toast('Revisi AI diterapkan!', 'success');
+          }
+
+          document.getElementById('mainUndoBtn').style.display = 'inline-block';
+          setTimeout(() => { closeAIRevisi(); }, 2500); 
+      };
+
+      // Mencegah Nambah Terlalu Panjang
+      if (newCodeNorm.length > (oldCodeNorm.length * 3) + 500) {
+        confirm("⚠️ BAHAYA DUPLIKAT KODE!<br><br>KODE BARU sangat panjang dibandingkan KODE LAMA. Ini berisiko memicu kode ganda.<br><br>Tetap paksa ganti sebagian?", () => { proceedReplace(); });
+      } 
+      // Mencegah Hapus Terlalu Banyak (Anti-Shrink Shield)
+      else if (oldCodeNorm.length > (newCodeNorm.length * 1.5) + 100) {
+        const oldLines = oldCode.split('\n').length;
+        const newLines = newCode.split('\n').length;
+        confirm(`⚠️ BAHAYA PENGHAPUSAN (KODE MENYUSUT)!<br><br>KODE LAMA yang Anda masukkan jauh lebih panjang (${oldLines} baris) daripada KODE BARU (${newLines} baris).<br><br>Jika dilanjutkan, puluhan baris kode asli Anda di dalam Kode Lama akan <b>TERHAPUS PERMANEN</b>.<br><br>Apakah Anda yakin ini yang Anda inginkan?`, () => { proceedReplace(); });
       }
-
-      document.getElementById('mainUndoBtn').style.display = 'inline-block';
-      setTimeout(() => { closeAIRevisi(); }, 2500); 
+      // Normal
+      else {
+        proceedReplace();
+      }
     }
 
     function replaceAllCode() {
