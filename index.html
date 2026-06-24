@@ -348,12 +348,6 @@
     <div id="globalStatus" style="margin-top:0.6rem; padding:0.5rem; border-radius:10px; font-size:0.8rem;"></div>
   </div>
 
-  <div class="container guide">
-    <details><summary>📘 Panduan Lengkap HABI STUDIO CODING .ZIP</summary>
-      <p><b>📄 Single:</b> Cari file/folder di input pencarian, klik hasil untuk memuat kode ke editor, edit jika perlu, lalu klik <b>Upload File</b>. Gunakan fitur <b>⚡ Revisi AI</b> untuk mengganti potongan kode dengan cerdas dan aman.</p>
-    </details>
-  </div>
-
   <footer>
     Powered by <strong>HABI STUDIO AI</strong> — Melampaui Batas Kreativitas
   </footer>
@@ -369,7 +363,7 @@
     </div>
   </div>
 
-  <!-- Modal Revisi AI -->
+  <!-- Modal Revisi AI (DENGAN AUTO-CLEANER & AUTO-SUGGEST) -->
   <div id="aiRevisiModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:600px; width:95%; max-height:95vh; overflow-y:auto;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
@@ -385,7 +379,8 @@
       <div id="aiRevisiStatus" style="font-size:0.8rem; margin-bottom:0.8rem; font-weight:600; padding:0.4rem; border-radius:6px; min-height:10px;"></div>
       
       <label>1️⃣ Kode Lama (Abaikan jika ingin Timpa Full)</label>
-      <textarea id="aiOldCode" placeholder="TIPS: Paste potongan kode asli LANGSUNG DARI EDITOR UTAMA di sini..." style="min-height:90px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiOldCode','aiOldStats'); autoCheckOldCode();"></textarea>
+      <!-- Fitur Auto-Clean ditanam di onpaste -->
+      <textarea id="aiOldCode" onpaste="handlePasteClean(event, 'aiOldCode', 'aiOldStats')" placeholder="TIPS: Jika paste dari AI gagal, sistem akan otomatis mencarikan saran kode dari editor..." style="min-height:90px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiOldCode','aiOldStats'); autoCheckOldCode();"></textarea>
       <div class="stats-row">
         <div class="char-count" id="aiOldStats" style="margin-top:0;">0 karakter | 0 baris</div>
         <div style="display:flex; gap:0.3rem;">
@@ -395,7 +390,7 @@
       </div>
       
       <label>2️⃣ Kode Baru (Dari balasan Chat AI / Teks Baru)</label>
-      <textarea id="aiNewCode" placeholder="Paste kode revisi utuh dari AI di sini..." style="min-height:120px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiNewCode','aiNewStats')"></textarea>
+      <textarea id="aiNewCode" onpaste="handlePasteClean(event, 'aiNewCode', 'aiNewStats')" placeholder="Paste kode revisi utuh dari AI di sini..." style="min-height:120px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiNewCode','aiNewStats')"></textarea>
       <div class="stats-row">
         <div class="char-count" id="aiNewStats" style="margin-top:0;">0 karakter | 0 baris</div>
         <div style="display:flex; gap:0.3rem;">
@@ -719,15 +714,45 @@
       });
     }
 
+    // ==================== AUTO-CLEANER ENGINE ====================
+    function autoCleanSnippet(text) {
+        let cleaned = text;
+        // Buang backticks markdown bahasa (contoh: ```javascript)
+        cleaned = cleaned.replace(/^```[a-zA-Z]*\n?/gm, '');
+        // Buang backticks penutup
+        cleaned = cleaned.replace(/```$/gm, '');
+        // Buang kata "KODE LAMA:" atau "KODE BARU:" yang tercopy dari AI
+        cleaned = cleaned.replace(/KODE LAMA:?/gi, '');
+        cleaned = cleaned.replace(/KODE BARU:?/gi, '');
+        return cleaned.trim();
+    }
+
+    // Tangkap event paste biasa (Tahan Layar -> Paste)
+    function handlePasteClean(event, id, statId) {
+        setTimeout(() => {
+            const el = document.getElementById(id);
+            el.value = autoCleanSnippet(el.value);
+            updateCodeStats(id, statId);
+            if (id === 'aiOldCode') autoCheckOldCode();
+        }, 50);
+    }
+
+    // Tangkap klik tombol Paste
     async function pasteToArea(id, statId) {
       try {
         const text = await navigator.clipboard.readText();
         if(!text) return toast('Clipboard kosong!', 'error');
+        
         const el = document.getElementById(id);
-        el.value = text;
+        if (id === 'aiOldCode' || id === 'aiNewCode') {
+            el.value = autoCleanSnippet(text);
+        } else {
+            el.value = text;
+        }
+        
         if (statId) updateCodeStats(id, statId);
         if (id === 'aiOldCode') autoCheckOldCode();
-        toast('Berhasil di-paste!', 'success');
+        toast('Berhasil di-paste & dibersihkan otomatis!', 'success');
       } catch (err) {
         toast('Gagal paste. Izinkan akses clipboard!', 'error');
       }
@@ -745,7 +770,7 @@
             time: timeStr,
             label: label || 'Normal'
         });
-        if(hist.length > 20) hist.pop(); // Simpan maksimal 20 histori terakhir
+        if(hist.length > 20) hist.pop();
         localStorage.setItem(HK_FILE, JSON.stringify(hist));
         renderLocalHistory();
     }
@@ -867,7 +892,7 @@
       });
     }
 
-    // ==================== ⚡ REVISI AI (SYNTAX SHIELD & SMART MATCH) ====================
+    // ==================== ⚡ REVISI AI (AUTO-SUGGEST & SYNTAX SHIELD) ====================
     function copySystemPrompt() {
       const systemPrompt = `Kamu adalah Senior Programmer. Tugasmu adalah memberikan revisi kode untuk sistem Auto-Replace Habi Studio.
 
@@ -942,29 +967,18 @@ KODE BARU:
         statusBox.style.background = 'transparent';
     }
 
-    // ALGORITMA PENCARIAN SUPER CERDAS (ABSOLUTE MATCH)
-    function findRobustMatch(editorText, searchText) {
-        const normalizeStr = (str) => str
-            .replace(/[\u2018\u2019`]/g, "'") // smart quotes
-            .replace(/[\u201C\u201D]/g, '"') 
-            .replace(/[\u200B-\u200D\uFEFF]/g, ''); // invisible chars
-
+    // --- ALGORITMA PENCARI PINTAR (AUTO-SUGGEST) ---
+    function findSmartMatch(editorText, searchText) {
+        const normalizeStr = (str) => str.replace(/[\u2018\u2019`]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/[\u200B-\u200D\uFEFF]/g, '');
         const edNorm = normalizeStr(editorText);
         const stNorm = normalizeStr(searchText);
 
-        // 1. Coba pencocokan eksak terlebih dahulu
         let exactIdx = edNorm.indexOf(stNorm);
-        if (exactIdx !== -1) {
-            return { start: exactIdx, end: exactIdx + stNorm.length - 1 };
-        }
+        if (exactIdx !== -1) return { start: exactIdx, end: exactIdx + stNorm.length - 1 };
 
-        // 2. Pencocokan kebal spasi (Absolut)
         const isIgnored = (char) => /\s/.test(char);
-        
         let stNoSpace = '';
-        for (let char of stNorm) {
-            if (!isIgnored(char)) stNoSpace += char;
-        }
+        for (let char of stNorm) if (!isIgnored(char)) stNoSpace += char;
         
         if (!stNoSpace) return null;
 
@@ -979,67 +993,43 @@ KODE BARU:
 
         let nsStart = edNoSpace.indexOf(stNoSpace);
         if (nsStart !== -1) {
-            return { 
-                start: mapToOriginal[nsStart], 
-                end: mapToOriginal[nsStart + stNoSpace.length - 1] 
-            };
+            return { start: mapToOriginal[nsStart], end: mapToOriginal[nsStart + stNoSpace.length - 1] };
         }
-
         return null;
     }
 
-    // FUNGSI PENGAMAN USER YANG DIINTEGRASIKAN
-    function performSafeReplace(fullContent, oldCode, newCode) {
-        
-        // 1. Cari Index persis menggunakan Algoritma Super Match
-        const match = findRobustMatch(fullContent, oldCode);
-        
-        if (!match) {
-            return { 
-                success: false, 
-                title: "KODE TIDAK DITEMUKAN",
-                desc: "Sistem gagal menemukan potongan kode ini di dalam file. Ini biasanya karena AI memotong kode di tengah-tengah kata, atau Anda belum memuat file.",
-                aiPrompt: "Halo AI, KODE LAMA yang kamu berikan TIDAK DITEMUKAN di file saya. Tolong berikan blok KODE LAMA yang lebih akurat, persis seperti di file asli!"
-            };
-        }
+    function findSuggestion(editorText, oldCode) {
+        const cleanOld = oldCode.replace(/```[a-z]*\n?/gi, '').replace(/KODE LAMA:?/gi, '').trim();
+        const lines = cleanOld.split('\n').map(l => l.trim()).filter(l => l.length > 8);
+        if (lines.length === 0) return null;
 
-        // 2. Deteksi Duplikasi menggunakan teks tanpa spasi
-        const stNoSpace = oldCode.replace(/[\s\u200B-\u200D\uFEFF]/g, '');
-        const edNoSpace = fullContent.replace(/[\s\u200B-\u200D\uFEFF]/g, '');
-        const occurrences = edNoSpace.split(stNoSpace).length - 1;
+        const editorLines = editorText.split('\n');
         
-        if (occurrences > 1) {
-            return { 
-                success: false, 
-                title: "TERDETEKSI KODE GANDA",
-                desc: `Sistem TERBLOKIR: Kode Lama terdeteksi di ${occurrences} lokasi berbeda pada file! Mohon salin potongan Kode Lama yang lebih panjang (unik) agar tidak merusak baris kode lain.`,
-                aiPrompt: `Halo AI, potongan KODE LAMA yang kamu berikan terlalu pendek sehingga terdeteksi ganda di ${occurrences} lokasi berbeda pada file. Tolong berikan potongan KODE LAMA yang lebih panjang/unik!`
-            };
-        }
-
-        // 3. Eksekusi Replace (Pemotongan String Murni berdasarkan Index)
-        const updatedContent = fullContent.substring(0, match.start) + newCode + fullContent.substring(match.end + 1);
-
-        // 4. Bracket Balance Warning (Peringatan Sintaksis)
-        const checkBracketBalance = (str) => {
-            const cleanStr = str.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, ''); 
-            const stack = [];
-            const pairs = { '}': '{', ')': '(', ']': '[' };
-            for (let char of cleanStr) {
-                if (['{', '(', '['].includes(char)) stack.push(char);
-                else if (['}', ')', ']'].includes(char)) {
-                    if (stack.pop() !== pairs[char]) return false;
-                }
+        const firstLineNorm = lines[0].replace(/\s+/g, '');
+        for (let i = 0; i < editorLines.length; i++) {
+            const edLineNorm = editorLines[i].replace(/\s+/g, '');
+            if (edLineNorm.includes(firstLineNorm)) {
+                let end = Math.min(editorLines.length, i + cleanOld.split('\n').length + 1);
+                return editorLines.slice(i, end).join('\n');
             }
-            return stack.length === 0;
-        };
-
-        let warning = null;
-        if (!checkBracketBalance(newCode)) {
-            warning = "PERINGATAN SINTAKSIS: Sistem mendeteksi jumlah tanda kurung {} / () / [] tidak seimbang pada Kode Baru Anda. Pastikan tidak ada kurung penutup yang tertinggal agar tidak memicu SyntaxError.";
         }
+        
+        const lastLineNorm = lines[lines.length-1].replace(/\s+/g, '');
+        for (let i = editorLines.length - 1; i >= 0; i--) {
+            const edLineNorm = editorLines[i].replace(/\s+/g, '');
+            if (edLineNorm.includes(lastLineNorm)) {
+                let start = Math.max(0, i - cleanOld.split('\n').length - 1);
+                return editorLines.slice(start, i + 1).join('\n');
+            }
+        }
+        return null;
+    }
 
-        return { success: true, updatedContent, warning };
+    function acceptSuggestion() {
+        const suggestedCode = document.getElementById('suggestedCode').value;
+        document.getElementById('aiOldCode').value = suggestedCode;
+        updateCodeStats('aiOldCode','aiOldStats');
+        autoCheckOldCode(); 
     }
 
     function autoCheckOldCode() {
@@ -1056,7 +1046,7 @@ KODE BARU:
         return;
       }
 
-      const match = findRobustMatch(editor.value, oldCode);
+      const match = findSmartMatch(editor.value, oldCode);
 
       if (match) {
         statusBox.innerHTML = `
@@ -1064,12 +1054,68 @@ KODE BARU:
                 ✅ <strong>Kode ditemukan!</strong> Aman untuk diganti.
             </div>`;
       } else {
-        showStatusError(
-            "KODE TIDAK DITEMUKAN", 
-            "Pastikan Anda menyalin blok kodenya dengan benar atau gunakan tombol Copy Pesan di bawah untuk AI.",
-            "Halo AI, KODE LAMA yang kamu berikan TIDAK DITEMUKAN di file saya saat ini. Tolong periksa kembali dan berikan KODE LAMA yang benar-benar ada di file saya sekarang!"
-        );
+        // TAMPILKAN AUTO-SUGGEST JIKA MATCH GAGAL
+        const suggestion = findSuggestion(editor.value, oldCode);
+        
+        if (suggestion) {
+            statusBox.innerHTML = `
+                <div style="background:#ff9800; color:white; padding:0.8rem; border-radius:8px; border-left:4px solid #e65100;">
+                    <strong style="font-size:0.9rem;">⚠️ Kode persis tidak ditemukan!</strong>
+                    <p style="font-size:0.75rem; margin:0.4rem 0;">Tapi sistem menemukan kode yang sangat mirip di file Anda. Apakah ini yang Anda maksud?</p>
+                    <textarea id="suggestedCode" style="width:100%; height:80px; margin-top:0.3rem; font-size:0.7rem; color:black; border-radius:4px; padding:0.3rem;" readonly>${suggestion}</textarea>
+                    <button onclick="acceptSuggestion()" style="width:100%; margin-top:0.4rem; padding:0.5rem; background:white; color:#ff9800; font-weight:bold; border:none; border-radius:4px; cursor:pointer;">✨ Ya, Gunakan Kode Ini!</button>
+                </div>
+            `;
+        } else {
+            showStatusError(
+                "KODE TIDAK DITEMUKAN", 
+                "Sistem gagal mencari bahkan dengan Auto-Suggest. Pastikan AI tidak salah memberikan file.",
+                "Halo AI, KODE LAMA yang kamu berikan benar-benar TIDAK DITEMUKAN di file saya saat ini. Tolong berikan blok KODE LAMA yang lebih akurat dan persis dengan file saya sekarang!"
+            );
+        }
       }
+    }
+
+    function performSafeReplace(fullContent, oldCode, newCode) {
+        const match = findSmartMatch(fullContent, oldCode);
+        if (!match) {
+            return { success: false, title: "KODE TIDAK DITEMUKAN", desc: "Pastikan kode benar-benar ada." };
+        }
+
+        const normFullNoSpace = fullContent.replace(/\s+/g, '');
+        const normOldNoSpace = oldCode.replace(/\s+/g, '');
+        const occurrences = normFullNoSpace.split(normOldNoSpace).length - 1;
+        
+        if (occurrences > 1) {
+            return { 
+                success: false, 
+                title: "TERDETEKSI KODE GANDA",
+                desc: `Sistem TERBLOKIR: Kode Lama terdeteksi di ${occurrences} lokasi berbeda pada file!`,
+                aiPrompt: `Halo AI, potongan KODE LAMA yang kamu berikan terdeteksi ganda di ${occurrences} lokasi berbeda pada file. Tolong berikan potongan KODE LAMA yang lebih panjang/unik!`
+            };
+        }
+
+        const updatedContent = fullContent.substring(0, match.start) + newCode + fullContent.substring(match.end + 1);
+
+        const checkBracketBalance = (str) => {
+            const cleanStr = str.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, ''); 
+            const stack = [];
+            const pairs = { '}': '{', ')': '(', ']': '[' };
+            for (let char of cleanStr) {
+                if (['{', '(', '['].includes(char)) stack.push(char);
+                else if (['}', ')', ']'].includes(char)) {
+                    if (stack.pop() !== pairs[char]) return false;
+                }
+            }
+            return stack.length === 0;
+        };
+
+        let warning = null;
+        if (!checkBracketBalance(newCode)) {
+            warning = "Sistem mendeteksi jumlah tanda kurung {} / () / [] tidak seimbang pada Kode Baru Anda. Pastikan tidak ada kurung penutup yang tertinggal agar tidak memicu SyntaxError.";
+        }
+
+        return { success: true, updatedContent, warning, match };
     }
 
     function executeAIRevisi() {
@@ -1084,7 +1130,6 @@ KODE BARU:
         return;
       }
 
-      // --- MEMANGGIL FUNGSI PENGAMAN DARI USER ---
       const safeCheck = performSafeReplace(editor.value, oldCode, newCode);
 
       if (!safeCheck.success) {
@@ -1092,9 +1137,8 @@ KODE BARU:
         return;
       }
 
-      // Simpan Histori sebelum ditimpa
       saveToLocalHistory(filename, editor.value, 'Sebelum Revisi Sebagian');
-      globalUndoCode = editor.value; // Quick Undo
+      globalUndoCode = editor.value;
 
       editor.value = safeCheck.updatedContent;
       updateCodeStats('singleCode', 'singleCodeStats');
@@ -1114,6 +1158,7 @@ KODE BARU:
       }
 
       document.getElementById('mainUndoBtn').style.display = 'inline-block';
+      setTimeout(() => { closeAIRevisi(); }, 2500); 
     }
 
     function replaceAllCode() {
@@ -1128,7 +1173,6 @@ KODE BARU:
       }
 
       confirm("🔥 PERINGATAN: Ini akan menghapus SELURUH isi file saat ini dan menggantinya 100% dengan Kode Baru. Lanjutkan?", () => {
-        // Simpan Histori sebelum ditimpa
         saveToLocalHistory(filename, editor.value, 'Sebelum Timpa Full');
         globalUndoCode = editor.value;
 
@@ -1144,21 +1188,9 @@ KODE BARU:
             </div>`;
 
         document.getElementById('mainUndoBtn').style.display = 'inline-block';
-        toast('Seluruh file ditimpa! Silakan cek editor.', 'success');
+        toast('Seluruh file ditimpa!', 'success');
+        setTimeout(() => { closeAIRevisi(); }, 1500);
       });
-    }
-
-    function undoMainRevisi() {
-      if (globalUndoCode) {
-        confirm("Mau balik ke revisi sebelumnya (Quick Undo)?", () => {
-          document.getElementById('singleCode').value = globalUndoCode;
-          updateCodeStats('singleCode', 'singleCodeStats');
-          globalUndoCode = ''; 
-          
-          document.getElementById('mainUndoBtn').style.display = 'none';
-          toast('⏪ Revisi terakhir berhasil dibatalkan!', 'success');
-        });
-      }
     }
 
     // ==================== ZIP TAB ====================
