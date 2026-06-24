@@ -89,7 +89,7 @@
     }
     .modal {
       background:var(--card-bg); padding:1.5rem; border-radius:16px;
-      max-width:480px; width:92%; border:1px solid var(--border);
+      max-width:550px; width:92%; border:1px solid var(--border);
       box-shadow:0 16px 48px rgba(0,0,0,0.3);
     }
     .modal h3 { color:var(--accent); margin-bottom:0.8rem; font-size:1.1rem; }
@@ -161,12 +161,10 @@
   <div class="theme-toggle" onclick="toggleTheme()" title="Ganti tema">🌓</div>
 
   <div class="container">
-    <!-- Logo -->
     <div class="logo-area">
       <img src="logo.png" alt="Logo HABI STUDIO CODING" class="logo-img" id="logoImg" onload="this.style.display='block'; startLogoGlow();" onerror="this.style.display='none'">
     </div>
 
-    <!-- Tab Navigasi -->
     <div class="tab-buttons">
       <button class="tab-btn active" onclick="switchTab('single')">📄 Single</button>
       <button class="tab-btn" onclick="switchTab('zip')">📦 ZIP</button>
@@ -178,7 +176,6 @@
       <button class="tab-btn" onclick="switchTab('chat')">💬 Chat to ZIP</button>
     </div>
 
-    <!-- Credentials -->
     <div style="display:flex; gap:0.4rem; align-items:center; margin-bottom:0.5rem; flex-wrap:wrap;">
       <input type="text" id="username" placeholder="Username" style="flex:1; min-width:80px; margin-top:0;" oninput="saveCreds()">
       <input type="text" id="repo" placeholder="Repo" style="flex:1; min-width:80px; margin-top:0;" oninput="saveCreds()">
@@ -186,10 +183,8 @@
       <button onclick="showTokenHelp()" class="inline-btn" style="background:#24292e;" title="Cara dapat token">🔑</button>
     </div>
 
-    <!-- Info repository aktif -->
     <div id="activeRepoInfo" style="font-size:0.8rem; margin-bottom:0.5rem; opacity:0.8;"></div>
 
-    <!-- Quick Links -->
     <div class="quick-links">
       <a href="https://ai-hub--habigenerateweb.replit.app/" target="_blank" title="Convert Chat AI → ZIP Project">
         <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/><path d="M7 9h10v2H7zm0 4h7v2H7z"/></svg>
@@ -217,7 +212,6 @@
       <label>Tempel Kode <span style="font-weight:normal; font-size:0.75rem;">(atau hasil pencarian di atas)</span></label>
       <textarea id="singleCode" placeholder="// Kode akan muncul di sini..." oninput="updateCodeStats('singleCode','singleCodeStats')"></textarea>
       
-      <!-- Area Statistik dan Action Tambahan Utama -->
       <div class="stats-row">
         <div class="char-count" id="singleCodeStats" style="margin-top:0;">0 karakter | 0 baris</div>
         <div style="display:flex; gap:0.3rem;">
@@ -255,7 +249,7 @@
       <div id="zipStatus" style="margin-top:0.3rem; font-size:0.8rem;"></div>
     </div>
 
-    <!-- Tab Editor (Buat File Baru) -->
+    <!-- Tab Editor -->
     <div id="tab-editor" class="tab-content">
       <label>📁 Bikin baru file</label>
       <div style="display:flex; gap:0.4rem; align-items:center;">
@@ -341,7 +335,7 @@
     <div id="tab-chat" class="tab-content">
       <label>💬 Tempel kode dari Chat AI</label>
       <p style="font-size:0.75rem; margin-bottom:0.4rem; opacity:0.9; line-height:1.4;">
-        Gunakan tombol di bawah untuk menyalin perintah khusus, lalu kirim ke AI agar balasan AI otomatis berformat siap ekstrak (Full Project tanpa dummy).
+        Gunakan tombol di bawah untuk menyalin perintah khusus, lalu kirim ke AI agar balasan AI otomatis berformat siap ekstrak.
       </p>
       <button onclick="copyChatToZipPrompt()" class="inline-btn" style="background:linear-gradient(135deg, #2196f3, #00bcd4); width:100%; margin-bottom:0.8rem; font-size:0.85rem; padding:0.6rem;">📋 Salin Prompt Chat to ZIP</button>
       <textarea id="chatCode" placeholder="Tempel semua balasan dari chat AI di sini...&#10;Pastikan nama file diawali ikon 📁" style="min-height:200px;"></textarea>
@@ -354,25 +348,12 @@
     <div id="globalStatus" style="margin-top:0.6rem; padding:0.5rem; border-radius:10px; font-size:0.8rem;"></div>
   </div>
 
-  <!-- Panduan Lengkap -->
   <div class="container guide">
     <details><summary>📘 Panduan Lengkap HABI STUDIO CODING .ZIP</summary>
       <p><b>📄 Single:</b> Cari file/folder di input pencarian, klik hasil untuk memuat kode ke editor, edit jika perlu, lalu klik <b>Upload File</b>. Gunakan fitur <b>⚡ Revisi AI</b> untuk mengganti potongan kode dengan cerdas dan aman.</p>
-      <p><b>📦 ZIP:</b> Upload file ZIP berisi proyek, otomatis diekstrak dan diupload ke repositori dengan struktur yang sama. Centang <b>Hapus folder root</b> jika ZIP hanya berisi satu folder utama.</p>
-      <p><b>✏️ Buat Baru:</b> Buat file baru langsung dari tool tanpa perlu membuka GitHub. Masukkan path lengkap (contoh: <code>repo/app/page.tsx</code>), tulis kode di kolom konten, lalu klik <b>Simpan</b>. Folder akan otomatis terstruktur. Nama repo bisa ditulis di awal path atau tidak (akan menggunakan repo yang sedang aktif).</p>
-      <p><b>📂 Files:</b> Jelajah isi repositori, cari file/folder, download, hapus file, hapus folder, hapus semua file, atau hapus repository. Gunakan tombol <b>Muat Struktur</b> untuk memuat daftar file. <b>Baru!</b> Klik <b>📥 Download Repository ZIP</b> untuk mengunduh seluruh isi repositori sebagai file ZIP dengan progress bar. Nama file dipertahankan asli (termasuk yang diawali titik seperti .gitignore).</p>
-      <p><b>✏️ Rename:</b> Cari file atau folder, pilih dari hasil, nama baru otomatis terisi, edit jika perlu, lalu klik <b>Rename</b> untuk memindahkan/rename.</p>
-      <p><b>➕ Buat Repo:</b> Buat repositori GitHub baru langsung dari tool. Isi nama, pilih visibilitas, dan tambahkan README jika perlu.</p>
-      <p><b>📋 Daftar:</b> Lihat semua repositori milik akun GitHub-mu. Centang repo yang ingin dihapus (repo <b>deploy-tool</b> dilindungi dan tidak bisa dicentang). Klik <b>Hapus Terpilih</b> untuk menghapus. Riwayat penghapusan tercatat di bawah.</p>
-      <p><b>💬 Chat to ZIP:</b> Tempelkan teks dari chat AI yang menggunakan penanda 📁 untuk setiap file. Tool akan memproses dan membuat file ZIP yang siap diunduh. Sangat berguna untuk mengubah percakapan AI langsung menjadi struktur proyek.</p>
-      <p><b>👥 Akun:</b> Kelola banyak akun GitHub. Setiap akun menampilkan nama profil, username, repo, dan token (sebagian). Gunakan tombol ✅ untuk memilih akun, ✏️ untuk mengedit, dan 🗑️ untuk menghapus. Klik <b>➕ Tambah Akun</b> untuk menambah akun baru (form modern, bukan prompt). Saat menambah atau mengedit akun, otomatis akan beralih ke akun tersebut. Detail akun bisa dicopy dengan klik 📋. Akun yang sedang aktif ditandai dengan badge ✅ di daftar. Kredensial tetap tersimpan meskipun browser direfresh.</p>
-      <p><b>🔑 Token:</b> Klik tombol 🔑 untuk panduan lengkap cara mendapatkan token GitHub dengan izin <code>repo</code> dan <code>delete_repo</code>.</p>
-      <p><b>🎨 Tema:</b> Klik 🌓 di pojok kanan atas untuk beralih antara tema gelap dan terang.</p>
-      <p><b>🖼️ Logo:</b> Upload file <code>logo.png</code> (ukuran 200x55px) ke root repositori untuk menampilkan logo kustom. Jika tidak ada, area logo akan kosong. Logo memiliki efek shadow dinamis yang aktif 20 detik setiap 1 menit.</p>
     </details>
   </div>
 
-  <!-- Footer -->
   <footer>
     Powered by <strong>HABI STUDIO AI</strong> — Melampaui Batas Kreativitas
   </footer>
@@ -388,7 +369,7 @@
     </div>
   </div>
 
-  <!-- Modal Revisi AI (DENGAN SYNTAX SHIELD USER) -->
+  <!-- Modal Revisi AI -->
   <div id="aiRevisiModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:600px; width:95%; max-height:95vh; overflow-y:auto;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
@@ -398,7 +379,7 @@
           <button onclick="copySystemPrompt()" class="inline-btn" style="flex:1; background:linear-gradient(135deg, #9c27b0, #673ab7); font-size:0.75rem; padding:0.6rem;">📋 Prompt System (AI Studio)</button>
           <button onclick="copyChatPrompt()" class="inline-btn" style="flex:1; background:linear-gradient(135deg, #2196f3, #00bcd4); font-size:0.75rem; padding:0.6rem;">📋 Prompt Chat Biasa</button>
         </div>
-        <p style="font-size:0.7rem; margin-top:0; opacity:0.8; margin-bottom:0;">Pilih prompt sesuai AI Anda. Mencegah AI memotong kurung kurawal (mencegah SyntaxError) dan memaksa format Code Block murni.</p>
+        <p style="font-size:0.7rem; margin-top:0; opacity:0.8; margin-bottom:0;">Pilih prompt sesuai AI Anda. Mencegah AI salah potong baris (mencegah kode duplikat) dan memaksa format Code Block murni.</p>
       </div>
 
       <div id="aiRevisiStatus" style="font-size:0.8rem; margin-bottom:0.8rem; font-weight:600; padding:0.4rem; border-radius:6px; min-height:10px;"></div>
@@ -487,12 +468,10 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    // ==================== STATE ====================
     const SK = 'hs_profiles', UK = 'hs_user', TK = 'hs_theme', HK = 'hs_history', AK = 'hs_antilag', HK_FILE = 'hs_file_history';
     let repoTree = [], selDelFolder = '', currentSearchTarget = null;
     let globalUndoCode = ''; 
 
-    // ==================== INIT ====================
     window.onload = () => {
       loadTheme(); genParticles(); initAntiLag(); loadCredsFromStorage();
       updateActiveRepoInfo();
@@ -524,7 +503,6 @@
       if (p) p.style.display = on ? 'none' : 'block';
     }
 
-    // ==================== LOGO GLOW ====================
     function startLogoGlow() {
       const logo = document.getElementById('logoImg');
       if (!logo || logo.style.display === 'none') return;
@@ -536,7 +514,6 @@
       setInterval(() => triggerGlow(), 60000);
     }
 
-    // ==================== CREDENTIALS ====================
     function saveCreds() {
       const u = {
         username: document.getElementById('username').value.trim(),
@@ -569,7 +546,6 @@
     function showTokenHelp() { document.getElementById('tokenHelpModal').style.display = 'flex'; }
     function closeTokenHelp() { document.getElementById('tokenHelpModal').style.display = 'none'; }
 
-    // ==================== TOAST & MODAL ====================
     function toast(msg, type) {
       const t = document.getElementById('toast');
       t.textContent = msg; t.className = 'toast ' + (type || '');
@@ -594,7 +570,6 @@
       else { d.style.background = 'transparent'; d.style.color = 'inherit'; }
     }
 
-    // ==================== TABS ====================
     function switchTab(tab) {
       const tabs = ['single','zip','editor','files','rename','create-repo','list-repo','chat'];
       document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', tabs[i] === tab));
@@ -605,7 +580,6 @@
       if (tab === 'editor') updateActiveRepoInfo();
     }
 
-    // ==================== GITHUB API & UTF8 FIX ====================
     function toB64(str) {
         return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
             function toSolidBytes(match, p1) {
@@ -662,7 +636,6 @@
       });
     }
 
-    // ==================== REPO TREE ====================
     async function loadRepoTree() {
       const { username, repo, token } = getCreds();
       if (!username || !repo || !token) return toast('Isi semua kredensial', 'error');
@@ -719,7 +692,6 @@
       c.innerHTML = html;
     }
 
-    // ==================== CODE STATS HELPER, COPY & PASTE ====================
     function updateCodeStats(textareaId, statsId) {
       const textarea = document.getElementById(textareaId);
       const stats = document.getElementById(statsId);
@@ -824,7 +796,7 @@
         let hist = JSON.parse(localStorage.getItem(HK_FILE) || '[]');
         let item = hist.find(h => h.id === id);
         if(!item) return;
-        confirm(`Pulihkan file ke versi: ${item.time}?`, () => {
+        confirm(`Pulihkan file ke versi:\n${item.time}?`, () => {
             document.getElementById('singleCode').value = item.content;
             updateCodeStats('singleCode', 'singleCodeStats');
             toast('Histori berhasil dipulihkan!', 'success');
@@ -941,31 +913,83 @@ KODE BARU:
       document.getElementById('aiRevisiModal').style.display = 'none';
     }
 
-    function findSmartMatch(editorText, searchText) {
-        const normalize = (str) => str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-        const edNorm = normalize(editorText);
-        const stNorm = normalize(searchText);
-        
-        // 1. Pencarian Persis (Paling Cepat)
-        let exactIdx = edNorm.indexOf(stNorm);
-        if (exactIdx !== -1) return { start: exactIdx, end: exactIdx + stNorm.length - 1 };
+    function showStatusError(title, desc, aiPrompt) {
+        const statusBox = document.getElementById('aiRevisiStatus');
+        let html = `
+            <div style="background:var(--danger); color:white; padding:0.8rem; border-radius:8px; border-left:4px solid #b71c1c;">
+                <strong style="font-size:0.9rem;">❌ ${title}</strong>
+                <p style="font-size:0.75rem; margin:0.4rem 0;">${desc}</p>
+        `;
+        if (aiPrompt) {
+            html += `
+                <textarea id="errAiCopy" style="width:100%; height:65px; margin-top:0.3rem; border-radius:4px; padding:0.3rem; font-size:0.7rem; color:#000;" readonly>${aiPrompt}</textarea>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('errAiCopy').value); toast('Pesan disalin! Kirim ke AI', 'success');" style="margin-top:0.3rem; width:100%; padding:0.4rem; background:white; color:var(--danger); font-weight:bold; border:none; border-radius:4px; cursor:pointer;">📋 Copy Pesan & Kirim ke AI</button>
+            `;
+        }
+        html += `</div>`;
+        statusBox.innerHTML = html;
+        statusBox.style.background = 'transparent';
+    }
 
-        // 2. Pencarian Cerdas (Abaikan perbedaan spasi, tab, dan enter)
-        const trimmedSearch = stNorm.trim();
-        if (!trimmedSearch) return null;
+    function showStatusWarning(title, desc) {
+        const statusBox = document.getElementById('aiRevisiStatus');
+        statusBox.innerHTML = `
+            <div style="background:#ff9800; color:white; padding:0.8rem; border-radius:8px; border-left:4px solid #e65100;">
+                <strong style="font-size:0.9rem;">⚠️ ${title}</strong>
+                <p style="font-size:0.75rem; margin:0.4rem 0;">${desc}</p>
+            </div>
+        `;
+        statusBox.style.background = 'transparent';
+    }
+
+    function performSafeReplace(fullContent, oldCode, newCode) {
+        const normalizeWhitespace = str => str.replace(/\s+/g, ' ').trim();
         
-        const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regexPattern = escapeRegExp(trimmedSearch).replace(/\s+/g, '\\s+');
-        
-        try {
-            const regex = new RegExp(regexPattern);
-            const match = edNorm.match(regex);
-            if (match) {
-                return { start: match.index, end: match.index + match[0].length - 1 };
+        let index = fullContent.indexOf(oldCode);
+        if (index === -1) {
+            const cleanFull = normalizeWhitespace(fullContent);
+            const cleanOld = normalizeWhitespace(oldCode);
+            if (!cleanFull.includes(cleanOld)) {
+                return { 
+                    success: false, 
+                    title: "KODE TIDAK DITEMUKAN",
+                    desc: "Pastikan spasi, tab, huruf besar-kecil, dan tanda bacanya sama persis dengan yang ada di editor.",
+                    aiPrompt: "Halo AI, KODE LAMA yang kamu berikan TIDAK DITEMUKAN di file saya saat ini. Kemungkinan kamu menggunakan versi kode yang salah. Tolong periksa kembali file terbaru saya dan berikan potongan KODE LAMA yang benar-benar cocok!"
+                };
             }
-        } catch(e) {}
+        }
 
-        return null;
+        const occurrences = fullContent.split(oldCode).length - 1;
+        if (occurrences > 1) {
+            return { 
+                success: false, 
+                title: "TERDETEKSI KODE GANDA",
+                desc: `Sistem mendeteksi Kode Lama ini di ${occurrences} lokasi berbeda. Sistem memblokir penggantian untuk mencegah salah potong.`,
+                aiPrompt: `Halo AI, potongan KODE LAMA yang kamu berikan terdeteksi ganda di ${occurrences} lokasi berbeda pada file. Tolong berikan potongan KODE LAMA yang lebih panjang/unik agar sistem tahu persis blok mana yang ingin diganti!`
+            };
+        }
+
+        const updatedContent = fullContent.replace(oldCode, newCode);
+
+        const checkBracketBalance = (str) => {
+            const cleanStr = str.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, ''); 
+            const stack = [];
+            const pairs = { '}': '{', ')': '(', ']': '[' };
+            for (let char of cleanStr) {
+                if (['{', '(', '['].includes(char)) stack.push(char);
+                else if (['}', ')', ']'].includes(char)) {
+                    if (stack.pop() !== pairs[char]) return false;
+                }
+            }
+            return stack.length === 0;
+        };
+
+        let warning = null;
+        if (!checkBracketBalance(newCode)) {
+            warning = "Sistem mendeteksi jumlah tanda kurung {} / () / [] tidak seimbang pada Kode Baru Anda. Pastikan tidak ada kurung penutup yang tertinggal agar tidak memicu SyntaxError.";
+        }
+
+        return { success: true, updatedContent, warning };
     }
 
     function autoCheckOldCode() {
@@ -975,53 +999,37 @@ KODE BARU:
 
       if (!oldCode.trim()) {
         statusBox.innerHTML = '';
-        statusBox.style.background = 'transparent';
         return;
       }
       if (!editor.value.trim()) {
-        statusBox.innerHTML = '❌ Editor utama masih kosong! Muat file terlebih dahulu.';
-        statusBox.style.color = 'var(--danger)';
-        statusBox.style.background = 'rgba(229,57,53,0.1)';
+        showStatusError("Editor Kosong", "Muat file terlebih dahulu sebelum melakukan pencarian.", null);
         return;
       }
 
-      const match = findSmartMatch(editor.value, oldCode);
+      const normalizeWhitespace = str => str.replace(/\s+/g, ' ').trim();
+      let index = editor.value.indexOf(oldCode);
+      let found = false;
 
-      if (match) {
-        statusBox.innerHTML = '✅ Kode ditemukan! Aman untuk diganti.';
-        statusBox.style.color = '#4caf50';
-        statusBox.style.background = 'rgba(76,175,80,0.1)';
+      if (index !== -1) {
+          found = true;
       } else {
-        statusBox.innerHTML = '❌ Kode tidak ditemukan! Pastikan Anda menyalin blok kodenya dengan benar.';
-        statusBox.style.color = 'var(--danger)';
-        statusBox.style.background = 'rgba(229,57,53,0.1)';
+          const cleanFull = normalizeWhitespace(editor.value);
+          const cleanOld = normalizeWhitespace(oldCode);
+          if (cleanFull.includes(cleanOld)) found = true;
       }
-    }
 
-    // --- FUNGSI PENGAMAN SYNTAX (BRACKET SHIELD) ---
-    function performSafeReplace(fullContent, oldCode, newCode) {
-        const match = findSmartMatch(fullContent, oldCode);
-        if (!match) {
-            return { success: false, error: "KODE TIDAK DITEMUKAN: Pastikan potongan kode lama benar-benar ada di dalam file." };
-        }
-
-        // Cek Duplikasi Lokasi (Mencegah salah replace jika ada kode yang kembar)
-        const normFullNoSpace = fullContent.replace(/\s+/g, '');
-        const normOldNoSpace = oldCode.replace(/\s+/g, '');
-        const occurrences = normFullNoSpace.split(normOldNoSpace).length - 1;
-        
-        if (occurrences > 1) {
-            return { 
-                success: false, 
-                error: `SISTEM TERBLOKIR: Kode Lama terdeteksi di ${occurrences} lokasi berbeda pada file! Mohon salin potongan Kode Lama yang lebih panjang agar unik.` 
-            };
-        }
-
-        // Catatan Revisi: Pengecekan kurung kurawal (Bracket Shield) yang terlalu ketat telah DIMATIKAN.
-        // Karena tool ini sudah memiliki fitur "Undo Cepat", lebih baik mengizinkan replace 
-        // daripada memblokir pengguna secara terus-menerus akibat false-alarm regex.
-
-        return { success: true, match: match };
+      if (found) {
+        statusBox.innerHTML = `
+            <div style="background:#4caf50; color:white; padding:0.6rem; border-radius:8px;">
+                ✅ <strong>Kode ditemukan!</strong> Aman untuk diganti.
+            </div>`;
+      } else {
+        showStatusError(
+            "KODE TIDAK DITEMUKAN", 
+            "Pastikan Anda menyalin blok kodenya dengan benar atau gunakan tombol Copy Pesan di bawah untuk AI.",
+            "Halo AI, KODE LAMA yang kamu berikan TIDAK DITEMUKAN di file saya saat ini. Tolong periksa kembali dan berikan KODE LAMA yang benar-benar ada di file saya sekarang!"
+        );
+      }
     }
 
     function executeAIRevisi() {
@@ -1031,46 +1039,40 @@ KODE BARU:
       const statusBox = document.getElementById('aiRevisiStatus');
       const filename = document.getElementById('singleSearchInput').value || 'File Tidak Bernama';
 
-      if (!oldCode.trim()) {
-        statusBox.innerHTML = '❌ Masukkan potongan kode lama yang ingin diganti!';
-        statusBox.style.color = 'var(--danger)';
-        statusBox.style.background = 'rgba(229,57,53,0.1)';
+      if (!oldCode.trim() || !newCode.trim()) {
+        showStatusError("Input Kosong", "Pastikan Kode Lama dan Kode Baru sudah diisi.", null);
         return;
       }
 
-      // --- MEMANGGIL FUNGSI PENGAMAN SYNTAX ---
       const safeCheck = performSafeReplace(editor.value, oldCode, newCode);
 
       if (!safeCheck.success) {
-        statusBox.innerHTML = '❌ ' + safeCheck.error;
-        statusBox.style.color = 'white';
-        statusBox.style.background = 'var(--danger)';
+        showStatusError(safeCheck.title, safeCheck.desc, safeCheck.aiPrompt);
         return;
       }
 
-      const match = safeCheck.match;
-
-      // Simpan Histori
       saveToLocalHistory(filename, editor.value, 'Sebelum Revisi Sebagian');
       globalUndoCode = editor.value;
 
-      const editorText = editor.value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-      const newText = editorText.substring(0, match.start) + newCode + editorText.substring(match.end + 1);
-      
-      editor.value = newText;
+      editor.value = safeCheck.updatedContent;
       updateCodeStats('singleCode', 'singleCodeStats');
 
       clearArea('aiOldCode', 'aiOldStats');
       clearArea('aiNewCode', 'aiNewStats');
 
-      statusBox.innerHTML = '✅ Berhasil menimpa kode sebagian tanpa merusak syntax!';
-      statusBox.style.color = '#4caf50';
-      statusBox.style.background = 'rgba(76,175,80,0.1)';
+      if (safeCheck.warning) {
+          showStatusWarning("PERINGATAN SINTAKSIS", safeCheck.warning);
+          toast('Berhasil, tapi periksa kurung kode!', 'info');
+      } else {
+          statusBox.innerHTML = `
+            <div style="background:#4caf50; color:white; padding:0.8rem; border-radius:8px;">
+                ✅ <strong>Berhasil menimpa kode!</strong>
+            </div>`;
+          toast('Revisi AI diterapkan!', 'success');
+      }
 
       document.getElementById('mainUndoBtn').style.display = 'inline-block';
-      toast('Revisi AI diterapkan! Silakan cek editor utama.', 'success');
-      
-      setTimeout(() => { closeAIRevisi(); }, 1500); 
+      setTimeout(() => { closeAIRevisi(); }, 2500); 
     }
 
     function replaceAllCode() {
@@ -1080,9 +1082,7 @@ KODE BARU:
       const filename = document.getElementById('singleSearchInput').value || 'File Tidak Bernama';
 
       if (!newCode.trim()) {
-        statusBox.innerHTML = '❌ Masukkan Kode Baru terlebih dahulu!';
-        statusBox.style.color = 'var(--danger)';
-        statusBox.style.background = 'rgba(229,57,53,0.1)';
+        showStatusError("Input Kosong", "Masukkan Kode Baru terlebih dahulu!", null);
         return;
       }
 
@@ -1096,13 +1096,14 @@ KODE BARU:
         clearArea('aiOldCode', 'aiOldStats');
         clearArea('aiNewCode', 'aiNewStats');
 
-        statusBox.innerHTML = '✅ Seluruh file berhasil ditimpa bersih!';
-        statusBox.style.color = '#4caf50';
-        statusBox.style.background = 'rgba(76,175,80,0.1)';
+        statusBox.innerHTML = `
+            <div style="background:#4caf50; color:white; padding:0.8rem; border-radius:8px;">
+                ✅ <strong>Seluruh file berhasil ditimpa bersih!</strong>
+            </div>`;
 
         document.getElementById('mainUndoBtn').style.display = 'inline-block';
-        toast('Seluruh file ditimpa! Silakan cek editor.', 'success');
-        setTimeout(() => { closeAIRevisi(); }, 1000);
+        toast('Seluruh file ditimpa!', 'success');
+        setTimeout(() => { closeAIRevisi(); }, 1500);
       });
     }
 
