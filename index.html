@@ -369,7 +369,7 @@
     </div>
   </div>
 
-  <!-- Modal Revisi AI (DENGAN SENSOR ANTI-SHRINK) -->
+  <!-- Modal Revisi AI -->
   <div id="aiRevisiModal" class="modal-overlay">
     <div class="modal" style="text-align:left; max-width:600px; width:95%; max-height:95vh; overflow-y:auto;">
       <h3>⚡ Auto Replace (Revisi AI)</h3>
@@ -472,6 +472,30 @@
     let repoTree = [], selDelFolder = '', currentSearchTarget = null;
     let globalUndoCode = ''; 
 
+    // PROTOKOL KETAT PENULISAN & REVISI KODE (DARI PENGGUNA)
+    const STRICT_AI_PROTOCOL = `**PROTOKOL KETAT PENULISAN & REVISI KODE (WAJIB DIIKUTI 100%):**
+
+**A. LARANGAN KODE DUMMY & SIMULASI (SANGAT PENTING):**
+1. DILARANG KERAS memberikan data palsu, simulasi \`setTimeout\`, mock data, atau kode *dummy* lainnya. Kode harus berbasis data nyata (Real Production Ready).
+2. Kode WAJIB menggunakan integrasi penuh ke Firebase (Firestore/Realtime Database/Auth) dan Fetch API yang asli/nyata agar bisa berjalan langsung di website produksi.
+3. WAJIB BERTANYA SEBELUM NGODING: Jika instruksi memerlukan integrasi API pihak ketiga atau struktur database, AI dilarang menebak-nebak. AI harus meminta dokumentasi API resmi, endpoint, atau skema database kepada pengguna terlebih dahulu sebelum mulai menulis kode.
+
+**B. ATURAN MODIFIKASI KODE:**
+1. DILARANG KERAS mengedit, mengubah, merombak, atau menyentuh file, folder, atau baris kode yang TIDAK saya perintahkan dalam bagian "Revisi" di bawah. 
+2. Fokus HANYA pada instruksi di percakapan ini. Bagian kode lain yang sudah bagus biarkan sama persis seperti aslinya, jangan dikarang atau diubah sendiri.
+3. Jangan mengubah letak atau struktur folder. Saya tidak paham coding dan hanya akan melakukan copy-paste kode yang Anda berikan langsung ke GitHub. Berikan kode secara FULL (UTUH) untuk file yang direvisi agar saya mudah menyalinnya.
+4. Tuliskan kode yang detail, komprehensif, dan berkualitas tinggi agar website saya tetap bagus dan berfungsi maksimal. Jangan memberikan kode yang terlalu simple atau disingkat-singkat jika itu justru menimbulkan bug atau kekurangan.
+
+**C. PROTOKOL PENULISAN KODE BERSAMBUNG:**
+Karena output AI memiliki batasan karakter, ikuti aturan ini secara ketat:
+1. Tuliskan kode file per file secara UTUH tanpa terpotong. Jangan gabungkan semua file sekaligus.
+2. JIKA KODE TERLALU PANJANG dan akan terpotong, berhentilah di batas aman 50 ribu karakter kalau bisa dan tulis baris ini di akhir: \`=== BERSAMBUNG ===\`
+3. Tunggu saya membalas dengan kata "lanjut". Setelah itu, langsung lanjutkan baris kode yang terpotong secara persis TANPA mengulang dari awal.
+4. Jika satu file sudah SELESAI 100%, tulis: \`=== SELESAI ===\`
+5. Selalu ingat (memori) konteks dari awal sampai akhir proyek.
+
+**Revisi Saat Ini:**`;
+
     window.onload = () => {
       loadTheme(); genParticles(); initAntiLag(); loadCredsFromStorage();
       updateActiveRepoInfo();
@@ -489,16 +513,6 @@
     }
     function initAntiLag() {
       const on = JSON.parse(localStorage.getItem(AK) || 'true');
-      const toggle = document.getElementById('antiLagToggle');
-      if (toggle) toggle.checked = on;
-      applyAntiLag(on);
-    }
-    function toggleAntiLag() {
-      const on = document.getElementById('antiLagToggle').checked;
-      localStorage.setItem(AK, JSON.stringify(on));
-      applyAntiLag(on);
-    }
-    function applyAntiLag(on) {
       const p = document.getElementById('particles');
       if (p) p.style.display = on ? 'none' : 'block';
     }
@@ -892,7 +906,7 @@
       });
     }
 
-    // ==================== ⚡ REVISI AI (ANTI-SHRINK SHIELD) ====================
+    // ==================== ⚡ REVISI AI (ANTI-SHRINK & ANTI-SHIFT) ====================
     function copySystemPrompt() {
       const systemPrompt = `Kamu adalah Senior Programmer. Tugasmu adalah memberikan revisi kode untuk sistem Auto-Replace Habi Studio.
 
@@ -947,7 +961,7 @@ KODE BARU:
         `;
         if (aiPrompt) {
             html += `
-                <textarea id="errAiCopy" style="width:100%; height:65px; margin-top:0.3rem; border-radius:4px; padding:0.3rem; font-size:0.7rem; color:#000;" readonly>${aiPrompt}</textarea>
+                <textarea id="errAiCopy" style="width:100%; height:120px; margin-top:0.3rem; border-radius:4px; padding:0.3rem; font-size:0.7rem; color:#000; border:none;" readonly>${aiPrompt}</textarea>
                 <button onclick="navigator.clipboard.writeText(document.getElementById('errAiCopy').value); toast('Pesan disalin! Kirim ke AI', 'success');" style="margin-top:0.3rem; width:100%; padding:0.4rem; background:white; color:var(--danger); font-weight:bold; border:none; border-radius:4px; cursor:pointer;">📋 Copy Pesan & Kirim ke AI</button>
             `;
         }
@@ -967,33 +981,43 @@ KODE BARU:
         statusBox.style.background = 'transparent';
     }
 
+    // ==================== MESIN PENCARI CERDAS ANTI-SHIFT ====================
     function findSmartMatch(editorText, searchText) {
-        const normalizeStr = (str) => str.replace(/[\u2018\u2019`]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/[\u200B-\u200D\uFEFF]/g, '');
-        const edNorm = normalizeStr(editorText);
-        const stNorm = normalizeStr(searchText);
-
-        let exactIdx = edNorm.indexOf(stNorm);
-        if (exactIdx !== -1) return { start: exactIdx, end: exactIdx + stNorm.length - 1 };
-
-        const isIgnored = (char) => /\s/.test(char);
-        let stNoSpace = '';
-        for (let char of stNorm) if (!isIgnored(char)) stNoSpace += char;
+        const isIgnored = (char) => /\s/.test(char) || /[\u200B-\u200D\uFEFF]/.test(char);
         
-        if (!stNoSpace) return null;
+        const normalizeChar = (char) => {
+            if (/[\u2018\u2019`]/.test(char)) return "'";
+            if (/[\u201C\u201D]/.test(char)) return '"';
+            return char;
+        };
 
-        let edNoSpace = '';
-        let mapToOriginal = [];
-        for (let i = 0; i < edNorm.length; i++) {
-            if (!isIgnored(edNorm[i])) {
-                edNoSpace += edNorm[i];
-                mapToOriginal.push(i);
+        let edClean = "";
+        let edMap = [];
+        for (let i = 0; i < editorText.length; i++) {
+            const char = editorText[i];
+            if (!isIgnored(char)) {
+                edClean += normalizeChar(char);
+                edMap.push(i);
             }
         }
 
-        let nsStart = edNoSpace.indexOf(stNoSpace);
-        if (nsStart !== -1) {
-            return { start: mapToOriginal[nsStart], end: mapToOriginal[nsStart + stNoSpace.length - 1] };
+        let stClean = "";
+        for (let i = 0; i < searchText.length; i++) {
+            const char = searchText[i];
+            if (!isIgnored(char)) {
+                stClean += normalizeChar(char);
+            }
         }
+
+        if (!stClean) return null;
+
+        let matchIdx = edClean.indexOf(stClean);
+        if (matchIdx !== -1) {
+            const startOriginal = edMap[matchIdx];
+            const endOriginal = edMap[matchIdx + stClean.length - 1];
+            return { start: startOriginal, end: endOriginal };
+        }
+
         return null;
     }
 
@@ -1066,16 +1090,17 @@ KODE BARU:
             statusBox.innerHTML = `
                 <div style="background:#ff9800; color:white; padding:0.8rem; border-radius:8px; border-left:4px solid #e65100;">
                     <strong style="font-size:0.9rem;">⚠️ Kode persis tidak ditemukan!</strong>
-                    <p style="font-size:0.75rem; margin:0.4rem 0;">Tapi sistem menemukan kode yang sangat mirip di file Anda (Mengabaikan komentar palsu AI). Apakah ini yang Anda maksud?</p>
+                    <p style="font-size:0.75rem; margin:0.4rem 0;">Sistem menemukan kode serupa tanpa komentar palsu AI. Apakah ini yang Anda maksud?</p>
                     <textarea id="suggestedCode" style="width:100%; height:80px; margin-top:0.3rem; font-size:0.7rem; color:black; border-radius:4px; padding:0.3rem;" readonly>${suggestion}</textarea>
                     <button onclick="acceptSuggestion()" style="width:100%; margin-top:0.4rem; padding:0.5rem; background:white; color:#ff9800; font-weight:bold; border:none; border-radius:4px; cursor:pointer;">✨ Ya, Gunakan Kode Ini!</button>
                 </div>
             `;
         } else {
+            const strictPrompt = STRICT_AI_PROTOCOL + `\n1. REVISI TIDAK DAPAT DITERAPKAN: Potongan "KODE LAMA" yang kamu berikan tidak ditemukan di dalam berkas saat ini. Pastikan menuliskan potongan KODE LAMA yang persis sama tanpa mengubah spasi atau komentar bawaan!`;
             showStatusError(
                 "KODE TIDAK DITEMUKAN", 
-                "Sistem gagal mencari bahkan dengan Auto-Suggest. AI mungkin salah memberikan file atau memotong kode di tengah kata.",
-                "Halo AI, KODE LAMA yang kamu berikan benar-benar TIDAK DITEMUKAN di file saya saat ini. Tolong berikan blok KODE LAMA yang lebih akurat dan persis dengan file saya sekarang!"
+                "Sistem gagal mencari bahkan dengan Auto-Suggest. AI mungkin salah memberikan file atau memotong kode di tengah.",
+                strictPrompt
             );
         }
       }
@@ -1084,19 +1109,34 @@ KODE BARU:
     function performSafeReplace(fullContent, oldCode, newCode) {
         const match = findSmartMatch(fullContent, oldCode);
         if (!match) {
-            return { success: false, title: "KODE TIDAK DITEMUKAN", desc: "Pastikan kode benar-benar ada." };
+            return { success: false, title: "KODE TIDAK DITEMUKAN", desc: "Pastikan kode lama benar-benar ada." };
         }
 
-        const normFullNoSpace = fullContent.replace(/\s+/g, '');
-        const normOldNoSpace = oldCode.replace(/\s+/g, '');
-        const occurrences = normFullNoSpace.split(normOldNoSpace).length - 1;
+        const cleanStr = (str) => {
+            const isIgnored = (char) => /\s/.test(char) || /[\u200B-\u200D\uFEFF]/.test(char);
+            const normalizeChar = (char) => {
+                if (/[\u2018\u2019`]/.test(char)) return "'";
+                if (/[\u201C\u201D]/.test(char)) return '"';
+                return char;
+            };
+            let res = "";
+            for (let i = 0; i < str.length; i++) {
+                if (!isIgnored(str[i])) res += normalizeChar(str[i]);
+            }
+            return res;
+        };
+
+        const cleanFull = cleanStr(fullContent);
+        const cleanOld = cleanStr(oldCode);
+        const occurrences = cleanFull.split(cleanOld).length - 1;
         
         if (occurrences > 1) {
+            const strictPrompt = STRICT_AI_PROTOCOL + `\n1. TERDETEKSI KODE GANDA: Potongan KODE LAMA yang kamu berikan muncul di ${occurrences} tempat berbeda pada file. Berikan potongan KODE LAMA yang lebih panjang atau spesifik agar proses penggantian aman!`;
             return { 
                 success: false, 
                 title: "TERDETEKSI KODE GANDA",
                 desc: `Sistem TERBLOKIR: Kode Lama terdeteksi di ${occurrences} lokasi berbeda pada file!`,
-                aiPrompt: `Halo AI, potongan KODE LAMA yang kamu berikan terdeteksi ganda di ${occurrences} lokasi berbeda pada file. Tolong berikan potongan KODE LAMA yang lebih panjang/unik!`
+                aiPrompt: strictPrompt
             };
         }
 
@@ -1117,12 +1157,13 @@ KODE BARU:
 
         let warning = null;
         if (!checkBracketBalance(newCode)) {
-            warning = "Sistem mendeteksi jumlah tanda kurung {} / () / [] tidak seimbang pada Kode Baru Anda. Pastikan tidak ada kurung penutup yang tertinggal agar tidak memicu SyntaxError.";
+            warning = "Sistem mendeteksi jumlah tanda kurung {} / () / [] tidak seimbang pada Kode Baru Anda.";
         }
 
         return { success: true, updatedContent, warning, match };
     }
 
+    // ==================== EKSEKUSI REVISI AI (DENGAN BLOKIR ERROR & PROTOKOL KETAT) ====================
     function executeAIRevisi() {
       const oldCode = document.getElementById('aiOldCode').value;
       const newCode = document.getElementById('aiNewCode').value;
@@ -1144,7 +1185,6 @@ KODE BARU:
 
       const match = safeCheck.match;
 
-      // ANTI-SHRINK SHIELD (Sensor Anti-Penyusutan)
       const oldCodeNorm = oldCode.replace(/\s+/g, '');
       const newCodeNorm = newCode.replace(/\s+/g, '');
       
@@ -1158,34 +1198,51 @@ KODE BARU:
           clearArea('aiOldCode', 'aiOldStats');
           clearArea('aiNewCode', 'aiNewStats');
 
-          if (safeCheck.warning) {
-              showStatusWarning("PERINGATAN SINTAKSIS", safeCheck.warning);
-              toast('Berhasil, tapi periksa kurung kode!', 'info');
-          } else {
-              statusBox.innerHTML = `
-                <div style="background:#4caf50; color:white; padding:0.8rem; border-radius:8px;">
-                    ✅ <strong>Berhasil menimpa kode sebagian!</strong>
-                </div>`;
-              toast('Revisi AI diterapkan!', 'success');
-          }
+          statusBox.innerHTML = `
+            <div style="background:#4caf50; color:white; padding:0.8rem; border-radius:8px;">
+                ✅ <strong>Berhasil menimpa kode sebagian!</strong>
+            </div>`;
+          toast('Revisi AI diterapkan!', 'success');
 
           document.getElementById('mainUndoBtn').style.display = 'inline-block';
           setTimeout(() => { closeAIRevisi(); }, 2500); 
       };
 
-      // Mencegah Nambah Terlalu Panjang
+      const checkAndProceed = () => {
+          if (safeCheck.warning) {
+              const bracketPrompt = STRICT_AI_PROTOCOL + `\n1. PERBAIKI KESALAHAN SINTAKSIS: Potongan KODE BARU yang kamu berikan sebelumnya memiliki tanda kurung {}, [], atau () yang TIDAK SEIMBANG sehingga memicu SyntaxError saat dideploy di Vercel. Tolong berikan versi kode baru yang struktur tanda kurungnya seimbang, lengkap, utuh, dan ikuti protokol ketat di atas!`;
+              
+              statusBox.innerHTML = `
+                <div style="background:#ff9800; color:white; padding:0.9rem; border-radius:8px; border-left:4px solid #e65100; box-shadow: 0 4px 12px rgba(255,152,0,0.2);">
+                    <strong style="font-size:0.9rem;">⚠️ STRUKTUR KURUNG/SIKU TIDAK SEIMBANG</strong>
+                    <p style="font-size:0.75rem; margin:0.4rem 0;">Sistem mendeteksi bahwa tanda kurung <b>{}</b>, <b>[]</b>, atau <b>()</b> pada Kode Baru Anda tidak seimbang. Jika diteruskan, website berpotensi mengalami error saat dijalankan.</p>
+                    
+                    <textarea id="bracketAiPrompt" style="width:100%; height:110px; margin-top:0.3rem; border-radius:6px; padding:0.4rem; font-size:0.7rem; color:#000; border:none; resize:none;" readonly>${bracketPrompt}</textarea>
+                    
+                    <div style="display:flex; gap:0.4rem; margin-top:0.5rem;">
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('bracketAiPrompt').value); toast('Pesan disalin! Kirim ke AI', 'success');" style="flex:1; padding:0.5rem; background:white; color:#ff9800; font-weight:bold; border:none; border-radius:6px; cursor:pointer; font-size:0.75rem; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">📋 Salin Pesan untuk AI</button>
+                        <button id="forceApplyBtn" style="flex:1; padding:0.5rem; background:var(--danger); color:white; font-weight:bold; border:none; border-radius:6px; cursor:pointer; font-size:0.75rem; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">🔥 Tetap Paksa Terapkan</button>
+                    </div>
+                </div>`;
+              
+              document.getElementById('forceApplyBtn').onclick = () => {
+                  proceedReplace();
+              };
+          } else {
+              proceedReplace();
+          }
+      };
+
       if (newCodeNorm.length > (oldCodeNorm.length * 3) + 500) {
-        confirm("⚠️ BAHAYA DUPLIKAT KODE!<br><br>KODE BARU sangat panjang dibandingkan KODE LAMA. Ini berisiko memicu kode ganda.<br><br>Tetap paksa ganti sebagian?", () => { proceedReplace(); });
+        confirm("⚠️ BAHAYA DUPLIKAT KODE!<br><br>KODE BARU sangat panjang dibandingkan KODE LAMA. Ini berisiko memicu kode ganda.<br><br>Tetap paksa ganti sebagian?", () => { checkAndProceed(); });
       } 
-      // Mencegah Hapus Terlalu Banyak (Anti-Shrink Shield)
       else if (oldCodeNorm.length > (newCodeNorm.length * 1.5) + 100) {
         const oldLines = oldCode.split('\n').length;
         const newLines = newCode.split('\n').length;
-        confirm(`⚠️ BAHAYA PENGHAPUSAN (KODE MENYUSUT)!<br><br>KODE LAMA yang Anda masukkan jauh lebih panjang (${oldLines} baris) daripada KODE BARU (${newLines} baris).<br><br>Jika dilanjutkan, puluhan baris kode asli Anda di dalam Kode Lama akan <b>TERHAPUS PERMANEN</b>.<br><br>Apakah Anda yakin ini yang Anda inginkan?`, () => { proceedReplace(); });
+        confirm(`⚠️ BAHAYA PENGHAPUSAN (KODE MENYUSUT)!<br><br>KODE LAMA yang Anda masukkan jauh lebih panjang (${oldLines} baris) daripada KODE BARU (${newLines} baris).<br><br>Jika dilanjutkan, puluhan baris kode asli Anda di dalam Kode Lama akan <b>TERHAPUS PERMANEN</b>.<br><br>Apakah Anda yakin ini yang Anda inginkan?`, () => { checkAndProceed(); });
       }
-      // Normal
       else {
-        proceedReplace();
+        checkAndProceed();
       }
     }
 
@@ -1441,11 +1498,12 @@ KODE BARU:
       res.innerHTML = matches.map(i => `<div onclick="selectRenameResult('${i.path}')">${i.type === 'tree' ? '📁' : '📄'} ${i.path}</div>`).join('');
       res.style.display = 'block';
     }
-    function selectRenameResult(path) {
+function selectRenameResult(path) {
       document.getElementById('renameSearchInput').value = path;
       document.getElementById('renameNewPath').value = path;
       document.getElementById('renameSearchResults').style.display = 'none';
     }
+
     async function executeRename() {
       const oldPath = document.getElementById('renameSearchInput').value.trim();
       const newPath = document.getElementById('renameNewPath').value.trim();
@@ -1512,6 +1570,7 @@ KODE BARU:
         document.getElementById('repoCount').textContent = repos.length + ' repo';
       } catch (e) { document.getElementById('repoListContainer').innerHTML = 'Error: ' + e.message; }
     }
+
     function renderRepoList(repos) {
       const c = document.getElementById('repoListContainer');
       if (!repos.length) { c.innerHTML = '<p>Tidak ada repo</p>'; return; }
@@ -1523,10 +1582,12 @@ KODE BARU:
       c.innerHTML = html;
       renderHistory();
     }
+
     function toggleAllRepos() {
       const s = document.getElementById('selectAllRepos').checked;
       document.querySelectorAll('.repo-checkbox').forEach(c => c.checked = s);
     }
+
     async function deleteSelectedRepos() {
       const cbs = document.querySelectorAll('.repo-checkbox:checked');
       if (!cbs.length) return toast('Pilih repo', 'error');
@@ -1545,12 +1606,14 @@ KODE BARU:
         refreshRepoList();
       });
     }
+
     function getHistory() { return JSON.parse(localStorage.getItem(HK) || '[]'); }
     function addHistory(name) {
       const h = getHistory();
       h.push({ name, time: new Date().toISOString() });
       localStorage.setItem(HK, JSON.stringify(h));
     }
+
     function renderHistory() {
       const c = document.getElementById('deleteHistoryContainer');
       const h = getHistory();
