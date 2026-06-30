@@ -1970,27 +1970,55 @@ function selectRenameResult(path) {
 
     async function restoreFullRepoToCommit(sha) {
       const { username, repo, token } = getCreds();
-      confirm(`🔥 <b>HARD RESET GIT (SUPER CEPAT)</b><br><br>Seluruh file & folder <b>${repo}</b> akan mundur ke versi: <b>${sha.substring(0,7)}</b>.<br><br>Aplikasi TIDAK akan pindah halaman. Vercel akan otomatis mendeteksi perubahan ini dan me-redeploy ulang website Anda. Yakin?`, async () => {
+      confirm(`🔥 <b>RESTORE FULL REPOSITORY (NEW COMMIT)</b><br><br>Sistem akan mengambil <b>SELURUH FOLDER & FILE</b> dari versi <b>${sha.substring(0,7)}</b> lalu menimpanya ke repository Anda sebagai pembaruan (Commit) yang baru.<br><br>Vercel akan mendeteksi ini sebagai pembaruan total dan mere-deploy seluruh website. Lanjutkan?`, async () => {
         try {
-          setStatus('🔄 Memulihkan repository secara diam-diam...', '');
+          setStatus('🔄 Memproses kloning seluruh file lama...', '');
           let branch = 'main';
+          const headers = { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' };
+          
           try {
-            const repoInfo = await (await fetch(`https://api.github.com/repos/${username}/${repo}`, { headers: {'Authorization': `token ${token}`} })).json();
+            const repoInfo = await (await fetch(`https://api.github.com/repos/${username}/${repo}`, { headers })).json();
             if (repoInfo.default_branch) branch = repoInfo.default_branch;
           } catch(e) {}
 
-          const res = await fetch(`https://api.github.com/repos/${username}/${repo}/git/refs/heads/${branch}`, {
+          // 1. Dapatkan referensi branch saat ini (HEAD)
+          const refRes = await fetch(`https://api.github.com/repos/${username}/${repo}/git/refs/heads/${branch}`, { headers });
+          if (!refRes.ok) throw new Error('Gagal membaca posisi branch saat ini');
+          const currentHeadSha = (await refRes.json()).object.sha;
+
+          // 2. Dapatkan data struktur penuh (Tree) dari tanggal masa lalu
+          const oldCommitRes = await fetch(`https://api.github.com/repos/${username}/${repo}/git/commits/${sha}`, { headers });
+          if (!oldCommitRes.ok) throw new Error('Gagal membaca data versi lama');
+          const oldTreeSha = (await oldCommitRes.json()).tree.sha;
+
+          // 3. Buat Commit BARU yang 100% isinya adalah Tree dari versi lama
+          const newCommitMsg = `⏪ Restore Full Repository to version ${sha.substring(0,7)}`;
+          const createCommitRes = await fetch(`https://api.github.com/repos/${username}/${repo}/git/commits`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({
+              message: newCommitMsg,
+              tree: oldTreeSha,
+              parents: [currentHeadSha] // Disambung ke data terbaru agar Vercel mendeteksi ini sebagai "Update"
+            })
+          });
+          if (!createCommitRes.ok) throw new Error('Gagal merakit file pemulihan');
+          const newCommitSha = (await createCommitRes.json()).sha;
+
+          // 4. Dorong (Push) Commit Baru tersebut ke GitHub
+          const updateRefRes = await fetch(`https://api.github.com/repos/${username}/${repo}/git/refs/heads/${branch}`, {
             method: 'PATCH',
-            headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sha: sha, force: true })
+            headers: headers,
+            body: JSON.stringify({ sha: newCommitSha, force: false })
           });
 
-          if (!res.ok) throw new Error((await res.json()).message || 'Gagal melakukan Hard Reset');
+          if (!updateRefRes.ok) throw new Error('Gagal mengupload pemulihan ke GitHub');
           
-          toast('✅ Berhasil! Vercel akan otomatis Deploy.', 'success');
-          setStatus(`✅ BERHASIL! GitHub ditimpa ke versi ${sha.substring(0,7)} tanpa pindah halaman.`, 'success');
+          toast('✅ Restore Full berhasil! Vercel sedang deploy.', 'success');
+          setStatus(`✅ BERHASIL! Seluruh repo kembali ke versi ${sha.substring(0,7)}. Cek Vercel Anda!`, 'success');
           
-          loadRepoTree(); 
+          loadRepoTree();
+          loadCommitsList(1); // Refresh tampilan histori otomatis
         } catch (e) {
           toast('Gagal memulihkan: ' + e.message, 'error');
           setStatus('❌ Gagal memulihkan: ' + e.message, 'error');
