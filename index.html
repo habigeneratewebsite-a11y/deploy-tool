@@ -174,7 +174,6 @@
       <button class="tab-btn" onclick="switchTab('create-repo')">➕ Buat Repo</button>
       <button class="tab-btn" onclick="switchTab('list-repo')">📋 Daftar</button>
       <button class="tab-btn" onclick="switchTab('chat')">💬 Chat to ZIP</button>
-      <button class="tab-btn" onclick="switchTab('commits')">📜 Commits</button>
     </div>
 
     <div style="display:flex; gap:0.4rem; align-items:center; margin-bottom:0.5rem; flex-wrap:wrap;">
@@ -344,30 +343,6 @@
       <button class="primary" onclick="processChatToZip()">📦 Proses & Download ZIP</button>
       <div class="progress-bar" id="chatProgress" style="display:none;"><div class="fill"></div></div>
       <div id="chatStatus" style="margin-top:0.4rem; font-size:0.8rem;"></div>
-
-      <div style="margin-top:1.2rem; border-top:1px solid var(--border); padding-top:1rem;">
-        <label>🌐 Download Semua Repository (By URL)</label>
-        <p style="font-size:0.75rem; margin-bottom:0.4rem; opacity:0.9;">Paste link GitHub repo siapapun (atau punya sendiri) untuk didownload sebagai ZIP.</p>
-        <div style="display:flex; gap:0.4rem;">
-          <input type="text" id="urlDownloadInput" placeholder="Contoh: https://github.com/user/nama-repo" style="margin-top:0; flex:1;">
-          <button onclick="downloadRepoByUrl()" class="inline-btn" style="background:linear-gradient(135deg, #4caf50, #2e7d32);">📥 Unduh ZIP</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tab Commits -->
-    <div id="tab-commits" class="tab-content">
-      <div style="display:flex; gap:0.4rem; margin-bottom:0.5rem; align-items:center;">
-        <button onclick="loadCommitsList(1)" class="inline-btn" style="flex:1; background:var(--accent);">🔄 Refresh Riwayat</button>
-      </div>
-      <div id="commitsListContainer" style="height:350px; overflow-y:auto; background:var(--input-bg); border:1px solid var(--border); border-radius:10px; padding:0.5rem; margin-bottom:0.5rem;">
-        <div style="text-align:center; opacity:0.6; padding:1rem 0;">Pilih repository dan klik Refresh untuk melihat histori...</div>
-      </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; background:var(--input-bg); padding:0.4rem; border-radius:8px; border:1px solid var(--border);">
-        <button onclick="prevCommitPage()" class="inline-btn" style="background:#4caf50;" id="btnPrevCommit" disabled>⏪ Sebelumnya</button>
-        <span style="font-size:0.8rem; font-weight:bold;" id="commitPageIndicator">Halaman 1</span>
-        <button onclick="nextCommitPage()" class="inline-btn" style="background:#4caf50;" id="btnNextCommit" disabled>Selanjutnya ⏩</button>
-      </div>
     </div>
 
     <div id="globalStatus" style="margin-top:0.6rem; padding:0.5rem; border-radius:10px; font-size:0.8rem;"></div>
@@ -610,14 +585,13 @@ Karena output AI memiliki batasan karakter, ikuti aturan ini secara ketat:
     }
 
     function switchTab(tab) {
-      const tabs = ['single','zip','editor','files','rename','create-repo','list-repo','chat','commits'];
+      const tabs = ['single','zip','editor','files','rename','create-repo','list-repo','chat'];
       document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', tabs[i] === tab));
       document.querySelectorAll('.tab-content').forEach(c => { c.classList.remove('active'); c.style.display = 'none'; });
       const t = document.getElementById('tab-' + tab);
       if (t) { t.classList.add('active'); t.style.display = 'block'; }
       if (tab === 'list-repo') refreshRepoList();
       if (tab === 'editor') updateActiveRepoInfo();
-      if (tab === 'commits') loadCommitsList(1);
     }
 
     function toB64(str) {
@@ -1837,194 +1811,9 @@ function selectRenameResult(path) {
       }, 5000);
     }
 
-    async function downloadRepoByUrl() {
-      const urlInput = document.getElementById('urlDownloadInput').value.trim();
-      if (!urlInput) return toast('Masukkan URL GitHub!', 'error');
-
-      // Mengekstrak username dan repo dari berbagai format URL GitHub
-      const match = urlInput.match(/github\.com\/([^\/]+)\/([^\/]+)/) || urlInput.match(/^([^\/]+)\/([^\/]+)$/);
-      if (!match) return toast('Format URL tidak valid. Cek kembali!', 'error');
-
-      const owner = match[1];
-      let repo = match[2].replace('.git', '').split('/')[0]; // Membersihkan url belakangnya
-      const { token } = getCreds();
-
-      try {
-        setStatus(`Mencari informasi repository ${owner}/${repo}...`, '');
-        // Headers pakai token agar bisa unduh repo Private sendiri juga. (Klo repo publik orang lain, tdk wajib)
-        const headers = token ? { 'Authorization': `token ${token}` } : {};
-        
-        const infoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers });
-        if (!infoRes.ok) throw new Error('Repository tidak ditemukan (Atau Private tapi Token salah)');
-        
-        const info = await infoRes.json();
-        const branch = info.default_branch || 'main';
-
-        setStatus(`Mendownload ${repo} sebagai ZIP...`, '');
-        
-        // Memanfaatkan API Zipball GitHub, diunduh dalam bentuk Blob (Download dalam background aplikasi)
-        const zipRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/zipball/${branch}`, { headers });
-        if (!zipRes.ok) throw new Error('Gagal mengunduh file ZIP dari GitHub');
-        
-        const blob = await zipRes.blob();
-        const objUrl = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = objUrl;
-        a.download = `${repo}-${branch}.zip`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(objUrl);
-
-        setStatus('✅ Repository berhasil didownload!', 'success');
-        toast('Selesai diunduh!', 'success');
-        document.getElementById('urlDownloadInput').value = '';
-      } catch (e) {
-        setStatus('❌ Error: ' + e.message, 'error');
-        toast(e.message, 'error');
-      }
-    }
-
     document.getElementById('chatCode').addEventListener('input', function() {
       updateCodeStats('chatCode','chatCodeStats');
     });
-
-    // ==================== GITHUB COMMITS HISTORY & RESTORE ====================
-    let currentCommitPage = 1;
-    let hasMoreCommits = true;
-
-    async function loadCommitsList(page = 1) {
-      const { username, repo, token } = getCreds();
-      const container = document.getElementById('commitsListContainer');
-      const ind = document.getElementById('commitPageIndicator');
-      const btnPrev = document.getElementById('btnPrevCommit');
-      const btnNext = document.getElementById('btnNextCommit');
-      
-      if (!username || !repo || !token) {
-        container.innerHTML = '<div style="text-align:center; color:var(--danger); padding:1rem 0;">Isi Kredensial dahulu.</div>';
-        return toast('Kredensial belum lengkap', 'error');
-      }
-      
-      container.innerHTML = `<div style="text-align:center; padding:2rem 0;">⏳ Memuat Halaman ${page}...</div>`;
-      btnPrev.disabled = true; btnNext.disabled = true;
-
-      try {
-        // Fetch persis 50 commit agar tidak lag
-        const res = await fetch(`https://api.github.com/repos/${username}/${repo}/commits?per_page=50&page=${page}`, {
-          headers: { 'Authorization': `token ${token}` }
-        });
-        
-        if (!res.ok) throw new Error((await res.json()).message || `HTTP Error ${res.status}`);
-        const commits = await res.json();
-        
-        if (commits.length === 0) {
-          container.innerHTML = '<div style="text-align:center; opacity:0.6; padding:1rem 0;">Tidak ada histori lagi.</div>';
-          hasMoreCommits = false;
-          btnPrev.disabled = (page === 1);
-          return;
-        }
-
-        let html = '';
-        commits.forEach(c => {
-          const msg = c.commit.message.split('\n')[0]; 
-          const author = c.commit.author.name;
-          const dateStr = new Date(c.commit.author.date).toLocaleString('id-ID', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-          const shaFull = c.sha;
-          const shaShort = c.sha.substring(0, 7);
-
-          html += `
-            <div style="background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:0.6rem; margin-bottom:0.5rem; display:flex; flex-direction:column; gap:0.4rem;">
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem;">
-                <strong style="font-size:0.85rem; color:var(--text); word-break:break-word;">${msg}</strong>
-                <a href="${c.html_url}" target="_blank" style="background:rgba(128,128,128,0.1); border:1px solid var(--border); color:var(--accent); font-family:monospace; padding:0.1rem 0.4rem; border-radius:5px; font-size:0.7rem; text-decoration:none;">${shaShort}</a>
-              </div>
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="display:flex; align-items:center; gap:0.4rem; font-size:0.75rem; opacity:0.8;">
-                  <span style="background:rgba(108,63,212,0.15); color:var(--accent); padding:0.1rem 0.3rem; border-radius:4px;">👤 ${author}</span>
-                  <span>🕒 ${dateStr}</span>
-                </div>
-                <button onclick="restoreFullRepoToCommit('${shaFull}')" class="inline-btn" style="background:var(--danger); padding:0.2rem 0.5rem; font-size:0.7rem; box-shadow:0 2px 8px rgba(229,57,53,0.3);" title="Kembalikan semua file di GitHub ke versi ini (Tanpa Pindah Halaman)">⏪ Restore Full</button>
-              </div>
-            </div>
-          `;
-        });
-        
-        container.innerHTML = html;
-        currentCommitPage = page;
-        ind.textContent = `Halaman ${page}`;
-        
-        btnPrev.disabled = (page === 1);
-        btnNext.disabled = (commits.length < 50); // Jika kurang dari 50, berarti sudah di halaman terakhir
-        toast(`Halaman ${page} dimuat`, 'success');
-        container.scrollTo(0,0);
-      } catch (e) {
-        container.innerHTML = `<div style="color:var(--danger); padding:0.5rem; text-align:center;">Gagal memuat: ${e.message}</div>`;
-        btnPrev.disabled = (page === 1);
-        toast('Gagal memuat', 'error');
-      }
-    }
-
-    function prevCommitPage() { if(currentCommitPage > 1) loadCommitsList(currentCommitPage - 1); }
-    function nextCommitPage() { loadCommitsList(currentCommitPage + 1); }
-
-    async function restoreFullRepoToCommit(sha) {
-      const { username, repo, token } = getCreds();
-      confirm(`🔥 <b>RESTORE FULL REPOSITORY (NEW COMMIT)</b><br><br>Sistem akan mengambil <b>SELURUH FOLDER & FILE</b> dari versi <b>${sha.substring(0,7)}</b> lalu menimpanya ke repository Anda sebagai pembaruan (Commit) yang baru.<br><br>Vercel akan mendeteksi ini sebagai pembaruan total dan mere-deploy seluruh website. Lanjutkan?`, async () => {
-        try {
-          setStatus('🔄 Memproses kloning seluruh file lama...', '');
-          let branch = 'main';
-          const headers = { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' };
-          
-          try {
-            const repoInfo = await (await fetch(`https://api.github.com/repos/${username}/${repo}`, { headers })).json();
-            if (repoInfo.default_branch) branch = repoInfo.default_branch;
-          } catch(e) {}
-
-          // 1. Dapatkan referensi branch saat ini (HEAD)
-          const refRes = await fetch(`https://api.github.com/repos/${username}/${repo}/git/refs/heads/${branch}`, { headers });
-          if (!refRes.ok) throw new Error('Gagal membaca posisi branch saat ini');
-          const currentHeadSha = (await refRes.json()).object.sha;
-
-          // 2. Dapatkan data struktur penuh (Tree) dari tanggal masa lalu
-          const oldCommitRes = await fetch(`https://api.github.com/repos/${username}/${repo}/git/commits/${sha}`, { headers });
-          if (!oldCommitRes.ok) throw new Error('Gagal membaca data versi lama');
-          const oldTreeSha = (await oldCommitRes.json()).tree.sha;
-
-          // 3. Buat Commit BARU yang 100% isinya adalah Tree dari versi lama
-          const newCommitMsg = `⏪ Restore Full Repository to version ${sha.substring(0,7)}`;
-          const createCommitRes = await fetch(`https://api.github.com/repos/${username}/${repo}/git/commits`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-              message: newCommitMsg,
-              tree: oldTreeSha,
-              parents: [currentHeadSha] // Disambung ke data terbaru agar Vercel mendeteksi ini sebagai "Update"
-            })
-          });
-          if (!createCommitRes.ok) throw new Error('Gagal merakit file pemulihan');
-          const newCommitSha = (await createCommitRes.json()).sha;
-
-          // 4. Dorong (Push) Commit Baru tersebut ke GitHub
-          const updateRefRes = await fetch(`https://api.github.com/repos/${username}/${repo}/git/refs/heads/${branch}`, {
-            method: 'PATCH',
-            headers: headers,
-            body: JSON.stringify({ sha: newCommitSha, force: false })
-          });
-
-          if (!updateRefRes.ok) throw new Error('Gagal mengupload pemulihan ke GitHub');
-          
-          toast('✅ Restore Full berhasil! Vercel sedang deploy.', 'success');
-          setStatus(`✅ BERHASIL! Seluruh repo kembali ke versi ${sha.substring(0,7)}. Cek Vercel Anda!`, 'success');
-          
-          loadRepoTree();
-          loadCommitsList(1); // Refresh tampilan histori otomatis
-        } catch (e) {
-          toast('Gagal memulihkan: ' + e.message, 'error');
-          setStatus('❌ Gagal memulihkan: ' + e.message, 'error');
-        }
-      });
-    }
 
     // ==================== BACKGROUND ====================
     function genParticles() {
