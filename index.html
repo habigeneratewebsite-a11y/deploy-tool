@@ -174,6 +174,7 @@
       <button class="tab-btn" onclick="switchTab('create-repo')">➕ Buat Repo</button>
       <button class="tab-btn" onclick="switchTab('list-repo')">📋 Daftar</button>
       <button class="tab-btn" onclick="switchTab('chat')">💬 Chat to ZIP</button>
+      <button class="tab-btn" onclick="switchTab('commits')">📜 Commits</button>
     </div>
 
     <div style="display:flex; gap:0.4rem; align-items:center; margin-bottom:0.5rem; flex-wrap:wrap;">
@@ -343,6 +344,16 @@
       <button class="primary" onclick="processChatToZip()">📦 Proses & Download ZIP</button>
       <div class="progress-bar" id="chatProgress" style="display:none;"><div class="fill"></div></div>
       <div id="chatStatus" style="margin-top:0.4rem; font-size:0.8rem;"></div>
+    </div>
+
+    <!-- Tab Commits -->
+    <div id="tab-commits" class="tab-content">
+      <div style="display:flex; gap:0.4rem; margin-bottom:0.5rem; align-items:center;">
+        <button onclick="loadCommitsList()" class="inline-btn" style="flex:1;">🔄 Refresh Riwayat Commits</button>
+      </div>
+      <div id="commitsListContainer" style="max-height:400px; overflow-y:auto; background:var(--input-bg); border:1px solid var(--border); border-radius:10px; padding:0.5rem;">
+        <div style="text-align:center; opacity:0.6; padding:1rem 0;">Pilih repository dan klik Refresh untuk melihat histori...</div>
+      </div>
     </div>
 
     <div id="globalStatus" style="margin-top:0.6rem; padding:0.5rem; border-radius:10px; font-size:0.8rem;"></div>
@@ -585,13 +596,14 @@ Karena output AI memiliki batasan karakter, ikuti aturan ini secara ketat:
     }
 
     function switchTab(tab) {
-      const tabs = ['single','zip','editor','files','rename','create-repo','list-repo','chat'];
+      const tabs = ['single','zip','editor','files','rename','create-repo','list-repo','chat','commits'];
       document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', tabs[i] === tab));
       document.querySelectorAll('.tab-content').forEach(c => { c.classList.remove('active'); c.style.display = 'none'; });
       const t = document.getElementById('tab-' + tab);
       if (t) { t.classList.add('active'); t.style.display = 'block'; }
       if (tab === 'list-repo') refreshRepoList();
       if (tab === 'editor') updateActiveRepoInfo();
+      if (tab === 'commits') loadCommitsList();
     }
 
     function toB64(str) {
@@ -1814,6 +1826,59 @@ function selectRenameResult(path) {
     document.getElementById('chatCode').addEventListener('input', function() {
       updateCodeStats('chatCode','chatCodeStats');
     });
+
+    // ==================== GITHUB COMMITS HISTORY ====================
+    async function loadCommitsList() {
+      const { username, repo, token } = getCreds();
+      const container = document.getElementById('commitsListContainer');
+      if (!username || !repo || !token) {
+        container.innerHTML = '<div style="text-align:center; color:var(--danger); padding:1rem 0;">Isi Username, Repo, dan Token terlebih dahulu.</div>';
+        return toast('Kredensial belum lengkap', 'error');
+      }
+      
+      container.innerHTML = '<div style="text-align:center; padding:1rem 0;">⏳ Memuat riwayat commit...</div>';
+      try {
+        const res = await fetch(`https://api.github.com/repos/${username}/${repo}/commits`, {
+          headers: { 'Authorization': `token ${token}` }
+        });
+        
+        if (!res.ok) throw new Error((await res.json()).message || `HTTP Error ${res.status}`);
+        const commits = await res.json();
+        
+        if (commits.length === 0) {
+          container.innerHTML = '<div style="text-align:center; opacity:0.6; padding:1rem 0;">Belum ada commit di repository ini.</div>';
+          return;
+        }
+
+        let html = '';
+        commits.forEach(c => {
+          const msg = c.commit.message.split('\n')[0]; // Ambil baris pertama pesan
+          const author = c.commit.author.name;
+          const dateStr = new Date(c.commit.author.date).toLocaleString('id-ID', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+          const shaShort = c.sha.substring(0, 7);
+          const url = c.html_url;
+
+          html += `
+            <div style="background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:0.6rem; margin-bottom:0.5rem; display:flex; flex-direction:column; gap:0.3rem;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem;">
+                <strong style="font-size:0.85rem; color:var(--text); word-break:break-word;">${msg}</strong>
+                <a href="${url}" target="_blank" style="background:rgba(128,128,128,0.1); border:1px solid var(--border); color:var(--accent); font-family:monospace; padding:0.1rem 0.4rem; border-radius:5px; font-size:0.7rem; text-decoration:none;">${shaShort}</a>
+              </div>
+              <div style="display:flex; align-items:center; gap:0.4rem; font-size:0.75rem; opacity:0.8;">
+                <span style="background:rgba(108,63,212,0.15); color:var(--accent); padding:0.1rem 0.3rem; border-radius:4px;">👤 ${author}</span>
+                <span>🕒 ${dateStr}</span>
+              </div>
+            </div>
+          `;
+        });
+        
+        container.innerHTML = html;
+        toast('Riwayat berhasil dimuat!', 'success');
+      } catch (e) {
+        container.innerHTML = `<div style="color:var(--danger); padding:0.5rem; text-align:center;">Gagal memuat: ${e.message}</div>`;
+        toast('Gagal memuat commits', 'error');
+      }
+    }
 
     // ==================== BACKGROUND ====================
     function genParticles() {
