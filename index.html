@@ -400,14 +400,26 @@
       <h3>⚡ Auto Replace (Revisi AI)</h3>
       
       <div style="background:var(--input-bg); padding:0.8rem; border-radius:10px; border:1px solid var(--accent); margin-bottom:0.5rem;">
-        <div style="display:flex; gap:0.4rem; margin-bottom:0.4rem;">
-          <button onclick="copySystemPrompt()" class="inline-btn" style="flex:1; background:linear-gradient(135deg, #9c27b0, #673ab7); font-size:0.75rem; padding:0.6rem;">📋 Prompt System (AI Studio)</button>
-          <button onclick="copyChatPrompt()" class="inline-btn" style="flex:1; background:linear-gradient(135deg, #2196f3, #00bcd4); font-size:0.75rem; padding:0.6rem;">📋 Prompt Chat Biasa</button>
-        </div>
-        <p style="font-size:0.7rem; margin-top:0; opacity:0.8; margin-bottom:0;">Pilih prompt sesuai AI Anda. Mencegah AI salah potong baris (mencegah kode duplikat) dan memaksa format Code Block murni.</p>
-      </div>
+                <div style="display:flex; gap:0.4rem; margin-bottom:0.4rem;">
+                  <button onclick="copySystemPrompt()" class="inline-btn" style="flex:1; background:linear-gradient(135deg, #9c27b0, #673ab7); font-size:0.75rem; padding:0.6rem;">📋 Prompt System (AI Studio)</button>
+                  <button onclick="copyChatPrompt()" class="inline-btn" style="flex:1; background:linear-gradient(135deg, #2196f3, #00bcd4); font-size:0.75rem; padding:0.6rem;">📋 Prompt Chat Biasa</button>
+                </div>
+                <p style="font-size:0.7rem; margin-top:0; opacity:0.8; margin-bottom:0;">Pilih prompt sesuai AI Anda. Mencegah AI salah potong baris (mencegah kode duplikat) dan memaksa format Code Block murni.</p>
+              </div>
 
-      <div id="aiRevisiStatus" style="font-size:0.8rem; margin-bottom:0.8rem; font-weight:600; padding:0.4rem; border-radius:6px; min-height:10px;"></div>
+              <!-- FITUR BARU: EKSTRAK BARIS -->
+              <div style="background:var(--input-bg); padding:0.8rem; border-radius:10px; border:1px solid #4caf50; margin-bottom:0.5rem;">
+                <strong style="font-size:0.8rem; color:#4caf50; display:block; margin-bottom:0.4rem;">✂️ Ekstrak Kode Berdasarkan Baris</strong>
+                <div style="display:flex; gap:0.4rem; align-items:center;">
+                  <input type="number" id="extractStart" placeholder="Dari baris (misal: 100)" style="flex:1; margin:0; padding:0.5rem; font-size:0.75rem;">
+                  <span style="font-size:0.8rem; font-weight:bold;">-</span>
+                  <input type="number" id="extractEnd" placeholder="Sampai baris (misal: 150)" style="flex:1; margin:0; padding:0.5rem; font-size:0.75rem;">
+                  <button onclick="extractLinesAndCopy()" class="inline-btn" style="background:#4caf50; padding:0.5rem 0.8rem; font-size:0.75rem;">📋 Copy</button>
+                </div>
+                <p style="font-size:0.65rem; margin-top:0.4rem; opacity:0.8; margin-bottom:0;">Gunakan ini jika kesulitan menyeleksi teks panjang di HP. Hasil otomatis tersalin!</p>
+              </div>
+
+              <div id="aiRevisiStatus" style="font-size:0.8rem; margin-bottom:0.8rem; font-weight:600; padding:0.4rem; border-radius:6px; min-height:10px;"></div>
       
       <label>1️⃣ Kode Lama (Abaikan jika ingin Timpa Full)</label>
       <textarea id="aiOldCode" onpaste="handlePasteClean(event, 'aiOldCode', 'aiOldStats')" placeholder="TIPS: Jika paste dari AI gagal, sistem akan otomatis mencari potongan tanpa mempedulikan komentar..." style="min-height:90px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiOldCode','aiOldStats'); autoCheckOldCode();"></textarea>
@@ -989,6 +1001,32 @@ KODE BARU:
 
     function closeAIRevisi() {
       document.getElementById('aiRevisiModal').style.display = 'none';
+    }
+
+    function extractLinesAndCopy() {
+      const start = parseInt(document.getElementById('extractStart').value);
+      const end = parseInt(document.getElementById('extractEnd').value);
+      const editor = document.getElementById('singleCode');
+
+      if (!start || !end || start > end || start < 1) {
+        toast('Nomor baris tidak valid!', 'error');
+        return;
+      }
+
+      const lines = editor.value.split('\n');
+      if (end > lines.length) {
+        toast(`Maksimal baris hanya ${lines.length}`, 'error');
+        return;
+      }
+
+      // Memotong array berdasarkan baris (index mulai dari 0)
+      const extractedText = lines.slice(start - 1, end).join('\n');
+
+      navigator.clipboard.writeText(extractedText).then(() => {
+        toast(`Baris ${start} - ${end} berhasil disalin!`, 'success');
+      }).catch(err => {
+        toast('Gagal menyalin', 'error');
+      });
     }
 
     function showStatusError(title, desc, aiPrompt) {
