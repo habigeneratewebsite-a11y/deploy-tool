@@ -221,12 +221,27 @@
         </div>
       </div>
 
-      <div style="display:flex; gap:0.3rem; margin-top:0.3rem;">
+      <div style="display:flex; gap:0.3rem; margin-top:0.3rem; flex-wrap:wrap;">
         <button onclick="refreshSingleTab()" class="inline-btn">🔄 Refresh</button>
         <button onclick="clearArea('singleCode','singleCodeStats')" class="inline-btn" style="background:var(--danger);">🗑️ Hapus</button>
         <button onclick="openAIRevisi()" class="inline-btn" style="background:linear-gradient(135deg, #ff9800, #f44336); box-shadow:0 2px 8px rgba(255,152,0,0.3);">⚡ Revisi AI</button>
+        <button onclick="openDuplicateRemover()" class="inline-btn" style="background:linear-gradient(135deg, #e91e63, #c2185b); box-shadow:0 2px 8px rgba(233,30,99,0.3);">🧹 Hapus Duplikat</button>
       </div>
       <button class="primary" onclick="deploySingle()">🚀 Upload File</button>
+
+      <!-- Modal Hapus Duplikat -->
+      <div id="duplicateModal" class="modal-overlay">
+        <div class="modal" style="text-align:left; max-width:600px; width:95%;">
+          <h3>🧹 Hapus Kode Duplikat</h3>
+          <p style="font-size:0.75rem; margin-bottom:0.5rem; opacity:0.9;">Tempelkan blok kode yang ganda di bawah ini. Sistem akan mencari semua salinannya di dalam file, <b>menyimpan 1 yang pertama</b>, dan menghapus sisanya dengan aman tanpa merusak sintaks.</p>
+          <textarea id="dupCodeInput" placeholder="Paste kode yang duplikat di sini..." style="min-height:150px; margin-bottom:0.5rem;"></textarea>
+          <div id="dupStatus" style="font-size:0.8rem; margin-bottom:0.8rem; font-weight:600; padding:0.4rem; border-radius:6px; min-height:10px;"></div>
+          <div style="display:flex; gap:0.4rem;">
+            <button onclick="executeRemoveDuplicate()" class="btn-confirm" style="flex:1; background:#e91e63;">🗑️ Eksekusi Hapus</button>
+            <button onclick="closeDuplicateRemover()" class="btn-cancel" style="flex:1;">Batal</button>
+          </div>
+        </div>
+      </div>
 
       <!-- HISTORI REVISI LOKAL -->
       <div style="margin-top:1rem; border-top:1px solid var(--border); padding-top:0.8rem;">
@@ -1145,16 +1160,24 @@ KODE BARU:
         
         const lastLineNorm = lines[lines.length-1].replace(/\s+/g, '').toLowerCase();
         let endIdx = -1;
-        for (let i = editorLines.length - 1; i >= 0; i--) {
-            if (editorLines[i].replace(/\s+/g, '').toLowerCase().includes(lastLineNorm)) {
-                endIdx = i;
-                break;
+        
+        // PERBAIKAN 1: Batasi pencarian ke bawah maksimal 150 baris dari titik awal.
+        // Mencegah tool menyeleksi ribuan baris tidak sengaja jika ada teks mirip di bawah file.
+        if (startIdx !== -1) {
+            let searchLimit = Math.min(editorLines.length - 1, startIdx + 150);
+            for (let i = searchLimit; i >= startIdx; i--) {
+                if (editorLines[i].replace(/\s+/g, '').toLowerCase().includes(lastLineNorm)) {
+                    endIdx = i;
+                    break;
+                }
             }
         }
 
         if (startIdx !== -1 && endIdx !== -1 && startIdx <= endIdx) {
-            let start = Math.max(0, startIdx - 1);
-            let end = Math.min(editorLines.length, endIdx + 2);
+            // PERBAIKAN 2: Ambil batas PAS. Hapus tarikan ekstra -1 dan +2.
+            // Mencegah kurung kurawal/baris penting ikut terhapus yang memicu SyntaxError!
+            let start = startIdx;
+            let end = endIdx + 1;
             return editorLines.slice(start, end).join('\n');
         }
         return null;
@@ -2095,6 +2118,98 @@ function selectRenameResult(path) {
           setStatus('❌ Gagal memulihkan: ' + e.message, 'error');
         }
       });
+    }
+
+    // ==================== FITUR HAPUS DUPLIKAT ====================
+    function openDuplicateRemover() {
+        document.getElementById('duplicateModal').style.display = 'flex';
+        document.getElementById('dupStatus').innerHTML = '';
+        document.getElementById('dupCodeInput').value = '';
+    }
+    
+    function closeDuplicateRemover() {
+        document.getElementById('duplicateModal').style.display = 'none';
+    }
+
+    function findAllSmartMatches(editorText, searchText) {
+        const isIgnored = (char) => char === ' ' || char === '\n' || char === '\t' || char === '\r' || /[\u200B-\u200D\uFEFF]/.test(char);
+        const normalizeChar = (char) => {
+            if (char === '‘' || char === '’' || char === '`') return "'";
+            if (char === '“' || char === '”') return '"';
+            return char;
+        };
+
+        let edCleanArr = [], edMap = [];
+        for (let i = 0; i < editorText.length; i++) {
+            if (!isIgnored(editorText[i])) { edCleanArr.push(normalizeChar(editorText[i])); edMap.push(i); }
+        }
+
+        let stCleanArr = [];
+        for (let i = 0; i < searchText.length; i++) {
+            if (!isIgnored(searchText[i])) stCleanArr.push(normalizeChar(searchText[i]));
+        }
+
+        let edClean = edCleanArr.join('');
+        let stClean = stCleanArr.join('');
+        if (!stClean) return [];
+
+        let matches = [];
+        let searchPos = 0;
+        while (true) {
+            let matchIdx = edClean.indexOf(stClean, searchPos);
+            if (matchIdx === -1) break;
+            matches.push({
+                start: edMap[matchIdx],
+                end: edMap[matchIdx + stClean.length - 1]
+            });
+            searchPos = matchIdx + stClean.length; 
+        }
+        return matches;
+    }
+
+    function executeRemoveDuplicate() {
+        const dupCode = document.getElementById('dupCodeInput').value;
+        const editor = document.getElementById('singleCode');
+        const statusBox = document.getElementById('dupStatus');
+        let fullText = editor.value;
+
+        if (!dupCode.trim()) {
+            statusBox.innerHTML = '<div style="background:var(--danger); color:white; padding:0.6rem; border-radius:6px;">❌ Masukkan kode yang ingin dicari!</div>';
+            return;
+        }
+        if (!fullText.trim()) {
+            statusBox.innerHTML = '<div style="background:var(--danger); color:white; padding:0.6rem; border-radius:6px;">❌ Editor masih kosong. Muat file dulu!</div>';
+            return;
+        }
+
+        const matches = findAllSmartMatches(fullText, dupCode);
+
+        if (matches.length === 0) {
+            statusBox.innerHTML = '<div style="background:var(--danger); color:white; padding:0.6rem; border-radius:6px;">❌ Kode tidak ditemukan di dalam file ini.</div>';
+            return;
+        }
+        if (matches.length === 1) {
+            statusBox.innerHTML = '<div style="background:#ff9800; color:white; padding:0.6rem; border-radius:6px;">⚠️ Kode ini hanya ada 1 di dalam file (TIDAK ADA DUPLIKAT). Aman!</div>';
+            return;
+        }
+
+        const filename = document.getElementById('singleSearchInput').value || 'File Tidak Bernama';
+        saveToLocalHistory(filename, fullText, 'Sebelum Hapus Duplikat');
+        globalUndoCode = fullText;
+
+        for (let i = matches.length - 1; i >= 1; i--) {
+            const match = matches[i];
+            fullText = fullText.substring(0, match.start) + fullText.substring(match.end + 1);
+        }
+
+        editor.value = fullText;
+        updateCodeStats('singleCode', 'singleCodeStats');
+        document.getElementById('mainUndoBtn').style.display = 'inline-block';
+
+        statusBox.innerHTML = `<div style="background:#4caf50; color:white; padding:0.6rem; border-radius:6px;">✅ Berhasil menghapus ${matches.length - 1} kode duplikat!</div>`;
+        toast('Duplikat berhasil dihapus!', 'success');
+        
+        setTimeout(() => { closeDuplicateRemover(); }, 2000);
     }
 
     // ==================== BACKGROUND ====================
