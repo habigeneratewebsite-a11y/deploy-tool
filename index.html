@@ -98,15 +98,15 @@
     .btn-cancel { background:rgba(128,128,128,0.15); color:var(--text); }
     .btn-confirm { background:var(--accent); color:white; }
     .toast {
-      position:fixed; top:1.5rem; left:50%; transform:translateX(-50%);
-      padding:0.7rem 1.4rem; border-radius:24px; background:rgba(26, 26, 46, 0.95); backdrop-filter:blur(10px); color:white;
-      z-index:9999; display:none; font-size:0.85rem; font-weight:500;
-      animation:toastIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow:0 8px 24px rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1);
+      position:fixed; bottom:2rem; left:50%; transform:translateX(-50%);
+      padding:0.7rem 1.4rem; border-radius:24px; background:#1a1a2e; color:white;
+      z-index:2000; display:none; font-size:0.85rem; font-weight:500;
+      animation:toastIn 0.3s; box-shadow:0 8px 24px rgba(0,0,0,0.4);
     }
-    .toast.success { background:rgba(46, 125, 50, 0.95); }
-    .toast.error { background:rgba(198, 40, 40, 0.95); }
-    .toast.info { background:rgba(21, 101, 192, 0.95); }
-    @keyframes toastIn { from{top:-3rem;opacity:0} to{top:1.5rem;opacity:1} }
+    .toast.success { background:#2e7d32; }
+    .toast.error { background:#c62828; }
+    .toast.info { background:#1565c0; }
+    @keyframes toastIn { from{bottom:0;opacity:0} to{bottom:2rem;opacity:1} }
     .progress-bar { width:100%; background:rgba(128,128,128,0.2); border-radius:8px; height:6px; margin-top:0.4rem; overflow:hidden; }
     .progress-bar .fill { height:100%; background:var(--accent); border-radius:8px; width:0%; transition:width 0.3s; }
     .file-browser { background:var(--input-bg); border-radius:10px; padding:0.6rem; max-height:280px; overflow-y:auto; margin:0.4rem 0; border:1px solid var(--border); }
@@ -221,27 +221,12 @@
         </div>
       </div>
 
-      <div style="display:flex; gap:0.3rem; margin-top:0.3rem; flex-wrap:wrap;">
+      <div style="display:flex; gap:0.3rem; margin-top:0.3rem;">
         <button onclick="refreshSingleTab()" class="inline-btn">🔄 Refresh</button>
         <button onclick="clearArea('singleCode','singleCodeStats')" class="inline-btn" style="background:var(--danger);">🗑️ Hapus</button>
         <button onclick="openAIRevisi()" class="inline-btn" style="background:linear-gradient(135deg, #ff9800, #f44336); box-shadow:0 2px 8px rgba(255,152,0,0.3);">⚡ Revisi AI</button>
-        <button onclick="openDuplicateRemover()" class="inline-btn" style="background:linear-gradient(135deg, #e91e63, #c2185b); box-shadow:0 2px 8px rgba(233,30,99,0.3);">🧹 Hapus Duplikat</button>
       </div>
       <button class="primary" onclick="deploySingle()">🚀 Upload File</button>
-
-      <!-- Modal Hapus Duplikat -->
-      <div id="duplicateModal" class="modal-overlay">
-        <div class="modal" style="text-align:left; max-width:600px; width:95%;">
-          <h3>🧹 Hapus Kode Duplikat</h3>
-          <p style="font-size:0.75rem; margin-bottom:0.5rem; opacity:0.9;">Tempelkan blok kode yang ganda di bawah ini. Sistem akan mencari semua salinannya di dalam file, <b>menyimpan 1 yang pertama</b>, dan menghapus sisanya dengan aman tanpa merusak sintaks.</p>
-          <textarea id="dupCodeInput" placeholder="Paste kode yang duplikat di sini..." style="min-height:150px; margin-bottom:0.5rem;"></textarea>
-          <div id="dupStatus" style="font-size:0.8rem; margin-bottom:0.8rem; font-weight:600; padding:0.4rem; border-radius:6px; min-height:10px;"></div>
-          <div style="display:flex; gap:0.4rem;">
-            <button onclick="executeRemoveDuplicate()" class="btn-confirm" style="flex:1; background:#e91e63;">🗑️ Eksekusi Hapus</button>
-            <button onclick="closeDuplicateRemover()" class="btn-cancel" style="flex:1;">Batal</button>
-          </div>
-        </div>
-      </div>
 
       <!-- HISTORI REVISI LOKAL -->
       <div style="margin-top:1rem; border-top:1px solid var(--border); padding-top:0.8rem;">
@@ -415,41 +400,14 @@
       <h3>⚡ Auto Replace (Revisi AI)</h3>
       
       <div style="background:var(--input-bg); padding:0.8rem; border-radius:10px; border:1px solid var(--accent); margin-bottom:0.5rem;">
-                <div style="display:flex; gap:0.4rem; margin-bottom:0.4rem;">
-                  <button onclick="copySystemPrompt()" class="inline-btn" style="flex:1; background:linear-gradient(135deg, #9c27b0, #673ab7); font-size:0.75rem; padding:0.6rem;">📋 Prompt System (AI Studio)</button>
-                  <button onclick="copyChatPrompt()" class="inline-btn" style="flex:1; background:linear-gradient(135deg, #2196f3, #00bcd4); font-size:0.75rem; padding:0.6rem;">📋 Prompt Chat Biasa</button>
-                </div>
-                <p style="font-size:0.7rem; margin-top:0; opacity:0.8; margin-bottom:0;">Pilih prompt sesuai AI Anda. Mencegah AI salah potong baris (mencegah kode duplikat) dan memaksa format Code Block murni.</p>
-              </div>
+        <div style="display:flex; gap:0.4rem; margin-bottom:0.4rem;">
+          <button onclick="copySystemPrompt()" class="inline-btn" style="flex:1; background:linear-gradient(135deg, #9c27b0, #673ab7); font-size:0.75rem; padding:0.6rem;">📋 Prompt System (AI Studio)</button>
+          <button onclick="copyChatPrompt()" class="inline-btn" style="flex:1; background:linear-gradient(135deg, #2196f3, #00bcd4); font-size:0.75rem; padding:0.6rem;">📋 Prompt Chat Biasa</button>
+        </div>
+        <p style="font-size:0.7rem; margin-top:0; opacity:0.8; margin-bottom:0;">Pilih prompt sesuai AI Anda. Mencegah AI salah potong baris (mencegah kode duplikat) dan memaksa format Code Block murni.</p>
+      </div>
 
-              <!-- FITUR BARU: EKSTRAK KODE -->
-              <div style="background:var(--input-bg); padding:0.8rem; border-radius:10px; border:1px solid #4caf50; margin-bottom:0.5rem;">
-                <strong style="font-size:0.8rem; color:#4caf50; display:block; margin-bottom:0.4rem;">✂️ Ekstrak Kode Berdasarkan Teks</strong>
-                <div style="display:flex; flex-direction:column; gap:0.4rem;">
-                  
-                  <div style="display:flex; gap:0.3rem;">
-                    <input type="text" id="extractStart" placeholder="Teks Awal..." style="flex:1; margin:0; padding:0.6rem; font-size:0.75rem; font-family:monospace;">
-                    <button onclick="navigator.clipboard.readText().then(t=>{document.getElementById('extractStart').value=t.trim();toast('Ditempel!','success')})" class="inline-btn" style="background:#4caf50; padding:0 0.6rem;" title="Paste">📋</button>
-                    <button onclick="document.getElementById('extractStart').value=''" class="inline-btn" style="background:var(--danger); padding:0 0.6rem;" title="Hapus">🗑️</button>
-                  </div>
-
-                  <div style="display:flex; gap:0.3rem;">
-                    <input type="text" id="extractEnd" placeholder="Teks Akhir..." style="flex:1; margin:0; padding:0.6rem; font-size:0.75rem; font-family:monospace;">
-                    <button onclick="navigator.clipboard.readText().then(t=>{document.getElementById('extractEnd').value=t.trim();toast('Ditempel!','success')})" class="inline-btn" style="background:#4caf50; padding:0 0.6rem;" title="Paste">📋</button>
-                    <button onclick="document.getElementById('extractEnd').value=''" class="inline-btn" style="background:var(--danger); padding:0 0.6rem;" title="Hapus">🗑️</button>
-                  </div>
-
-                  <button onclick="extractLinesAndCopy()" class="inline-btn" style="background:#4caf50; padding:0.6rem; font-size:0.8rem; font-weight:bold; width:100%;">📋 Ekstrak & Copy</button>
-                </div>
-                
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
-                    <p style="font-size:0.65rem; opacity:0.8; margin:0; line-height:1.3; flex:1;">Masukkan kata kunci awal dan akhir.</p>
-                    <span id="extractStats" style="font-size:0.65rem; font-weight:bold; color:#4caf50; background:rgba(76, 175, 80, 0.1); padding:0.2rem 0.5rem; border-radius:4px;">0 char | 0 baris</span>
-                </div>
-                <p style="font-size:0.65rem; margin-top:0.4rem; opacity:0.8; margin-bottom:0;">Masukkan kata kunci awal dan akhir. Sistem akan menyalin semua kode di antara keduanya.</p>
-              </div>
-
-              <div id="aiRevisiStatus" style="font-size:0.8rem; margin-bottom:0.8rem; font-weight:600; padding:0.4rem; border-radius:6px; min-height:10px;"></div>
+      <div id="aiRevisiStatus" style="font-size:0.8rem; margin-bottom:0.8rem; font-weight:600; padding:0.4rem; border-radius:6px; min-height:10px;"></div>
       
       <label>1️⃣ Kode Lama (Abaikan jika ingin Timpa Full)</label>
       <textarea id="aiOldCode" onpaste="handlePasteClean(event, 'aiOldCode', 'aiOldStats')" placeholder="TIPS: Jika paste dari AI gagal, sistem akan otomatis mencari potongan tanpa mempedulikan komentar..." style="min-height:90px; margin-bottom:0.2rem;" oninput="updateCodeStats('aiOldCode','aiOldStats'); autoCheckOldCode();"></textarea>
@@ -538,6 +496,15 @@
     const SK = 'hs_profiles', UK = 'hs_user', TK = 'hs_theme', HK = 'hs_history', AK = 'hs_antilag', HK_FILE = 'hs_file_history';
     let repoTree = [], selDelFolder = '', currentSearchTarget = null;
     let globalUndoCode = ''; 
+
+    // Helper untuk mencegah kode JS render berantakan di UI
+    function escapeHTML(str) {
+        return str.replace(/&/g, '&amp;')
+                  .replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;')
+                  .replace(/"/g, '&quot;')
+                  .replace(/'/g, '&#039;');
+    }
 
     // PROTOKOL KETAT PENULISAN & REVISI KODE (DARI PENGGUNA)
     const STRICT_AI_PROTOCOL = `**PROTOKOL KETAT PENULISAN & REVISI KODE (WAJIB DIIKUTI 100%):**
@@ -1033,39 +1000,6 @@ KODE BARU:
       document.getElementById('aiRevisiModal').style.display = 'none';
     }
 
-    function extractLinesAndCopy() {
-      const startText = document.getElementById('extractStart').value.trim();
-      const endText = document.getElementById('extractEnd').value.trim();
-      const editor = document.getElementById('singleCode');
-      const code = editor.value;
-
-      if (!startText || !endText) {
-        toast('Masukkan teks awal dan akhir!', 'error');
-        return;
-      }
-
-      const startIndex = code.indexOf(startText);
-      if (startIndex === -1) {
-        toast('Teks awal tidak ditemukan di file ini!', 'error');
-        return;
-      }
-
-      const endIndex = code.indexOf(endText, startIndex);
-      if (endIndex === -1) {
-        toast('Teks akhir tidak ditemukan!', 'error');
-        return;
-      }
-
-      // Mengambil teks dari kata kunci awal sampai akhir dari kata kunci akhir
-      const extractedText = code.substring(startIndex, endIndex + endText.length);
-
-      navigator.clipboard.writeText(extractedText).then(() => {
-        toast('Kode berhasil diekstrak & disalin!', 'success');
-      }).catch(err => {
-        toast('Gagal menyalin ke clipboard', 'error');
-      });
-    }
-
     function showStatusError(title, desc, aiPrompt) {
         const statusBox = document.getElementById('aiRevisiStatus');
         let html = `
@@ -1075,23 +1009,12 @@ KODE BARU:
         `;
         if (aiPrompt) {
             html += `
-                <textarea id="errAiCopy" style="width:100%; height:120px; margin-top:0.3rem; border-radius:4px; padding:0.3rem; font-size:0.7rem; color:#000; border:none;" readonly>${aiPrompt}</textarea>
+                <textarea id="errAiCopy" style="width:100%; height:120px; margin-top:0.3rem; border-radius:4px; padding:0.3rem; font-size:0.7rem; color:#000; border:none;" readonly>${escapeHTML(aiPrompt)}</textarea>
                 <button onclick="navigator.clipboard.writeText(document.getElementById('errAiCopy').value); toast('Pesan disalin! Kirim ke AI', 'success');" style="margin-top:0.3rem; width:100%; padding:0.4rem; background:white; color:var(--danger); font-weight:bold; border:none; border-radius:4px; cursor:pointer;">📋 Copy Pesan & Kirim ke AI</button>
             `;
         }
         html += `</div>`;
         statusBox.innerHTML = html;
-        statusBox.style.background = 'transparent';
-    }
-
-    function showStatusWarning(title, desc) {
-        const statusBox = document.getElementById('aiRevisiStatus');
-        statusBox.innerHTML = `
-            <div style="background:#ff9800; color:white; padding:0.8rem; border-radius:8px; border-left:4px solid #e65100;">
-                <strong style="font-size:0.9rem;">⚠️ ${title}</strong>
-                <p style="font-size:0.75rem; margin:0.4rem 0;">${desc}</p>
-            </div>
-        `;
         statusBox.style.background = 'transparent';
     }
 
@@ -1160,24 +1083,16 @@ KODE BARU:
         
         const lastLineNorm = lines[lines.length-1].replace(/\s+/g, '').toLowerCase();
         let endIdx = -1;
-        
-        // PERBAIKAN 1: Batasi pencarian ke bawah maksimal 150 baris dari titik awal.
-        // Mencegah tool menyeleksi ribuan baris tidak sengaja jika ada teks mirip di bawah file.
-        if (startIdx !== -1) {
-            let searchLimit = Math.min(editorLines.length - 1, startIdx + 150);
-            for (let i = searchLimit; i >= startIdx; i--) {
-                if (editorLines[i].replace(/\s+/g, '').toLowerCase().includes(lastLineNorm)) {
-                    endIdx = i;
-                    break;
-                }
+        for (let i = editorLines.length - 1; i >= 0; i--) {
+            if (editorLines[i].replace(/\s+/g, '').toLowerCase().includes(lastLineNorm)) {
+                endIdx = i;
+                break;
             }
         }
 
         if (startIdx !== -1 && endIdx !== -1 && startIdx <= endIdx) {
-            // PERBAIKAN 2: Ambil batas PAS. Hapus tarikan ekstra -1 dan +2.
-            // Mencegah kurung kurawal/baris penting ikut terhapus yang memicu SyntaxError!
-            let start = startIdx;
-            let end = endIdx + 1;
+            let start = Math.max(0, startIdx - 1);
+            let end = Math.min(editorLines.length, endIdx + 2);
             return editorLines.slice(start, end).join('\n');
         }
         return null;
@@ -1215,11 +1130,12 @@ KODE BARU:
         const suggestion = findSuggestion(editor.value, oldCode);
         
         if (suggestion) {
+            // Mencegah kode HTML/JS dari 'suggestion' merusak tampilan
             statusBox.innerHTML = `
                 <div style="background:#ff9800; color:white; padding:0.8rem; border-radius:8px; border-left:4px solid #e65100;">
                     <strong style="font-size:0.9rem;">⚠️ Kode persis tidak ditemukan!</strong>
                     <p style="font-size:0.75rem; margin:0.4rem 0;">Sistem menemukan kode serupa tanpa komentar palsu AI. Apakah ini yang Anda maksud?</p>
-                    <textarea id="suggestedCode" style="width:100%; height:80px; margin-top:0.3rem; font-size:0.7rem; color:black; border-radius:4px; padding:0.3rem;" readonly>${suggestion}</textarea>
+                    <textarea id="suggestedCode" style="width:100%; height:80px; margin-top:0.3rem; font-size:0.7rem; color:black; border-radius:4px; padding:0.3rem;" readonly>${escapeHTML(suggestion)}</textarea>
                     <button onclick="acceptSuggestion()" style="width:100%; margin-top:0.4rem; padding:0.5rem; background:white; color:#ff9800; font-weight:bold; border:none; border-radius:4px; cursor:pointer;">✨ Ya, Gunakan Kode Ini!</button>
                 </div>
             `;
@@ -1263,7 +1179,9 @@ KODE BARU:
         const updatedContent = fullContent.substring(0, match.start) + newCode + fullContent.substring(match.end + 1);
 
         const checkBracketBalance = (str) => {
-            const cleanStr = str.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, ''); 
+            // Hapus komentar dan isi string (kutip) agar tidak dianggap bracket nyasar
+            const cleanStr = str.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '')
+                                .replace(/(['"`])(?:(?=(\\?))\2.)*?\1/g, ''); 
             const stack = [];
             const pairs = { '}': '{', ')': '(', ']': '[' };
             for (let char of cleanStr) {
@@ -1283,7 +1201,7 @@ KODE BARU:
         return { success: true, updatedContent, warning, match };
     }
 
-    // ==================== EKSEKUSI REVISI AI (DENGAN BLOKIR ERROR & PROTOKOL KETAT) ====================
+    // ==================== EKSEKUSI REVISI AI (DENGAN BLOKIR ERROR TOTAL) ====================
     function executeAIRevisi() {
       const oldCode = document.getElementById('aiOldCode').value;
       const newCode = document.getElementById('aiNewCode').value;
@@ -1304,7 +1222,6 @@ KODE BARU:
       }
 
       const match = safeCheck.match;
-
       const oldCodeNorm = oldCode.replace(/\s+/g, '');
       const newCodeNorm = newCode.replace(/\s+/g, '');
       
@@ -1330,31 +1247,29 @@ KODE BARU:
 
       const checkAndProceed = () => {
           if (safeCheck.warning) {
-              const bracketPrompt = STRICT_AI_PROTOCOL + `\n1. PERBAIKI KESALAHAN SINTAKSIS: Potongan KODE BARU yang kamu berikan sebelumnya memiliki tanda kurung {}, [], atau () yang TIDAK SEIMBANG sehingga memicu SyntaxError saat dideploy di Vercel. Tolong berikan versi kode baru yang struktur tanda kurungnya seimbang, lengkap, utuh, dan ikuti protokol ketat di atas!`;
+              const bracketPrompt = STRICT_AI_PROTOCOL + `\n1. KESALAHAN SINTAKS/KURUNG: Potongan KODE BARU yang kamu berikan memiliki tanda kurung {}, [], atau () yang TIDAK SEIMBANG. Ini akan memicu Fatal Error / Syntax Error pada website (terutama backend/API). Tolong periksa dan berikan versi KODE BARU yang tanda kurungnya seimbang sempurna!`;
               
+              // Tampilan Merah (Bahaya) dan Pemblokiran Total (TIDAK ADA TOMBOL PAKSA)
               statusBox.innerHTML = `
-                <div style="background:#ff9800; color:white; padding:0.9rem; border-radius:8px; border-left:4px solid #e65100; box-shadow: 0 4px 12px rgba(255,152,0,0.2);">
-                    <strong style="font-size:0.9rem;">⚠️ STRUKTUR KURUNG/SIKU TIDAK SEIMBANG</strong>
-                    <p style="font-size:0.75rem; margin:0.4rem 0;">Sistem mendeteksi bahwa tanda kurung <b>{}</b>, <b>[]</b>, atau <b>()</b> pada Kode Baru Anda tidak seimbang. Jika diteruskan, website berpotensi mengalami error saat dijalankan.</p>
+                <div style="background:var(--danger); color:white; padding:0.9rem; border-radius:8px; border-left:4px solid #b71c1c; box-shadow: 0 4px 12px rgba(229,57,53,0.3);">
+                    <strong style="font-size:0.9rem;">❌ BLOKIR OTOMATIS: SINTAKS ERROR</strong>
+                    <p style="font-size:0.75rem; margin:0.4rem 0;">Sistem mendeteksi tanda kurung <b>{}</b>, <b>[]</b>, atau <b>()</b> pada Kode Baru Anda tidak seimbang. <b>Tindakan diblokir permanen</b> untuk mencegah website Anda mengalami error fatal!</p>
                     
-                    <textarea id="bracketAiPrompt" style="width:100%; height:110px; margin-top:0.3rem; border-radius:6px; padding:0.4rem; font-size:0.7rem; color:#000; border:none; resize:none;" readonly>${bracketPrompt}</textarea>
+                    <textarea id="bracketAiPrompt" style="width:100%; height:110px; margin-top:0.3rem; border-radius:6px; padding:0.4rem; font-size:0.7rem; color:#000; border:none; resize:none;" readonly>${escapeHTML(bracketPrompt)}</textarea>
                     
                     <div style="display:flex; gap:0.4rem; margin-top:0.5rem;">
-                        <button onclick="navigator.clipboard.writeText(document.getElementById('bracketAiPrompt').value); toast('Pesan disalin! Kirim ke AI', 'success');" style="flex:1; padding:0.5rem; background:white; color:#ff9800; font-weight:bold; border:none; border-radius:6px; cursor:pointer; font-size:0.75rem; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">📋 Salin Pesan untuk AI</button>
-                        <button id="forceApplyBtn" style="flex:1; padding:0.5rem; background:var(--danger); color:white; font-weight:bold; border:none; border-radius:6px; cursor:pointer; font-size:0.75rem; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">🔥 Tetap Paksa Terapkan</button>
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('bracketAiPrompt').value); toast('Pesan disalin! Kirim ke AI', 'success');" style="width:100%; padding:0.6rem; background:white; color:var(--danger); font-weight:bold; border:none; border-radius:6px; cursor:pointer; font-size:0.8rem; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">📋 Salin Pesan untuk Minta AI Perbaiki</button>
                     </div>
                 </div>`;
-              
-              document.getElementById('forceApplyBtn').onclick = () => {
-                  proceedReplace();
-              };
+                
+              // Fungsi Terhenti di sini. Tidak melanjutkan proses penyisipan kode.
           } else {
               proceedReplace();
           }
       };
 
       if (newCodeNorm.length > (oldCodeNorm.length * 3) + 500) {
-        confirm("⚠️ BAHAYA DUPLIKAT KODE!<br><br>KODE BARU sangat panjang dibandingkan KODE LAMA. Ini berisiko memicu kode ganda.<br><br>Tetap paksa ganti sebagian?", () => { checkAndProceed(); });
+        confirm("⚠️ BAHAYA DUPLIKAT KODE!<br><br>KODE BARU sangat panjang dibandingkan KODE LAMA. Ini berisiko memicu kode ganda.<br><br>Lanjutkan penggantian kode ini?", () => { checkAndProceed(); });
       } 
       else if (oldCodeNorm.length > (newCodeNorm.length * 1.5) + 100) {
         const oldLines = oldCode.split('\n').length;
@@ -2118,98 +2033,6 @@ function selectRenameResult(path) {
           setStatus('❌ Gagal memulihkan: ' + e.message, 'error');
         }
       });
-    }
-
-    // ==================== FITUR HAPUS DUPLIKAT ====================
-    function openDuplicateRemover() {
-        document.getElementById('duplicateModal').style.display = 'flex';
-        document.getElementById('dupStatus').innerHTML = '';
-        document.getElementById('dupCodeInput').value = '';
-    }
-    
-    function closeDuplicateRemover() {
-        document.getElementById('duplicateModal').style.display = 'none';
-    }
-
-    function findAllSmartMatches(editorText, searchText) {
-        const isIgnored = (char) => char === ' ' || char === '\n' || char === '\t' || char === '\r' || /[\u200B-\u200D\uFEFF]/.test(char);
-        const normalizeChar = (char) => {
-            if (char === '‘' || char === '’' || char === '`') return "'";
-            if (char === '“' || char === '”') return '"';
-            return char;
-        };
-
-        let edCleanArr = [], edMap = [];
-        for (let i = 0; i < editorText.length; i++) {
-            if (!isIgnored(editorText[i])) { edCleanArr.push(normalizeChar(editorText[i])); edMap.push(i); }
-        }
-
-        let stCleanArr = [];
-        for (let i = 0; i < searchText.length; i++) {
-            if (!isIgnored(searchText[i])) stCleanArr.push(normalizeChar(searchText[i]));
-        }
-
-        let edClean = edCleanArr.join('');
-        let stClean = stCleanArr.join('');
-        if (!stClean) return [];
-
-        let matches = [];
-        let searchPos = 0;
-        while (true) {
-            let matchIdx = edClean.indexOf(stClean, searchPos);
-            if (matchIdx === -1) break;
-            matches.push({
-                start: edMap[matchIdx],
-                end: edMap[matchIdx + stClean.length - 1]
-            });
-            searchPos = matchIdx + stClean.length; 
-        }
-        return matches;
-    }
-
-    function executeRemoveDuplicate() {
-        const dupCode = document.getElementById('dupCodeInput').value;
-        const editor = document.getElementById('singleCode');
-        const statusBox = document.getElementById('dupStatus');
-        let fullText = editor.value;
-
-        if (!dupCode.trim()) {
-            statusBox.innerHTML = '<div style="background:var(--danger); color:white; padding:0.6rem; border-radius:6px;">❌ Masukkan kode yang ingin dicari!</div>';
-            return;
-        }
-        if (!fullText.trim()) {
-            statusBox.innerHTML = '<div style="background:var(--danger); color:white; padding:0.6rem; border-radius:6px;">❌ Editor masih kosong. Muat file dulu!</div>';
-            return;
-        }
-
-        const matches = findAllSmartMatches(fullText, dupCode);
-
-        if (matches.length === 0) {
-            statusBox.innerHTML = '<div style="background:var(--danger); color:white; padding:0.6rem; border-radius:6px;">❌ Kode tidak ditemukan di dalam file ini.</div>';
-            return;
-        }
-        if (matches.length === 1) {
-            statusBox.innerHTML = '<div style="background:#ff9800; color:white; padding:0.6rem; border-radius:6px;">⚠️ Kode ini hanya ada 1 di dalam file (TIDAK ADA DUPLIKAT). Aman!</div>';
-            return;
-        }
-
-        const filename = document.getElementById('singleSearchInput').value || 'File Tidak Bernama';
-        saveToLocalHistory(filename, fullText, 'Sebelum Hapus Duplikat');
-        globalUndoCode = fullText;
-
-        for (let i = matches.length - 1; i >= 1; i--) {
-            const match = matches[i];
-            fullText = fullText.substring(0, match.start) + fullText.substring(match.end + 1);
-        }
-
-        editor.value = fullText;
-        updateCodeStats('singleCode', 'singleCodeStats');
-        document.getElementById('mainUndoBtn').style.display = 'inline-block';
-
-        statusBox.innerHTML = `<div style="background:#4caf50; color:white; padding:0.6rem; border-radius:6px;">✅ Berhasil menghapus ${matches.length - 1} kode duplikat!</div>`;
-        toast('Duplikat berhasil dihapus!', 'success');
-        
-        setTimeout(() => { closeDuplicateRemover(); }, 2000);
     }
 
     // ==================== BACKGROUND ====================
