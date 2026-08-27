@@ -174,7 +174,6 @@
       <button class="tab-btn" onclick="switchTab('create-repo')">➕ Buat Repo</button>
       <button class="tab-btn" onclick="switchTab('list-repo')">📋 Daftar</button>
       <button class="tab-btn" onclick="switchTab('chat')">💬 Chat to ZIP</button>
-      <button class="tab-btn" onclick="switchTab('commits')">📜 Commits</button>
     </div>
 
     <div style="display:flex; gap:0.4rem; align-items:center; margin-bottom:0.5rem; flex-wrap:wrap;">
@@ -227,15 +226,6 @@
         <button onclick="openAIRevisi()" class="inline-btn" style="background:linear-gradient(135deg, #ff9800, #f44336); box-shadow:0 2px 8px rgba(255,152,0,0.3);">⚡ Revisi AI</button>
       </div>
       <button class="primary" onclick="deploySingle()">🚀 Upload File</button>
-
-      <!-- HISTORI REVISI LOKAL -->
-      <div style="margin-top:1rem; border-top:1px solid var(--border); padding-top:0.8rem;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-            <strong style="font-size:0.85rem; color:var(--accent);">📜 Histori File Lokal (Backup)</strong>
-            <button onclick="clearAllLocalHistory()" class="inline-btn" style="background:var(--danger); padding:0.2rem 0.5rem; font-size:0.7rem;">Hapus Semua</button>
-        </div>
-        <div id="localHistoryContainer" style="max-height:200px; overflow-y:auto; font-size:0.75rem;"></div>
-      </div>
     </div>
 
     <!-- Tab ZIP -->
@@ -352,21 +342,6 @@
           <input type="text" id="urlDownloadInput" placeholder="Contoh: https://github.com/user/nama-repo" style="margin-top:0; flex:1;">
           <button onclick="downloadRepoByUrl()" class="inline-btn" style="background:linear-gradient(135deg, #4caf50, #2e7d32);">📥 Unduh ZIP</button>
         </div>
-      </div>
-    </div>
-
-    <!-- Tab Commits -->
-    <div id="tab-commits" class="tab-content">
-      <div style="display:flex; gap:0.4rem; margin-bottom:0.5rem; align-items:center;">
-        <button onclick="loadCommitsList(1)" class="inline-btn" style="flex:1; background:var(--accent);">🔄 Refresh Riwayat</button>
-      </div>
-      <div id="commitsListContainer" style="height:350px; overflow-y:auto; background:var(--input-bg); border:1px solid var(--border); border-radius:10px; padding:0.5rem; margin-bottom:0.5rem;">
-        <div style="text-align:center; opacity:0.6; padding:1rem 0;">Pilih repository dan klik Refresh untuk melihat histori...</div>
-      </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; background:var(--input-bg); padding:0.4rem; border-radius:8px; border:1px solid var(--border);">
-        <button onclick="prevCommitPage()" class="inline-btn" style="background:#4caf50;" id="btnPrevCommit" disabled>⏪ Sebelumnya</button>
-        <span style="font-size:0.8rem; font-weight:bold;" id="commitPageIndicator">Halaman 1</span>
-        <button onclick="nextCommitPage()" class="inline-btn" style="background:#4caf50;" id="btnNextCommit" disabled>Selanjutnya ⏩</button>
       </div>
     </div>
 
@@ -533,7 +508,6 @@ Karena output AI memiliki batasan karakter, ikuti aturan ini secara ketat:
     window.onload = () => {
       loadTheme(); genParticles(); initAntiLag(); loadCredsFromStorage();
       updateActiveRepoInfo();
-      renderLocalHistory();
     };
 
     function loadTheme() {
@@ -619,14 +593,13 @@ Karena output AI memiliki batasan karakter, ikuti aturan ini secara ketat:
     }
 
     function switchTab(tab) {
-      const tabs = ['single','zip','editor','files','rename','create-repo','list-repo','chat','commits'];
+      const tabs = ['single','zip','editor','files','rename','create-repo','list-repo','chat'];
       document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', tabs[i] === tab));
       document.querySelectorAll('.tab-content').forEach(c => { c.classList.remove('active'); c.style.display = 'none'; });
       const t = document.getElementById('tab-' + tab);
       if (t) { t.classList.add('active'); t.style.display = 'block'; }
       if (tab === 'list-repo') refreshRepoList();
       if (tab === 'editor') updateActiveRepoInfo();
-      if (tab === 'commits') loadCommitsList(1);
     }
 
     function toB64(str) {
@@ -638,9 +611,12 @@ Karena output AI memiliki batasan karakter, ikuti aturan ini secara ketat:
     
     function fromB64(str) {
         try {
-            return decodeURIComponent(atob(str).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
+            const binString = atob(str);
+            const bytes = new Uint8Array(binString.length);
+            for (let i = 0; i < binString.length; i++) {
+                bytes[i] = binString.charCodeAt(i);
+            }
+            return new TextDecoder('utf-8').decode(bytes);
         } catch (e) {
             try { return decodeURIComponent(escape(atob(str))); } 
             catch (e2) { return atob(str); }
@@ -1155,7 +1131,6 @@ KODE BARU:
       const newCodeNorm = newCode.replace(/\s+/g, '');
       
       const proceedReplace = () => {
-          saveToLocalHistory(filename, editor.value, 'Sebelum Revisi Sebagian');
           globalUndoCode = editor.value;
 
           editor.value = safeCheck.updatedContent;
