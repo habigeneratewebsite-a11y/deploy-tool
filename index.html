@@ -908,12 +908,35 @@ Karena output AI memiliki batasan karakter, ikuti aturan ini secara ketat:
       if (!path) return toast('Masukkan path file', 'error');
       const { username, repo, token } = getCreds();
       try {
+        toast('Sedang mengambil file...', 'info');
         const d = await ghGet(username, repo, path, token);
+        
+        let fileText = '';
         if (d.content) {
-          document.getElementById('singleCode').value = fromB64(d.content);
-          updateCodeStats('singleCode','singleCodeStats');
-          toast('File dimuat: ' + path, 'success');
+          // File normal (< 1 MB)
+          fileText = fromB64(d.content);
+        } else if (d.sha) {
+          // File besar (> 1 MB): Ambil isi teks mentah via Git Blobs API (Support s/d 100 MB)
+          const blobRes = await fetch(`https://api.github.com/repos/${username}/${repo}/git/blobs/${d.sha}`, {
+            headers: { 
+              'Authorization': `token ${token}`,
+              'Accept': 'application/vnd.github.raw'
+            }
+          });
+          if (!blobRes.ok) throw new Error('Gagal memuat raw blob file besar');
+          fileText = await blobRes.text();
+        } else if (d.download_url) {
+          // Cadangan jika Blobs API tidak merespons
+          const rawRes = await fetch(d.download_url);
+          if (!rawRes.ok) throw new Error('Gagal mengunduh via download_url');
+          fileText = await rawRes.text();
+        } else {
+          throw new Error('Konten file kosong atau tidak ditemukan.');
         }
+
+        document.getElementById('singleCode').value = fileText;
+        updateCodeStats('singleCode','singleCodeStats');
+        toast('File dimuat: ' + path, 'success');
       } catch (e) { toast('Gagal: ' + e.message, 'error'); }
     }
     function refreshSingleTab() { document.getElementById('singleSearchInput').value = ''; document.getElementById('singleCode').value = ''; updateCodeStats('singleCode','singleCodeStats'); toast('Tab direfresh', 'info'); }
