@@ -1321,13 +1321,47 @@ KODE BARU:
     async function downloadFile(path) {
       const { username, repo, token } = getCreds();
       try {
+        toast('Sedang menyiapkan unduhan...', 'info');
         const d = await ghGet(username, repo, path, token);
+        let blob;
+
         if (d.content) {
+          // File normal (< 1 MB)
           const bytes = new Uint8Array(atob(d.content).split('').map(c => c.charCodeAt(0)));
-          const blob = new Blob([bytes], { type: 'application/octet-stream' });
-          const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = path.split('/').pop(); a.click();
+          blob = new Blob([bytes], { type: 'application/octet-stream' });
+        } else if (d.sha) {
+          // File besar (> 1 MB): Unduh langsung via Git Blobs API (Support s/d 100 MB)
+          const blobRes = await fetch(`https://api.github.com/repos/${username}/${repo}/git/blobs/${d.sha}`, {
+            headers: {
+              'Authorization': `token ${token}`,
+              'Accept': 'application/vnd.github.raw'
+            }
+          });
+          if (!blobRes.ok) throw new Error('Gagal mengambil blob file besar');
+          blob = await blobRes.blob();
+        } else if (d.download_url) {
+          // Cadangan jika Blobs API gagal
+          const rawRes = await fetch(d.download_url);
+          if (!rawRes.ok) throw new Error('Gagal mengunduh');
+          blob = await rawRes.blob();
+        } else {
+          throw new Error('File tidak ditemukan');
         }
-      } catch (_) { toast('Gagal download', 'error'); }
+
+        // Trigger proses download ke HP/Laptop
+        const a = document.createElement('a');
+        const objUrl = URL.createObjectURL(blob);
+        a.href = objUrl;
+        a.download = path.split('/').pop();
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(objUrl);
+
+        toast('✅ Download berhasil!', 'success');
+      } catch (e) {
+        toast('Gagal download: ' + e.message, 'error');
+      }
     }
     
     async function deleteFile(path) {
